@@ -15,4 +15,5 @@
 - [`../SusuLib/posts/SimdGpgpuTpu.md`](https://github.com/SwuduSusuwu/SusuLib/blob/preview/posts/SimdGpgpuTpu.md) is discussions of how to improve performance (which sims are sensitive to) of programs.
 - [`../SusuPosts/posts/SakuraSchoolHowto.md`](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/SakuraSchoolHowto.md) is a discussion of sims for *Android OS* (*Android OS* uses *Java* for most programs).
 - [`../SusuPosts/posts/2_dimensional_forge.md`](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/2_dimensional_forge.md) is discussions of how to render on computers.
+- [`../SusuPosts/posts/GoogleStore_MicrosoftStore_Ubuntu_scripted_tool_sims.md#google-store-question`](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/GoogleStore_MicrosoftStore_Ubuntu_scripted_tool_sims.md#google-store-question) is discussions of sims for *Android OS* (*Android OS* uses *Java* for most programs).
 
