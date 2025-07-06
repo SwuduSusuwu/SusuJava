@@ -13,4 +13,5 @@
 - [`../SusuLib/posts/`](https://github.com/SwuduSusuwu/SusuPosts/tree/preview/posts/) is a work-in-progress which is supposed to mirror all posts from <https://SwuduSusuwu.SubStack.com/>, which starts with the oldest posts (so for now this does not include new posts, which <https://github.com/SwuduSusuwu/SusuLib/tree/preview/posts/> does, but `SusuLib` just includes posts which have use for `g++` tools).
 - [`../SusuLib/posts/CnsCompress.md`](https://github.com/SwuduSusuwu/SusuLib/blob/preview/posts/CnsCompress.md) discusses formulas for computers to produce textures plus meshes.
 - [`../SusuLib/posts/SimdGpgpuTpu.md`](https://github.com/SwuduSusuwu/SusuLib/blob/preview/posts/SimdGpgpuTpu.md) is discussions of how to improve performance (which sims are sensitive to) of programs.
+- [`../SusuPosts/posts/SakuraSchoolHowto.md`](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/SakuraSchoolHowto.md) is a discussion of sims for *Android OS* (*Android OS* uses *Java* for most programs).
 
