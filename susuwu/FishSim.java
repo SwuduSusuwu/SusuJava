@@ -57,6 +57,8 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
       * +`class Pos`: `Pos` stores vectors (first-order tensors), to future-proof (for volumetrics). Usage: `double setsMembersOfPos(Pos pos)`.
       * +`class ImmutablePos2`: 2-dimensional specialization of `class ImmutablePos`.
       * +`class Pos2`: 2-dimensional specialization of `class Pos`.
+  * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / GRID_SIZE`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
+    * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `GRID_SIZE`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
 
 ``` end of *Markdown*
 */
@@ -157,9 +159,10 @@ public class FishSim extends Application {
 
 	private void updateFish() {
 		// Use spatial partitioning (simple grid system)
-		List<Fish>[][] grid = new ArrayList[resolution[0] / GRID_SIZE][resolution[1] / GRID_SIZE];
-		for (int i = 0; i < resolution[0] / GRID_SIZE; i++) {
-			for (int j = 0; j < resolution[1] / GRID_SIZE; j++) {
+		int[] gridSize = { (int)Math.ceil(resolution[0] / GRID_SIZE), (int)Math.ceil(resolution[1] / GRID_SIZE) };
+		List<Fish>[][] grid = new ArrayList[gridSize[0]][gridSize[1]];
+		for (int i = 0; i < grid.length; i++) {
+			for (int j = 0; j < grid[i].length; j++) {
 				grid[i][j] = new ArrayList<>();
 			}
 		}
@@ -167,8 +170,8 @@ public class FishSim extends Application {
 		// Assign fish to grid cells
 		for (Fish fish : fishList) {
 			int[] gridPos = {(int) (fish.pos[0] / GRID_SIZE), (int) (fish.pos[1] / GRID_SIZE)};
-			if (gridPos[0] >= 0 && gridPos[0] < resolution[0] / GRID_SIZE && gridPos[1] >= 0 && gridPos[1] < resolution[1] / GRID_SIZE) {
-				grid[gridPos[0]][gridPos[1]].add(fish);
+			if (gridPos[0] >= 0 && gridPos[0] < grid.length && gridPos[1] >= 0 && gridPos[1] < grid[gridPos[0]].length) {
+				grid[gridPos[0]][gridPos[1]].add(fish); // TODO: unconditional execution (no `if()`) once the invariant `Fish.pos <= FishSim.resolution` establishes.
 			}
 		}
 
