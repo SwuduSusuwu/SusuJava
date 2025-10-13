@@ -75,6 +75,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
         * @`FishSim::updateFish()`: `if(fish.isInBounds) {}` around `grid[gridPos[0]][gridPos[1]].add(fish);`, so `FishSim` allows out-of-bounds `Fish`.
     * +`boolean FishSim::setResolution(newResolution)`: this sets all variables (plus uses all functions) required for `class FishSim` to switch to `newResolution`.
   * +`FishSim::getBounds()`: to replace `FishSim::resolution` for physics uses. Introduced `bounds` for this (to allow out-of-view positions). Notice: for simple sims, this can `return resolutionf;`.
+    * `bounds = {resolution[0] * 2, resolution[1] * 2};` `BOUNDS_FACTOR = (PosBounds.wrapAroundResolution == posBounds ? 0 : 2);`: if `wrapAroundResolution`, the view is close to a natural ocean.
 
 ``` end of *Markdown*
 */
@@ -175,7 +176,7 @@ public class FishSim extends Application {
 	private static int[] resolution = {1280, 720};
 	private static double[] resolutionf = {resolution[0], resolution[1]};
 	private static int resVolume = resolution[0] * resolution[1];
-	private static double[] bounds = resolutionf; // can use `{resolution[0] * 2, resolution[1] * 2};`, but first wish to show switch to `getBounds()` is success.
+	private static double[] bounds = {resolution[0] * 2, resolution[1] * 2}; // for simple sims, use `bounds = resolutionf;`
 	private static double boundsVolume = bounds[0] * bounds[1];
 	private static double fishVolume = 200; // Uses resolution of `Fish::render()`.
 	private static double fishLengthsSep = 62; // Average `Fish`-lengths distance  from `Fish` to `Fish`.
@@ -319,6 +320,7 @@ public class FishSim extends Application {
 		private static double MAX_SPEED = 3.0;
 		private static double ACCELERATION = 0.1;
 		private static double isSimilarTolerance = 0.2;
+		public static boolean applyWallAvoidanceTru = (PosBounds.wrapAroundResolution == posBounds);
 		public static boolean redFishAreAggressiveOrPoisonous = true; // changes how `isSimilarTo(Fish other)` uses `color.getRed()`
 
 		private double[] pos;        // Position
@@ -470,6 +472,7 @@ public class FishSim extends Application {
 		}
 
 		private void applyWallAvoidance(double[] res) {
+			if(!applyWallAvoidanceTru) { return; }
 			double[] avoidancePos = {0, 0};
 
 			if (pos[0] < BOUNDS_DISTANCE) {
