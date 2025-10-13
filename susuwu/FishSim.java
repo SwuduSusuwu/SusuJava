@@ -70,6 +70,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `GRID_SIZE`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
     * @`FishSim::updateFish()`: moves bounds test into `FishSim::posBound()`, which `Fish::setPos()` uses.
     * @`class FishSim`: +`resVolume`, +`fishVolume`, +`fishLengthsSep`, `fishPerVolume`: so `FISH_COUNT` scales to resolution.
+    * @`FishSim::renderFish()`: `if(isPosInBounds(fish.pos))` reduces calls to `fish.render()` (improves `fps` for sims with huge unshown groups of fish).
 
 ``` end of *Markdown*
 */
@@ -258,8 +259,16 @@ public class FishSim extends Application {
 
 	private void renderFish() {
 		gc.clearRect(0, 0, resolution[0], resolution[1]);
-		for (Fish fish : fishList) {
-			fish.render(gc);
+		if(PosBounds.boundless == posBounds) {
+			for(Fish fish : fishList) {
+				if(isPosInBounds(fish.pos)) { // TODO: have `Fish::setPos()` store `posBound()`'s `return` value, so do not have to recompute this (is worth the storage space?)
+					fish.render(gc);
+				} // For `Fish` not in bounds, this condition improves `fps` (lowers `drawMs`).
+			}
+		} else { // Not `boundless`, so `Fish::setPos()` ensures `Fish.pos` in `resolution` bounds.
+			for(Fish fish : fishList) {
+				fish.render(gc);
+			}
 		}
 	}
 
