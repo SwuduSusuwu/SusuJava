@@ -418,7 +418,7 @@ public class FishSim extends Application {
 		public void setPos(double[] newPos) { // If `PosBounds.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.getBounds()[dim] > pos[dim]` is established.
 			isInBounds = posBound(newPos, posBounds);
 			isVisible = (0 <= newPos[0] && resolution[0] > newPos[0] && 0 <= newPos[1]  && resolution[1] > newPos[1]);
-			if(!isInBounds) {
+			if((!isInBounds) && PosBounds.boundless != posBounds) {
 				outOfBounds("Fish::setPos", this);
 			}
 			pos = newPos;
