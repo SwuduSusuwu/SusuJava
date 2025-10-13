@@ -74,6 +74,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * @`FishSim::renderFish()`: `if(isPosInBounds(fish.pos))` reduces calls to `fish.render()` (improves `fps` for sims with huge unshown groups of fish).
       * @`class Fish`: +`boolean isInBounds;` stores `boolean posBound()`'s `return` value (improves CPU use). TODO: rename to `isVisible`?
         * @`FishSim::updateFish()`: `if(fish.isInBounds) {}` around `grid[gridPos[0]][gridPos[1]].add(fish);`, so `FishSim` allows out-of-bounds `Fish`.
+      * @`class Fish`: +`boolean isVisible`: improves `FishSim::renderFish()` (reduces calls to `fish.render()`, which improves `fps` for sims with huge unshown groups of fish).
     * +`boolean FishSim::setResolution(newResolution)`: this sets all variables (plus uses all functions) required for `class FishSim` to switch to `newResolution`.
   * +`FishSim::getBounds()`: to replace `FishSim::resolution` for physics uses. Introduced `bounds` for this (to allow out-of-view positions). Notice: for simple sims, this can `return resolutionf;`.
     * `bounds = {resolution[0] * 2, resolution[1] * 2};` `BOUNDS_FACTOR = (PosBounds.wrapAroundResolution == posBounds ? 0 : 2);`: if `wrapAroundResolution`, the view is close to a natural ocean.
@@ -286,14 +287,8 @@ public class FishSim extends Application {
 
 	private void renderFish() {
 		gc.clearRect(0, 0, resolution[0], resolution[1]);
-		if(PosBounds.boundless == posBounds) { // TODO: if the overhead `if(fish.isInBounds)` is not noticeable, always use this.
-			for(Fish fish : fishList) {
-				if(fish.isInBounds) { // For `Fish` not in bounds, this condition improves `fps` (lowers `drawMs`).
-					fish.render(gc);
-				}
-			}
-		} else { // Not `boundless`, so `Fish::setPos()` ensures `true == Fish.isInBounds`.
-			for(Fish fish : fishList) {
+		for(Fish fish : fishList) {
+			if(fish.isVisible) { // For `Fish` not shown, this condition improves `fps` (lowers `drawMs`).
 				fish.render(gc);
 			}
 		}
@@ -329,7 +324,8 @@ public class FishSim extends Application {
 		private double[] pos;        // Position
 		private double[] dpos;       // Motion (derivative of position)
 		private Color color;
-		public boolean isInBounds; // TODO: rename to `isVisible`?
+		public boolean isInBounds;
+		public boolean isVisible = false; // Just stores `0 <= pos[0] && resolution[0] > pos[0] && 0 <= pos[1]  && resolution[1] > pos[1]` for now.
 
 		public Fish(double[] pos, double[] dpos, Color color) {
 			this.pos = pos;
@@ -350,6 +346,7 @@ public class FishSim extends Application {
 
 		public void setPos(double[] newPos) { // If `PosBounds.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.getBounds()[dim] > pos[dim]` is established.
 			isInBounds = posBound(newPos, posBounds);
+			isVisible = (0 <= newPos[0] && resolution[0] > newPos[0] && 0 <= newPos[1]  && resolution[1] > newPos[1]);
 			if(!isInBounds) {
 				outOfBounds("Fish::setPos", this);
 			}
