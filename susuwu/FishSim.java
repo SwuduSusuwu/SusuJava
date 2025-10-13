@@ -42,6 +42,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
 * {-`Fish::createFishShape()`, -`Fish::getShape()`}, {+`Fish::render()`, +`FishSim::renderFish()`}: switch to `GraphicsContext`.
 * @`Fish::update`: `Fish` now wrap around (to opposite edges) if out-of-bounds.
 * Notice: the list which follows is all own improvements (versus version above). Own version:
+  * @`FishSim::*`, @`Fish::*`: now mutable (since future versions will allow to resize windows plus configure distances). TODO: introduce `get*()` methods (so that typos do not reconfigure constants, such as view distances).
   * @`GRID_SIZE`: documents minimum value which enforces `*_DISTANCE`s.
   * @`applyFlockingRules()`: replaces magic constants (`100`) with `GRID_SIZE` (fixes undefined behaviour if `GRID_SIZE` changes).
   * @`Fish::applyFlockingRules()`, @`Fish::update()`: Replaces magic constants ({`2600`, `1600`}) with {`WIDTH`, `HEIGHT`}.
@@ -72,11 +73,11 @@ import java.util.concurrent.Executors;
 
 public class FishSim extends Application {
 
-	private static final int WIDTH = 1280;
-	private static final int HEIGHT = 720;
-	private static final int FISH_COUNT = 102;
-	private static final int GRID_SIZE = 100; // Notice: set this to `Colllections.max({*_DISTANCE})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
-	private static final int UPDATE_INTERVAL = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
+	private static int WIDTH = 1280;
+	private static int HEIGHT = 720;
+	private static int FISH_COUNT = 102;
+	private static int GRID_SIZE = 100; // Notice: set this to `Colllections.max({*_DISTANCE})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
+	private static int UPDATE_INTERVAL = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
 
 	private List<Fish> fishList = new ArrayList<>();
 	private Random random = new Random();
@@ -186,18 +187,18 @@ public class FishSim extends Application {
 	}
 
 	public static class Fish {
-		private static final double SEPARATION_DISTANCE = 22;
-		private static final double SEPARATION_FACTOR = 2;
-		private static final double SEPARATION_NONSIMILAR_DISTANCE = 42;
-		private static final double SEPARATION_NONSIMILAR_FACTOR = 2.2;
-		private static final double ALIGNMENT_DISTANCE = 100;
-		private static final double ALIGNMENT_FACTOR = 1;
-		private static final double COHESION_DISTANCE = 100;
-		private static final double COHESION_FACTOR = 1;
-		private static final double BOUNDS_DISTANCE = 20;
-		private static final double BOUNDS_FACTOR = 1;
-		private static final double MAX_SPEED = 3.0;
-		private static final double ACCELERATION = 0.1;
+		private static double SEPARATION_DISTANCE = 22;
+		private static double SEPARATION_FACTOR = 2;
+		private static double SEPARATION_NONSIMILAR_DISTANCE = 42;
+		private static double SEPARATION_NONSIMILAR_FACTOR = 2.2;
+		private static double ALIGNMENT_DISTANCE = 100;
+		private static double ALIGNMENT_FACTOR = 1;
+		private static double COHESION_DISTANCE = 100;
+		private static double COHESION_FACTOR = 1;
+		private static double BOUNDS_DISTANCE = 20;
+		private static double BOUNDS_FACTOR = 1;
+		private static double MAX_SPEED = 3.0;
+		private static double ACCELERATION = 0.1;
 
 		private double x, y;        // Position
 		private double dx, dy;      // Velocity
