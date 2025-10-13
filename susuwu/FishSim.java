@@ -115,6 +115,14 @@ import susuwu.Calculus; /* `Calculus.pow2()` */
 import susuwu.Forces; /* `class Forces implements java.lang.Cloneable` */
 
 public class FishSim extends Application {
+	public enum PhysicsMode { // `PhysicsMode` says how to execute `updateFish()`
+		synchronousHomo,      // `updateFish()` once per `refreshLoop()`.
+		synchronousInterval,  // `updateFish()` per `positionInterval` `refreshLoop()`s.
+		asynchronousHomo,     // `executor.submit(() -> updateFish());` once per `refreshLoop()`.
+		asynchronousInterval, // `executor.submit(() -> updateFish());` per `positionInterval` `refreshLoop()`s.
+		separateUnbound,      // `new AnimationTimer() { public void handle(long now) { updateFish(); }`
+		separateFps,          // `Timeline timeline = new Timeline( new KeyFrame(Duration.millis(1000.0 / physicsRefreshHertz), event -> { updateFish(); })`
+	}
 
 	public double[] posDiff(double[] pos, double[] o) {
 		if(PosBounds.wrapAroundResolution == posBounds) {
