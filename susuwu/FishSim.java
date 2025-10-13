@@ -202,6 +202,7 @@ public class FishSim extends Application {
 	private long physicsNs = -1; // Stores `nanoTime()` (at end of functions such as `FishSim::updateFish()`) minus `nanoTime()` at start of those.
 	private double fps = 0;
 	private int frameCounter = 0;
+	private int physicsCounter = 0;
 
 	private ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -289,6 +290,7 @@ public class FishSim extends Application {
 		}
 
 		physicsNs += System.nanoTime() - physicsNsStart;
+		physicsCounter++;
 	}
 
 	private void renderFish() {
