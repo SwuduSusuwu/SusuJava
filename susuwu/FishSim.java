@@ -138,6 +138,7 @@ public class FishSim extends Application {
 //    public static class Pos2 extends double[2] {} // `{Pos2[0], Pos2[1]}` is `{x, y}` position (or resolution), or is `{pos[0], pos[0]}` motion (derivative of position), or is is `{d2x, d2y}` acceleration (derivative number 2). This was supposed to do what `typedef` does (wish for future-proof (limitless dimensions) virtual `class` with functions for numerous transforms).
 // Will use `double[]` for now. TODO: test how much of `java`'s [static `Array` overhead](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Physics_sims_which_structures_to_use.md#separate-variables-versus-dim-lists) `java`'s toolkit optimizes for you. If performance is a problem, choose a new approach to use.
 
+	private static PosBounds posBounds = PosBounds.wrapAroundResolution;
 	private static int[] resolution = {1280, 720};
 	private static double[] resolutionf = {resolution[0], resolution[1]};
 	private static int FISH_COUNT = 102;
