@@ -332,6 +332,18 @@ public class FishSim extends Application {
 		System.err.println(function + ": " + posOutOfBoundsStr(fish.pos, "Fish.pos"));
 	}
 
+	/* Spatial partitioning (simple grid system). TODO: generic version of this (accept all `class`s with `#isInBounds` plus `#pos`). */
+	private void listToPartitions(List<Fish>[][] grid, List<Fish> fishList) {
+		assert grid.length == (int)Math.ceil(getBounds()[0] / GRID_SIZE);
+		assert grid[0].length == (int)Math.ceil(getBounds()[1] / GRID_SIZE);
+		for(Fish fish : fishList) { /* Assign list members to grid sections */
+			if(fish.isInBounds) {
+				int[] gridPos = {(int) (fish.pos[0] / GRID_SIZE), (int) (fish.pos[1] / GRID_SIZE)};
+				grid[gridPos[0]][gridPos[1]].add(fish); // if `gridPos` is not in bounds, this will `throw new IndexOutOfBoundsException()`. But `Fish.setPos()` uses `FishSim::posBound()` which uses `FishSim::isPosInBounds()`, which ensures the `.pos` bounds to `resolution`.
+			}
+		}
+	}
+
 	private void updateFish() {
 		long physicsNsStart = System.nanoTime();
 
@@ -342,14 +354,7 @@ public class FishSim extends Application {
 				grid[i][j] = new ArrayList<>();
 			}
 		}
-
-		// Assign fish to grid cells
-		for(Fish fish : fishList) {
-			if(fish.isInBounds) { // TODO: allow `PosBounds.boundless == posBounds` (but more `grid`s will use more **CPU**).
-				int[] gridPos = {(int) (fish.pos[0] / GRID_SIZE), (int) (fish.pos[1] / GRID_SIZE)};
-				grid[gridPos[0]][gridPos[1]].add(fish); // if `gridPos` is not in bounds, this will `throw new IndexOutOfBoundsException()`. But `Fish.setPos()` uses `FishSim::posBound()` which uses `FishSim::isPosInBounds()`, which ensures the `.pos` bounds to `resolution`.
-			}
-		}
+		listToPartitions(grid, fishList);
 
 		// Update each fish
 		for(Fish fish : fishList) {
