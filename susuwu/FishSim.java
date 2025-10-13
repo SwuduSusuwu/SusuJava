@@ -29,6 +29,7 @@ Prefixes (used for variables / functions / classes): `` +`Class` `` introduces `
   * @`SEPARATION_DISTANCE`: (from `50`) to `22`, so fish still school.
 * @`WIDTH`: (from `800`) to `1280`, @`HEIGHT`: (from `600`) to `720`, since most computers (plus smartphones) can show *720p* resolution.
   * @`FISH_COUNT`: (from `50`) to `102`, since the window now has more room.
+* @`Fish::createFishShape()`: produce 2 colors of fish.
 
 ``` end of *Markdown*
 */
@@ -161,7 +162,11 @@ public class FishSim extends Application {
 				2, 0,      // Middle-right
 				5, 10      // Right (tail)
 			);
-			fish.setFill(Color.ORANGERED);
+			if(1.0 / 2 < random.nextDouble()) {
+				fish.setFill(Color.BLUE);
+			} else {
+				fish.setFill(Color.GREEN);
+			}
 			fish.setTranslateX((int) x);
 			fish.setTranslateY((int) y);
 			fish.getTransforms().add(javafx.scene.transform.Rotate.rotate(Math.toDegrees(angle) + 90, 0, 0));
