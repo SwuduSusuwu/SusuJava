@@ -149,7 +149,7 @@ public class FishSim extends Application {
 	private static double[] resolutionf = {resolution[0], resolution[1]};
 	private static int resVolume = resolution[0] * resolution[1];
 	private static double fishVolume = 200; // Uses resolution of `Fish::render()`.
-	private static double fishLengthsSep = 42; // Average `Fish`-lengths distance  from `Fish` to `Fish`.
+	private static double fishLengthsSep = 62; // Average `Fish`-lengths distance  from `Fish` to `Fish`.
 	private static double fishPerVolume = 1 / fishVolume / fishLengthsSep; // `Fish` per volume (for 2D, volume is resolution).
 	private static int FISH_COUNT = (int)(resVolume * fishPerVolume);
 	private static int GRID_SIZE = 100; // Notice: set this to `Colllections.max({*_DISTANCE})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
@@ -273,7 +273,7 @@ public class FishSim extends Application {
 		private static double ALIGNMENT_FACTOR = 1;
 		private static double COHESION_DISTANCE = 100;
 		private static double COHESION_FACTOR = 1;
-		private static double BOUNDS_DISTANCE = 42;
+		private static double BOUNDS_DISTANCE = 100;
 		private static double BOUNDS_FACTOR = 2;
 		private static double MAX_SPEED = 3.0;
 		private static double ACCELERATION = 0.1;
