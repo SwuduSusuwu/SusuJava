@@ -31,8 +31,9 @@ Prefixes (used for variables / functions / classes): `` +`Class` `` introduces `
   * @`FISH_COUNT`: (from `50`) to `102`, since the window now has more room.
 * @`Fish::createFishShape()`: produce 2 colors of fish.
   * +`Fish::isSimilarTo()`: limits schools to similar `Fish`.
+  * +`SEPARATION_NONSIMILAR_DISTANCE`, +`SEPARATION_NONSIMILAR_FACTOR`: so `Fish::applySeparation()` can use `isSimilarTo()`.
   * @`Fish::applyAlignment()`, @`Fish::applyCohesion()`: use `Fish::isSimilarTo()`.
-  * @`class FishSim`: is now close to a fluid particle sim which has 2 types of molecules which group to similar molecules (such as [oleophilic compounds](https://thepetrosolutions.com/forums/topic/difference-between-oleophobic-and-oleophilic-impurities/#post-3508)), except the numerous steps of *Boids* formula cause some emergent phenomenon which simple molecules do not possess.
+  * @`class FishSim`: is now close to a fluid particle sim which has 2 types of molecules which group to similar molecules (such as [oleophilic compounds](https://thepetrosolutions.com/forums/topic/difference-between-oleophobic-and-oleophilic-impurities/#post-3508)) plus separate from nonsimilar molecules ([such as oleophobic compounds](https://poe.com/s/dYx54tOaDTaDnaBT9TRm)), except the numerous steps of *Boids* formula cause some emergent phenomenon which simple molecules do not possess.
 
 ``` end of *Markdown*
 */
@@ -60,6 +61,8 @@ public class FishSim extends Application {
 	private static final int FISH_COUNT = 102;
 	private static final double SEPARATION_DISTANCE = 22;
 	private static final double SEPARATION_FACTOR = 2;
+	private static final double SEPARATION_NONSIMILAR_DISTANCE = 42;
+	private static final double SEPARATION_NONSIMILAR_FACTOR = 2.2;
 	private static final double ALIGNMENT_DISTANCE = 100;
 	private static final double ALIGNMENT_FACTOR = 1;
 	private static final double COHESION_DISTANCE = 100;
@@ -205,17 +208,26 @@ public class FishSim extends Application {
 
 		public void applySeparation() {
 			double sepX = 0, sepY = 0;
-			int count = 0;
+			double sepNonsimilarX = 0, sepNonsimilarY = 0;
+			int count = 0, countNonsimilar = 0;
 
 			for (Fish other : fishList) {
 				if (other != this) {
 					double diffX = x - other.x;
 					double diffY = y - other.y;
 					double dist = Math.hypot(diffX, diffY);
-					if (dist < SEPARATION_DISTANCE) {
-						sepX += diffX / dist;
-						sepY += diffY / dist;
-						count++;
+					if (isSimilarTo(other)) {
+						if (dist < SEPARATION_DISTANCE) {
+							sepX += diffX / dist;
+							sepY += diffY / dist;
+							count++;
+						}
+					} else {
+						if (dist < SEPARATION_NONSIMILAR_DISTANCE) {
+							sepNonsimilarX += diffX / dist;
+							sepNonsimilarY += diffY / dist;
+							countNonsimilar++;
+						}
 					}
 				}
 			}
@@ -227,12 +239,22 @@ public class FishSim extends Application {
 				// Normalize and scale separation force
 				double sepLength = Math.sqrt(sepX * sepX + sepY * sepY);
 				if (sepLength > 0) {
-					sepX = (sepX / sepLength) * ACCELERATION * SEPARATION_FACTOR;
-					sepY = (sepY / sepLength) * ACCELERATION * SEPARATION_FACTOR;
+					dx += (sepX / sepLength) * ACCELERATION * SEPARATION_FACTOR;
+					dy += (sepY / sepLength) * ACCELERATION * SEPARATION_FACTOR;
 				}
 
-				dx += sepX;
-				dy += sepY;
+			}
+			if (countNonsimilar > 0) {
+				sepNonsimilarX /= countNonsimilar;
+				sepNonsimilarY /= countNonsimilar;
+
+				// Normalize and scale separation force
+				double sepLength = Math.sqrt(sepNonsimilarX * sepNonsimilarX + sepNonsimilarY * sepNonsimilarY);
+				if (sepLength > 0) {
+					dx += (sepNonsimilarX / sepLength) * ACCELERATION * SEPARATION_NONSIMILAR_FACTOR;
+					dy += (sepNonsimilarY / sepLength) * ACCELERATION * SEPARATION_NONSIMILAR_FACTOR;
+				}
+
 			}
 		}
 
