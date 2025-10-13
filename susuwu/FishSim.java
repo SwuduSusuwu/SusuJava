@@ -243,6 +243,7 @@ public class FishSim extends Application {
 	private List<Fish> fishList = new ArrayList<>();
 	private int fishShown = 0;
 	private int[] gridSize = { (int)Math.ceil(getBounds()[0] / GRID_SIZE), (int)Math.ceil(getBounds()[1] / GRID_SIZE) };
+	private List<Fish>[][] grid; /* `listToPartitions(List<>[][] grid, List<> list)` uses this */
 	private Random random = new Random();
 	private Pane root = new Pane();
 	private Canvas canvas = new Canvas(resolution[0], resolution[1]);
@@ -289,6 +290,13 @@ public class FishSim extends Application {
 		fpsText.setY(30);
 		fpsText.setFill(Color.WHITE);
 
+		grid = new ArrayList[gridSize[0]][gridSize[1]]; /* `listToPartitions(List<>[][] grid, List<> list)` uses this */
+		for(int i = 0; i < grid.length; i++) {
+			for(int j = 0; j < grid[i].length; j++) {
+				grid[i][j] = new ArrayList<>();
+			}
+		}
+
 		// Start animation loop
 /*
 		new AnimationTimer() {
@@ -333,10 +341,15 @@ public class FishSim extends Application {
 	}
 
 	/* Spatial partitioning (simple grid system). TODO: generic version of this (accept all `class`s with `#isInBounds` plus `#pos`). */
-	private void listToPartitions(List<Fish>[][] grid, List<Fish> fishList) {
+	private void listToPartitions(List<Fish>[][] grid, List<Fish> list) {
 		assert grid.length == (int)Math.ceil(getBounds()[0] / GRID_SIZE);
 		assert grid[0].length == (int)Math.ceil(getBounds()[1] / GRID_SIZE);
-		for(Fish fish : fishList) { /* Assign list members to grid sections */
+		for(int i = 0; i < grid.length; i++) {
+			for(int j = 0; j < grid[i].length; j++) {
+				grid[i][j].clear();
+			}
+		}
+		for(Fish fish : list) { /* Assign list members to grid sections */
 			if(fish.isInBounds) {
 				int[] gridPos = {(int) (fish.pos[0] / GRID_SIZE), (int) (fish.pos[1] / GRID_SIZE)};
 				grid[gridPos[0]][gridPos[1]].add(fish); // if `gridPos` is not in bounds, this will `throw new IndexOutOfBoundsException()`. But `Fish.setPos()` uses `FishSim::posBound()` which uses `FishSim::isPosInBounds()`, which ensures the `.pos` bounds to `resolution`.
@@ -347,13 +360,6 @@ public class FishSim extends Application {
 	private void updateFish() {
 		long physicsNsStart = System.nanoTime();
 
-		// Use spatial partitioning (simple grid system)
-		List<Fish>[][] grid = new ArrayList[gridSize[0]][gridSize[1]];
-		for(int i = 0; i < grid.length; i++) {
-			for(int j = 0; j < grid[i].length; j++) {
-				grid[i][j] = new ArrayList<>();
-			}
-		}
 		listToPartitions(grid, fishList);
 
 		// Update each fish
