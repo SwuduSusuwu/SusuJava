@@ -91,6 +91,8 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * `bounds = {resolution[0] * 2, resolution[1] * 2};` `BOUNDS_FACTOR = (PosBoundsMode.wrapAroundResolution == posBounds.getPosBoundsMode() ? 0 : 2);`: if `wrapAroundResolution`, the view is close to a natural ocean.
     * +`FishSim::getBoundsSlash2()`: caches `getBounds()[dim] / 2` for physics uses (improves inner loops).
 
+Notice: replaced most of [*Solar-Pro-2*'s original `FishSim.java`](https://github.com/SwuduSusuwu/SusuJava/blob/solarPro2FishSim/susuwu/FishSim.java), as this intro documents (plus [*GitHub*'s `/compare/` tool shows](https://github.com/SwuduSusuwu/SusuJava/compare/solarPro2FishSim..susuFishSim#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4)).
+
 ``` end of *Markdown*
 */
 
