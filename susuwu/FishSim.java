@@ -26,7 +26,9 @@ Prefixes (used for variables / functions / classes): `` +`Class` `` introduces `
 * @`Fish::update()`: if rotation is miniscule, this reuses transforms (to improve `fps`, but `fps` is too unstable to notice differences.)
 * +`*_FACTOR`: (`= 1` for original results), scales `Fish::apply*()` forces.
   * @`SEPARATION_FACTOR`: (from `1`) to `2`, so schools are loose enough to view individual fish.
-  * @`SEPARATION_DISTANCE`: (from `50`) to `32`, so fish still school.
+  * @`SEPARATION_DISTANCE`: (from `50`) to `22`, so fish still school.
+* @`WIDTH`: (from `800`) to `1280`, @`HEIGHT`: (from `600`) to `720`, since most computers (plus smartphones) can show *720p* resolution.
+  * @`FISH_COUNT`: (from `50`) to `102`, since the window now has more room.
 
 ``` end of *Markdown*
 */
@@ -49,10 +51,10 @@ import java.util.Random;
 
 public class FishSim extends Application {
 
-	private static final int WIDTH = 800;
-	private static final int HEIGHT = 600;
-	private static final int FISH_COUNT = 50;
-	private static final double SEPARATION_DISTANCE = 32;
+	private static final int WIDTH = 1280;
+	private static final int HEIGHT = 720;
+	private static final int FISH_COUNT = 102;
+	private static final double SEPARATION_DISTANCE = 22;
 	private static final double SEPARATION_FACTOR = 2;
 	private static final double ALIGNMENT_DISTANCE = 100;
 	private static final double ALIGNMENT_FACTOR = 1;
