@@ -90,6 +90,8 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
       * +`ReentrantLock updateFishLock`: @`updateFish()` blocks unless has exclusive access to this.
       * +`ReentrantLock renderFishLock`: @`renderFish()` blocks unless has exclusive access to this.
 
+Notice: replaced most of [*Solar-Pro-2*'s original `FishSim.java`](https://github.com/SwuduSusuwu/SusuJava/blob/solarPro2FishSim/susuwu/FishSim.java), as this intro documents (plus [*GitHub*'s `/compare/` tool shows](https://github.com/SwuduSusuwu/SusuJava/compare/solarPro2FishSim..susuFishSim#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4)).
+
 ``` end of *Markdown*
 */
 
