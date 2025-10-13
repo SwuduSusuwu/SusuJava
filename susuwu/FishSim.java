@@ -50,6 +50,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
   * +`Fish::isSimilarTo()`: limits schools to similar `Fish`. @`apply*()`: uses this.
   * +`FishSim::refreshLoop()`: houses `FishSim::ApplicationTimer::handle()`'s codeflow. Reason: so is simple for future versions to switch `new AnimationTimer() {@Override public void handle(long now) { refreshLoop(); }}.start();` to alternatives (such as to `Timeline timeline = new Timeline(new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(); })); timeline.setCycleCount(Animation.INDEFINITE); timeline.play();`).
     * @`FishSim::fpsText`: `String.format("%4.2f", fps)` (`4.` so `fpsText.size()` does not change if `fps` magnitude does, `.2` to show miniscule differences).
+    * @`FishSim::fpsText`: show milliseconds used per monitor refresh ("draw ms"). If `updateFish()` executes once per `refreshLoop()`, this is also "physics ms".
   * @`FishSim::*`: replaces pairs of 2 `int`s with `int[2]` (replaced 2 `double`s with `double[2]`), to future-proof (for `class Pos2`). Such as: -`WIDTH`, -`HEIGHT`, +`resolution[]`.
     * +`double[] resolutionf = {resolution[0], resolution[1]};`: for physics code which requires `double[]`.
     * +`class ImmutablePos`: stores constant vectors (first-order tensors), to future-proof (for volumetrics). [Usage: `double acceptsConsts(ImmutablePos pos)`](https://github.com/SwuduSusuwu/SusuJava/compare/preview..pos2#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4).
@@ -152,7 +153,7 @@ public class FishSim extends Application {
 	private Canvas canvas = new Canvas(resolution[0], resolution[1]);
 	private GraphicsContext gc = canvas.getGraphicsContext2D();
 
-	private Text fpsText = new Text("0 FPS");
+	private Text fpsText = new Text("0 FPS, inf ms");
 	private int frameCount = 0;
 	private long lastTime = System.nanoTime();
 	private double fps = 0;
@@ -206,7 +207,8 @@ public class FishSim extends Application {
 			lastTime = now;
 			fps = frameCount / elapsed;
 			Platform.runLater(() -> {
-				fpsText.setText(String.format("%4.2f FPS", fps));
+				double drawMs = 1 / fps * 1000;
+				fpsText.setText(String.format("%4.2f FPS, %4.2f ms", fps, drawMs));
 			});
 			frameCount = 0;
 		} else {
