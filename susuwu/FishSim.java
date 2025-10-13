@@ -202,6 +202,7 @@ public class FishSim extends Application {
 	private long physicsNs = -1; // Stores `nanoTime()` (at end of functions such as `FishSim::updateFish()`) minus `nanoTime()` at start of those.
 	private long renderNs = -1; // Stores `frameCount` sum of `nanoTime()` (at end of functions such as `renderFish()`) minus `nanoTime()` at start of those.
 	private double fps = 0;
+	public double renderMs = Double.NaN; // Stores average **ms** of **CPU** used for graphics functions per second (`renderNs / frameCount / 1_000_000.0`)
 	public double physicsMs = Double.NaN; // Stores average **ms** of **CPU** used for physics functions per second (`physicsNs / physicsCounter / 1_000_000.0`)
 	private int frameCounter = 0;
 	private int physicsCounter = 0;
@@ -254,9 +255,11 @@ public class FishSim extends Application {
 		if (elapsed >= 1.0) {
 			lastTime = now;
 			fps = frameCount / elapsed;
+			renderMs = renderNs / frameCount / 1_000_000.0;
 			physicsMs = physicsNs / physicsCounter / 1_000_000.0;
 			Platform.runLater(() -> fpsTextRefresh());
 			frameCount = 0;
+			renderNs = -1;
 			physicsCounter = 0;
 			physicsNs = -1;
 		} else {
@@ -303,7 +306,7 @@ public class FishSim extends Application {
 		fishShown = 0;
 		gc.clearRect(0, 0, resolution[0], resolution[1]);
 		for(Fish fish : fishList) {
-			if(fish.isVisible) { // For `Fish` not shown, this condition improves `fps` (lowers `drawMs`).
+			if(fish.isVisible) { // For `Fish` not shown, this condition improves `fps` (lowers `renderNs`).
 				fishShown++;
 				fish.render(gc);
 			}
@@ -312,8 +315,7 @@ public class FishSim extends Application {
 	}
 
 	private void fpsTextRefresh() {
-		double drawMs = 1 / fps * 1000;
-		fpsText.setText(String.format("%4d Fish (%4d shown), %4.2f FPS, %4.2f draw ms, %4.2f physics ms", fishList.size(), fishShown, fps, drawMs, physicsMs));
+		fpsText.setText(String.format("%4d Fish (%4d shown), %4.2f FPS, %4.2f render ms, %4.2f physics ms", fishList.size(), fishShown, fps, renderMs, physicsMs));
 	}
 
 	@Override
