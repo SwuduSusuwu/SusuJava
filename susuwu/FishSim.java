@@ -230,7 +230,7 @@ public class FishSim extends Application {
 		System.err.println(function + ": " + posOutOfBoundsStr(fish.pos, "Fish.pos"));
 	}
 
-	private void updateFish() {
+	private void updateFish() throws IndexOutOfBoundsException {
 		// Use spatial partitioning (simple grid system)
 		List<Fish>[][] grid = new ArrayList[gridSize[0]][gridSize[1]];
 		for (int i = 0; i < grid.length; i++) {
@@ -242,6 +242,10 @@ public class FishSim extends Application {
 		// Assign fish to grid cells
 		for (Fish fish : fishList) {
 			int[] gridPos = {(int) (fish.pos[0] / GRID_SIZE), (int) (fish.pos[1] / GRID_SIZE)};
+			if(0 > gridPos[0] || grid.length <= gridPos[0] ||
+			   0 > gridPos[1] || grid[0].length <= gridPos[1]) {
+				throw IndexOutOfBoundsException("gridPos " + Arrays.toString(gridPos) + ","); // Redundant, since `ArrayList` does this?
+			}
 			grid[gridPos[0]][gridPos[1]].add(fish); // if `gridPos` is not in bounds, this will `throw new IndexOutOfBoundsException()`. But `Fish.setPos()` uses `FishSim::posBound()` which uses `FishSim::isPosInBounds()`, which ensures the `.pos` bounds to `resolution`.
 		}
 
