@@ -199,6 +199,7 @@ public class FishSim extends Application {
 	private Text fpsText = new Text("0 Fish shown, 0 Fish, 0 FPS, inf draw ms, inf physics ms");
 	private int frameCount = 0;
 	private long lastTime = System.nanoTime();
+	private long physicsNs = -1; // Stores `nanoTime()` (at end of functions such as `FishSim::updateFish()`) minus `nanoTime()` at start of those.
 	private double fps = 0;
 	private int frameCounter = 0;
 
@@ -263,6 +264,8 @@ public class FishSim extends Application {
 	}
 
 	private void updateFish() {
+		long physicsNsStart = System.nanoTime();
+
 		// Use spatial partitioning (simple grid system)
 		List<Fish>[][] grid = new ArrayList[gridSize[0]][gridSize[1]];
 		for (int i = 0; i < grid.length; i++) {
@@ -284,6 +287,8 @@ public class FishSim extends Application {
 			fish.applyFlockingRules(fishList, grid);
 			fish.update();
 		}
+
+		physicsNs += System.nanoTime() - physicsNsStart;
 	}
 
 	private void renderFish() {
