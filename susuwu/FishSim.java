@@ -66,6 +66,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
   * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / GRID_SIZE`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
     * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `GRID_SIZE`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
     * @`FishSim::updateFish()`: moves bounds test into `FishSim::posBound()`, which `Fish::setPos()` uses.
+    * @`class FishSim`: +`resVolume`, +`fishVolume`, +`fishLengthsSep`, `fishPerVolume`: so `FISH_COUNT` scales to resolution.
 
 ``` end of *Markdown*
 */
@@ -142,7 +143,11 @@ public class FishSim extends Application {
 	private static PosBounds posBounds = PosBounds.wrapAroundResolution;
 	private static int[] resolution = {1280, 720};
 	private static double[] resolutionf = {resolution[0], resolution[1]};
-	private static int FISH_COUNT = 102;
+	private static int resVolume = resolution[0] * resolution[1];
+	private static double fishVolume = 200; // Uses resolution of `Fish::render()`.
+	private static double fishLengthsSep = 42; // Average `Fish`-lengths distance  from `Fish` to `Fish`.
+	private static double fishPerVolume = 1 / fishVolume / fishLengthsSep; // `Fish` per volume (for 2D, volume is resolution).
+	private static int FISH_COUNT = (int)(resVolume * fishPerVolume);
 	private static int GRID_SIZE = 100; // Notice: set this to `Colllections.max({*_DISTANCE})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
 	private static int UPDATE_INTERVAL = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
 
