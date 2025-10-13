@@ -174,6 +174,7 @@ public class FishSim extends Application {
 	private Pane root = new Pane();
 	private Canvas canvas = new Canvas(resolution[0], resolution[1]);
 	private GraphicsContext gc = canvas.getGraphicsContext2D();
+	private Stage stage;
 
 	private Text fpsText = new Text("0 Fish, 0 FPS, inf draw ms, inf physics ms");
 	private int frameCount = 0;
@@ -200,6 +201,7 @@ public class FishSim extends Application {
 		root.getChildren().add(fpsText);
 
 		Scene scene = new Scene(root, resolution[0], resolution[1], Color.LIGHTBLUE);
+		stage = primaryStage;
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("Fish Simulation (Boids)");
 		primaryStage.setResizable(false);
