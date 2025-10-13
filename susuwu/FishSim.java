@@ -201,6 +201,7 @@ public class FishSim extends Application {
 	private long lastTime = System.nanoTime();
 	private long physicsNs = -1; // Stores `nanoTime()` (at end of functions such as `FishSim::updateFish()`) minus `nanoTime()` at start of those.
 	private double fps = 0;
+	public double physicsMs = Double.NaN; // Stores average **ms** of **CPU** used for physics functions per second (`physicsNs / physicsCounter / 1_000_000.0`)
 	private int frameCounter = 0;
 	private int physicsCounter = 0;
 
@@ -252,8 +253,11 @@ public class FishSim extends Application {
 		if (elapsed >= 1.0) {
 			lastTime = now;
 			fps = frameCount / elapsed;
+			physicsMs = physicsNs / physicsCounter / 1_000_000.0;
 			Platform.runLater(() -> fpsTextRefresh());
 			frameCount = 0;
+			physicsCounter = 0;
+			physicsNs = -1;
 		} else {
 			frameCount++;
 		}
@@ -306,7 +310,7 @@ public class FishSim extends Application {
 
 	private void fpsTextRefresh() {
 		double drawMs = 1 / fps * 1000;
-		fpsText.setText(String.format("%4d Fish (%4d shown), %4.2f FPS, %4.2f draw ms, %4.2f physics ms", fishList.size(), fishShown, fps, drawMs, UPDATE_INTERVAL * drawMs));
+		fpsText.setText(String.format("%4d Fish (%4d shown), %4.2f FPS, %4.2f draw ms, %4.2f physics ms", fishList.size(), fishShown, fps, drawMs, physicsMs));
 	}
 
 	@Override
