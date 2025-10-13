@@ -53,6 +53,10 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
   * @`Fish::update()`: documents future `Fish::setPos()`, which will have alternatives (versus wraparound) to ensure `Fish` are in bounds.
   * @`FishSim::*`: replaces pairs of 2 `int`s with `int[2]` (replaced 2 `double`s with `double[2]`), to future-proof (for `class Pos2`). Such as: -`WIDTH`, -`HEIGHT`, +`resolution[]`.
     * +`double[] resolutionf = {resolution[0], resolution[1]};`: for physics code which requires `double[]`.
+    * +`class ImmutablePos`: stores constant vectors (first-order tensors), to future-proof (for volumetrics). [Usage: `double acceptsConsts(ImmutablePos pos)`](https://github.com/SwuduSusuwu/SusuJava/compare/preview..pos2#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4).
+      * +`class Pos`: `Pos` stores vectors (first-order tensors), to future-proof (for volumetrics). Usage: `double setsMembersOfPos(Pos pos)`.
+      * +`class ImmutablePos2`: 2-dimensional specialization of `class ImmutablePos`.
+      * +`class Pos2`: 2-dimensional specialization of `class Pos`.
 
 ``` end of *Markdown*
 */
@@ -74,7 +78,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class FishSim extends Application {
-
 //    public static class Pos2 extends double[2] {} // `{Pos2[0], Pos2[1]}` is `{x, y}` position (or resolution), or is `{pos[0], pos[0]}` motion (derivative of position), or is is `{d2x, d2y}` acceleration (derivative number 2). This was supposed to do what `typedef` does (wish for future-proof (limitless dimensions) virtual `class` with functions for numerous transforms).
 // Will use `double[]` for now. TODO: test how much of `java`'s [static `Array` overhead](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Physics_sims_which_structures_to_use.md#separate-variables-versus-dim-lists) `java`'s toolkit optimizes for you. If performance is a problem, choose a new approach to use.
 
@@ -385,6 +388,124 @@ public class FishSim extends Application {
 			gc.closePath();
 			gc.fill();
 			gc.restore();
+		}
+	};
+
+	/* Proof-of-concept versions of `class {ImmutablePos, Pos, ImmutablePos2, Pos2}`, will allow dimension-agnostic physics.
+	 * Not used for now, due to concerns of virtual function RAM plus CPU usage.
+	 * The actual `class`s will include numerous more functions, plus will move into `./susuwu/{ImmutablePos, Pos, ImmutablePos2, Pos2}.java`
+	 */
+	public abstract static class ImmutablePos { /* `ImmutablePos` stores constant vectors (first-order tensors). Usage: `double acceptsConsts(ImmutablePos pos)`. */
+		double[] pos; /* Notice: future versions will use `private double[] pos;` */
+		public double at(int index) { /* Usage: `ImmutablePos.at(index)` `return`s `pos[index]`. */
+			assert pos.length > index; /* Notice: this trusts `java` to enforce `Array` bounds */
+			return pos[index];
+		}
+		public int dims() { /* Usage: `for(int index = ImmutablePos.dims(); index--; ) { sum += ImmutablePos.at(index); }` */
+			return pos.length;
+		}
+		abstract public Pos zeros(); /* Usage: `ImmutablePos pos = o.zeros(); assert o.dims() == pos.dims(); for(int index = pos.dims(); index--; ) { assert 0 == pos.at(index); }` */
+		abstract public Pos ones(); /* Usage: `ImmutablePos pos = o.ones(); assert o.dims() == pos.dims(); for(int index = pos.dims(); index--; ) { assert 1 == pos.at(index); }` */
+		abstract public Pos clone(); /* Usage: `ImmutablePos pos = o.clone(); assert o.dims() == pos.dims(); for(int index = pos.dims(); index--; ) { assert o.at(index) == pos.at(index); }` */
+		abstract public double volume(); /* Usage: `double arithmeticProduct = ImmutablePos.volume(); //Cartesian-volume` */
+	};
+	public abstract static class Pos extends ImmutablePos { /* `Pos` stores vectors (first-order tensors). Usage: `double acceptsMutables(Pos pos)`.  */
+		public void set(int index, double newValue) { /* Usage: `Pos.set(index, newValue)`. */
+			assert pos.length > index; /* Notice: this trusts `java` to enforce `Array` bounds */
+			pos[index] = newValue;
+		}
+		public abstract double volume(); /* Usage: `return`s the product (Cartestian-volume) of `pos` */
+		public abstract void plusEquals(ImmutablePos o); /* Usage: `Pos.plusEquals(oPos)` is the tensor version of `Pos += o` */
+		public abstract void minusEquals(ImmutablePos o); /* Usage: `Pos.minusEquals(oPos)` is the tensor version of `Pos -= o` */
+		public abstract void starEquals(ImmutablePos o); /* Usage: `Pos.starEquals(oPos)` is the tensor version of `Pos *= o` */
+		public abstract void slashEquals(ImmutablePos o); /* Usage: `Pos.slashEquals(oPos)` is the tensor version of `Pos /= o` */
+		public abstract void moduloEquals(ImmutablePos o); /* Usage: `Pos.moduloEquals(oPos)` is the tensor version of `Pos %= o` */
+	};
+	public static class ImmutablePos2 extends ImmutablePos { /* `ImmutablePos2` is the 2-dimensional specialization of `class ImmutablePos`. Usage: `double acceptsConsts(ImmutablePos2 pos2)`. */
+		double[] pos = {0, 0}; // `{pos[0], pos[1]}` replaces `{x, y}` position, `{WIDTH, HEIGHT}` resolution, `{dx, dy}` motion tensors, or `{d2x, d2y}` acceleration tensors.
+		public ImmutablePos2() {}
+		public ImmutablePos2(Pos2 o) { /* Notice: must use `interface` (or multiple inheritance) to allow implicit conversion of `Pos2` into `ImmutablePos` plus `ImmutablePos2` */
+			pos[0] = o.pos[0];
+			pos[1] = o.pos[1];
+		}
+		public ImmutablePos2(double pos0, double pos1) {
+			pos[0] = pos0;
+			pos[1] = pos1;
+		}
+		@Override
+		public int dims() {
+			return 2;
+		}
+		@Override
+		public Pos zeros() {
+			return new Pos2();
+		}
+		@Override
+		public Pos ones() {
+			return new Pos2(1, 1);
+		}
+		@Override
+		public Pos clone() {
+			return new Pos2(pos[0], pos[1]);
+		}
+
+		@Override
+		public double volume() {
+			return pos[0] * pos[1];
+		}
+	};
+	public static class Pos2 extends Pos { /* `class Pos2` is the 2-dimensional specialization of `class Pos` */
+		double[] pos = {0, 0};
+		public Pos2() {}
+		public Pos2(double pos0, double pos1) {
+			pos[0] = pos0;
+			pos[1] = pos1;
+		}
+		@Override
+		public int dims() {
+			return 2;
+		}
+		@Override
+		public Pos zeros() {
+			return new Pos2();
+		}
+		@Override
+		public Pos ones() {
+			return new Pos2(1, 1);
+		}
+		@Override
+		public Pos clone() {
+			return new Pos2(pos[0], pos[1]);
+		}
+
+		@Override
+		public double volume() {
+			return pos[0] * pos[1];
+		}
+		@Override
+		public void plusEquals(ImmutablePos o) {
+			pos[0] += o.pos[0];
+			pos[1] += o.pos[1];
+		}
+		@Override
+		public void minusEquals(ImmutablePos o) {
+			pos[0] -= o.pos[0];
+			pos[1] -= o.pos[1];
+		}
+		@Override
+		public void starEquals(ImmutablePos o) {
+			pos[0] *= o.pos[0];
+			pos[1] *= o.pos[1];
+		}
+		@Override
+		public void slashEquals(ImmutablePos o) {
+			pos[0] /= o.pos[0];
+			pos[1] /= o.pos[1];
+		}
+		@Override
+		public void moduloEquals(ImmutablePos o) {
+			pos[0] %= o.pos[0];
+			pos[1] %= o.pos[1];
 		}
 	};
 };
