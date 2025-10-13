@@ -26,7 +26,7 @@
 [`./.ssh/`](./.ssh/) is to [use signatures / certificates](#signatures--certificates).
 
 [`./susuwu/`](./susuwu/) stores `package susuwu;`, which is [`java`](https://www.java.com/en/download/help/whatis_java.html) source code (`*.java`) for <https://GitHub.com/SwuduSusuwu/> (which is the `git` version of <https://SwuduSusuwu.SubStack.com/>). The goal is to publish modular (reusable) source code which future sims can use:
-- TODO
+- [`./susuwu/Calculus.java`](./susuwu/Calculus.java): `` public class Calculus { /* `class Calculus` houses simple trigonometric (transcendental) `public static` functions. Future versions will include true calculus functions (such as "area-under-curve" integrals, or "False Position" or "Quadratic Interpolation" root formulas). */ ``
 
 [`./posts/`](./posts/) is *Markdown* which has to do with `java` sims, plus references to *Markdown* from other repos which has some use for `java` sims:
 - [`../SusuLib/posts/`](https://github.com/SwuduSusuwu/SusuPosts/tree/preview/posts/) is a work-in-progress which is supposed to mirror all posts from <https://SwuduSusuwu.SubStack.com/>, which starts with the oldest posts (so for now this does not include new posts, which <https://github.com/SwuduSusuwu/SusuLib/tree/preview/posts/> does, but `SusuLib` just includes posts which have use for `g++` tools).
