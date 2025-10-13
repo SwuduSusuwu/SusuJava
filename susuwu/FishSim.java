@@ -329,37 +329,42 @@ public class FishSim extends Application {
 	}
 
 	private void fpsTextRefresh() {
-		boolean fpsTextMsSpec = (0 != ((FpsTextMode.msSpec.value | FpsTextMode.msFish.value) & fpsTextMode));
+		boolean fpsTextModeFps = (0 != (FpsTextMode.fps.value & fpsTextMode));
+		boolean fpsTextModeMs = (0 != (FpsTextMode.ms.value & fpsTextMode));
+		boolean fpsTextModeMsSpec = (0 != (FpsTextMode.msSpec.value & fpsTextMode));
+		boolean fpsTextMsSpecFish = (0 != ((FpsTextMode.msSpec.value | FpsTextMode.msFish.value) & fpsTextMode)); // TODO: replace manual bitshifts with `java.util.EnumSet<E>`?
+		boolean fpsTextModeMsFish = (0 != (FpsTextMode.msFish.value & fpsTextMode));
+		boolean fpsTextModeFish = (0 != (FpsTextMode.fish.value & fpsTextMode));
+		boolean fpsTextModeFishShown = (0 != (FpsTextMode.fishShown.value & fpsTextMode));
 		double totalMs = 1 / fps * 1000;
 		String fpsTextStr = "";
 		String strSep = ", ", strJoin = " (";
 		if(FpsTextMode.none.value == fpsTextMode) { return; }
-		if(0 != (FpsTextMode.fps.value & fpsTextMode)) {
+		if(fpsTextModeFps) {
 			fpsTextStr += String.format("%4.2f FPS" + strSep, fps);
 		}
-		if(0 != (FpsTextMode.ms.value & fpsTextMode)) {
-			fpsTextStr += String.format("%4.2f MS" + (fpsTextMsSpec ? strJoin : strSep), totalMs);
+		if(fpsTextModeMs) {
+			fpsTextStr += String.format("%4.2f MS" + (fpsTextMsSpecFish ? strJoin : strSep), totalMs);
 		}
-		if(0 != (FpsTextMode.msSpec.value & fpsTextMode)) {
+		if(fpsTextModeMsSpec) {
 			fpsTextStr += String.format("%4.2f drawMS, %4.2f physicsMS", renderMs, physicsMs);
-			fpsTextStr += (0 != (FpsTextMode.msFish.value & fpsTextMode) ? strSep : "");
+			fpsTextStr += (fpsTextModeMsFish ? strSep : "");
 		}
-		if(0 != (FpsTextMode.msFish.value & fpsTextMode)) {
+		if(fpsTextModeMsFish) {
 			fpsTextStr += String.format("%2.4f drawMS / Fish shown, %2.4f physicsMS / Fish", renderMs / fishShown, physicsMs / fishList.size());
 		}
-		if(fpsTextMsSpec) {
+		if(fpsTextMsSpecFish) {
 			if(0 != ((FpsTextMode.ms.value & fpsTextMode))) {
 				fpsTextStr += ")";
 			}
 			fpsTextStr += strSep;
 		}
-		if(0 != (FpsTextMode.fish.value & fpsTextMode)) {
+		if(fpsTextModeFish) {
 			fpsTextStr += String.format("%4d Fish", fishList.size());
-			fpsTextStr += (0 != (FpsTextMode.fishShown.value & fpsTextMode) ? strJoin : strSep);
+			fpsTextStr += (fpsTextModeFishShown ? strJoin : strSep);
 		}
-		if(0 != (FpsTextMode.fishShown.value & fpsTextMode)) {
-			fpsTextStr += String.format("%4d Fish shown", fishShown);
-			fpsTextStr += (0 != (FpsTextMode.fish.value & fpsTextMode) ? ")" : "");
+		if(fpsTextModeFishShown) {
+			fpsTextStr += String.format(fpsTextModeFish ? "%4d shown)" : "%4d Fish shown", fishShown);
 			fpsTextStr += strSep;
 		}
 		fpsText.setText(fpsTextStr.substring(0, fpsTextStr.length() - strSep.length()));
