@@ -237,7 +237,8 @@ public class FishSim extends Application {
 	private static double[] resolutionf = {resolution[0], resolution[1]};
 	private static double[] resolutionfSlash2 = {resolution[0] / 2, resolution[1] / 2}; // Improves execution of inner loops which use this
 	private static int resVolume = resolution[0] * resolution[1];
-	private static double[] bounds = {resolution[0] * 2, resolution[1] * 2}; // for simple sims, use `bounds = resolutionf;`
+	private static double boundsResolutionFactor = 2; // `resolution[dim] * 2` gives best results (sufficient room for natural ocean, small enough for most CPUs to process). Notice: Powers of 2 give improved versions of most formulas for computers, but for now this allows all values
+	private static double[] bounds = {resolution[0] * boundsResolutionFactor, resolution[1] * boundsResolutionFactor}; // for simple sims, use `bounds = resolutionf;`
 	private static double[] boundsSlash2 = {getBounds()[0] / 2, getBounds()[1] / 2}; // Improves execution of inner loops which use this
 	private static double boundsVolume = getBounds()[0] * getBounds()[1];
 	private static double fishVolume = 200; // Uses resolution of `Fish::render()`.
