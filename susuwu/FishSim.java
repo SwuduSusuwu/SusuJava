@@ -72,6 +72,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * @`class FishSim`: +`resVolume`, +`fishVolume`, +`fishLengthsSep`, `fishPerVolume`: so `FISH_COUNT` scales to resolution.
     * @`FishSim::renderFish()`: `if(isPosInBounds(fish.pos))` reduces calls to `fish.render()` (improves `fps` for sims with huge unshown groups of fish).
       * @`class Fish`: +`boolean isInBounds;` stores `boolean posBound()`'s `return` value (improves CPU use). TODO: rename to `isVisible`?
+        * @`FishSim::updateFish()`: `if(fish.isInBounds) {}` around `grid[gridPos[0]][gridPos[1]].add(fish);`, so `FishSim` allows out-of-bounds `Fish`.
 
 ``` end of *Markdown*
 */
@@ -232,7 +233,7 @@ public class FishSim extends Application {
 		System.err.println(function + ": " + posOutOfBoundsStr(fish.pos, "Fish.pos"));
 	}
 
-	private void updateFish() throws IndexOutOfBoundsException {
+	private void updateFish() {
 		// Use spatial partitioning (simple grid system)
 		List<Fish>[][] grid = new ArrayList[gridSize[0]][gridSize[1]];
 		for (int i = 0; i < grid.length; i++) {
@@ -243,12 +244,10 @@ public class FishSim extends Application {
 
 		// Assign fish to grid cells
 		for (Fish fish : fishList) {
-			int[] gridPos = {(int) (fish.pos[0] / GRID_SIZE), (int) (fish.pos[1] / GRID_SIZE)};
-			if(0 > gridPos[0] || grid.length <= gridPos[0] ||
-			   0 > gridPos[1] || grid[0].length <= gridPos[1]) {
-				throw IndexOutOfBoundsException("gridPos " + Arrays.toString(gridPos) + ","); // Redundant, since `ArrayList` does this?
+			if(fish.isInBounds) { // TODO: allow `PosBounds.boundless == posBounds` (but more `grid`s will use more **CPU**).
+				int[] gridPos = {(int) (fish.pos[0] / GRID_SIZE), (int) (fish.pos[1] / GRID_SIZE)};
+				grid[gridPos[0]][gridPos[1]].add(fish); // if `gridPos` is not in bounds, this will `throw new IndexOutOfBoundsException()`. But `Fish.setPos()` uses `FishSim::posBound()` which uses `FishSim::isPosInBounds()`, which ensures the `.pos` bounds to `resolution`.
 			}
-			grid[gridPos[0]][gridPos[1]].add(fish); // if `gridPos` is not in bounds, this will `throw new IndexOutOfBoundsException()`. But `Fish.setPos()` uses `FishSim::posBound()` which uses `FishSim::isPosInBounds()`, which ensures the `.pos` bounds to `resolution`.
 		}
 
 		// Update each fish
