@@ -92,7 +92,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
 */
 
 import javafx.animation.Animation;
-//import javafx.animation.AnimationTimer;
+import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -123,6 +123,7 @@ public class FishSim extends Application {
 		separateUnbound,      // `new AnimationTimer() { public void handle(long now) { updateFish(); }`
 		separateFps,          // `Timeline timeline = new Timeline( new KeyFrame(Duration.millis(1000.0 / physicsRefreshHertz), event -> { updateFish(); })`
 	}
+	private static PhysicsMode monitorRefreshMode = PhysicsMode.separateFps; // `monitorRefreshMode` must use `.separateUnbound` or `.separateFps`.
 
 	public double[] posDiff(double[] pos, double[] o) {
 		if(PosBounds.wrapAroundResolution == posBounds) {
@@ -306,17 +307,23 @@ public class FishSim extends Application {
 		}
 
 		// Start animation loop
-/*
-		new AnimationTimer() {
-			@Override
-			public void handle(long now) { refreshLoop(now); }
-		}.start(); // Notice: replace `Timeline` with this for benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`).
-*/
-		Timeline timeline = new Timeline(
-			new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(System.nanoTime()); })
-		); // Notice: since this limits `fps` to `monitorRefreshHertz`, this prevents benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`). Benchmarks can still use `FpsTextMode.msSpec` (or `FpsTextMode.msFish`).
-		timeline.setCycleCount(Animation.INDEFINITE);
-		timeline.play();
+		switch(monitorRefreshMode) { // `PhysicsMode.` is omitted from all `case`s, to support old `java --source` versions
+		case separateUnbound:
+			new AnimationTimer() {
+				@Override
+				public void handle(long now) { refreshLoop(now); }
+			}.start(); // Notice: replace `Timeline` with this for benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`).
+			break;
+		case separateFps:
+			Timeline timeline = new Timeline(
+				new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(System.nanoTime()); })
+			); // Notice: since this limits `fps` to `monitorRefreshHertz`, this prevents benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`). Benchmarks can still use `FpsTextMode.msSpec` (or `FpsTextMode.msFish`).
+			timeline.setCycleCount(Animation.INDEFINITE);
+			timeline.play();
+			break;
+		default:
+			throw new IllegalArgumentException("Unsupported `PhysicsMode monitorRefreshMode`: " + monitorRefreshMode);
+		}
 	}
 
 	private void refreshLoop(long now) {
