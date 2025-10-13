@@ -10,7 +10,7 @@ package susuwu; /* Usage: `import susuwu.FishSim;` */
 Intro to simple [*JavaFX*](https://github.com/openjdk/jfx) fish sim. Usage: `import susuwu.FishSim;` includes `public class`s (for new sims to use),
 * This ([`./susuwu/FishSim.java`](./FishSim.java)) uses pseudo-*Markdown* for comments, but [`./posts/FishSim.md`](../posts/FishSim.md) is the actual [*Markdown*](https://github.github.com/gfm/) document for this.
 * [Comments with multiple rows](../README.md#java) tend to start all rows with " *", but this comment omits those, due to use of "* " for *Markdown* lists.
-* This *Java* source code is split from [`../SusuPosts/posts/Human_ancestors_are_fish.md#request-java-fish`](https://github.com/SwuduSusuwu/SusuPosts/blob/69b7b1545ab51a1c1a562c0ac838a950bb086442/posts/Human_ancestors_are_fish.md#request-java-fish).
+* This `java` source code is split from [`../SusuPosts/posts/Human_ancestors_are_fish.md#request-java-fish`](https://github.com/SwuduSusuwu/SusuPosts/blob/69b7b1545ab51a1c1a562c0ac838a950bb086442/posts/Human_ancestors_are_fish.md#request-java-fish).
 * The [original version of this source code](https://github.com/SwuduSusuwu/SusuJava/blob/solarPro2FishSim/susuwu/FishSim.java) was [produced through *Solar-Pro-2*](https://poe.com/s/ehlOJYRJNsrGJttfJ4HK), but the goal is just to use thus as a template (for future versions to replace all with own source code).
 
 ******************************************
@@ -22,7 +22,6 @@ Prefixes (used for variables / functions / classes): `` +`Class` `` introduces `
   * @`AnimationTimer::handle()`: show true **FPS**, plus do not to redraw `fpsText` unless `fps` changes.
 * @`Fish::applySeparation()`: reuse values.
 * @`Fish::applyWallAvoidance()`: reuse values, plus replace [magic constants](https://stackoverflow.com/questions/43950998/what-are-symbolic-constants-and-magic-constants) with `BOUNDS_DISTANCE`.
-* +`FishSim::refreshLoop()`: now houses `FishSim::ApplicationTimer::handle()`'s codeflow. Reason: so is simple for future versions to switch `new AnimationTimer() {@Override public void handle(long now) { refreshLoop(); }}.start();` to alternatives (such as to `Timeline timeline = new Timeline(new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(); })); timeline.setCycleCount(Animation.INDEFINITE); timeline.play();`).
 * @`Fish::update()`: if rotation is miniscule, this reuses transforms (to improve `fps`, but `fps` is too unstable to notice differences.)
 * +`*_FACTOR`: (`= 1` for original results), scales `Fish::apply*()` forces.
   * @`SEPARATION_FACTOR`: (from `1`) to `2`, so schools are loose enough to view individual fish.
@@ -30,14 +29,11 @@ Prefixes (used for variables / functions / classes): `` +`Class` `` introduces `
 * @`WIDTH`: (from `800`) to `1280`, @`HEIGHT`: (from `600`) to `720`, since most computers (plus smartphones) can show *720p* resolution.
   * @`FISH_COUNT`: (from `50`) to `102`, since the window now has more room.
 * @`Fish::createFishShape()`: produce 2 colors of fish.
-  * +`Fish::isSimilarTo()`: limits schools to similar `Fish`.
-  * +`SEPARATION_NONSIMILAR_DISTANCE`, +`SEPARATION_NONSIMILAR_FACTOR`: so `Fish::applySeparation()` can use `isSimilarTo()`.
-  * @`Fish::applyAlignment()`, @`Fish::applyCohesion()`: use `Fish::isSimilarTo()`.
   * @`class FishSim`: is now close to a fluid particle sim which has 2 types of molecules which group to similar molecules (such as [oleophilic compounds](https://thepetrosolutions.com/forums/topic/difference-between-oleophobic-and-oleophilic-impurities/#post-3508)) plus separate from nonsimilar molecules ([such as oleophobic compounds](https://poe.com/s/dYx54tOaDTaDnaBT9TRm)), except the numerous steps of *Boids* formula cause some emergent phenomenon which simple molecules do not possess.
 
 ******************************************
 
-Notice: used *Solar-Pro-2* to improve codeflow (of the ancestor `git commit` --- "@`FishSim.java`: +`double SEPARATION_NONSIMILAR_*`" --- to this) [so `fps` improves](https://poe.com/s/ifeHY8AcpVmVC7R5aPB7):
+Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/SusuJava/commit/6242d2045d619dd664c9a8eea9141c5d178a2ce8) (of the ancestor `git commit` --- which was half (`1 / 2`) human-produced source code --- to thus) [so `fps` improves](https://poe.com/s/ifeHY8AcpVmVC7R5aPB7):
 * @`class FishSim`: move `class Fish`-specific values into @`class Fish`.
 * @`class FishSim`: use `java.util.concurrent.Executor{s,Service}` to offload `updateFish()` physics (now uses 2 **CPU**s).
 * +`GRID_SIZE`, @`updateFish()`: use `GRID_SIZE` to split `List<Fish> fishList` into `List<Fish>[][] grid` (which reduces *O(n^2)* to *O(n^2 / (WIDTH / GRID_SIZE) / (HEIGHT / GRID_SIZE))* **CPU** use).
@@ -45,8 +41,15 @@ Notice: used *Solar-Pro-2* to improve codeflow (of the ancestor `git commit` ---
 * @`class FishSim`: replaces `1.0 / 2 < random.nextDouble()` with `random.nextBoolean()`.
 * {-`Fish::createFishShape()`, -`Fish::getShape()`}, {+`Fish::render()`, +`FishSim::renderFish()`}: switch to `GraphicsContext`.
 * @`Fish::update`: `Fish` now wrap around (to opposite edges) if out-of-bounds.
-* @`WIDTH`: (from `1280`) to `2600`, @`HEIGHT`: (from `720`) to `1600`. Since that is too much for most devices, future versions will lower those (or use resizable windows).
-* @`class FishSim`: is now `class OptimizedFishSim`.
+* Notice: the list which follows is all own improvements (versus version above). Own version:
+  * @`GRID_SIZE`: documents minimum value which enforces `*_DISTANCE`s.
+  * @`applyFlockingRules()`: replaces magic constants (`100`) with `GRID_SIZE` (fixes undefined behaviour if `GRID_SIZE` changes).
+  * @`Fish::applyFlockingRules()`, @`Fish::update()`: Replaces magic constants ({`2600`, `1600`}) with {`WIDTH`, `HEIGHT`}.
+  * @`class FishSim`: reduces `UPDATE_INTERVAL` (from `5`) to `2` (since `ExecutorService` is used, this does not lower `fps`) so physics is smooth.
+  * +`Fish::isSimilarTo()`: limits schools to similar `Fish`. @`apply*()`: uses this.
+  * +`FishSim::refreshLoop()`: houses `FishSim::ApplicationTimer::handle()`'s codeflow. Reason: so is simple for future versions to switch `new AnimationTimer() {@Override public void handle(long now) { refreshLoop(); }}.start();` to alternatives (such as to `Timeline timeline = new Timeline(new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(); })); timeline.setCycleCount(Animation.INDEFINITE); timeline.play();`).
+    * @`FishSim::fpsText`: `String.format("%4.2f", fps)` (`4.` so `fpsText.size()` does not change if `fps` magnitude does, `.2` to show miniscule differences).
+  * @`Fish::update()`: documents future `Fish::setPos()`, which will have alternatives (versus wraparound) to ensure `Fish` are in bounds.
 
 ``` end of *Markdown*
 */
@@ -67,13 +70,13 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class OptimizedFishSim extends Application {
+public class FishSim extends Application {
 
-	private static final int WIDTH = 2600;
-	private static final int HEIGHT = 1600;
+	private static final int WIDTH = 1280;
+	private static final int HEIGHT = 720;
 	private static final int FISH_COUNT = 102;
-	private static final int GRID_SIZE = 100;
-	private static final int UPDATE_INTERVAL = 5; // Update flocking rules every 5 frames
+	private static final int GRID_SIZE = 100; // Notice: set this to `Colllections.max({*_DISTANCE})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
+	private static final int UPDATE_INTERVAL = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
 
 	private List<Fish> fishList = new ArrayList<>();
 	private Random random = new Random();
@@ -109,7 +112,7 @@ public class OptimizedFishSim extends Application {
 
 		Scene scene = new Scene(root, WIDTH, HEIGHT, Color.LIGHTBLUE);
 		primaryStage.setScene(scene);
-		primaryStage.setTitle("Optimized Fish Simulation (Boids)");
+		primaryStage.setTitle("Fish Simulation (Boids)");
 		primaryStage.setResizable(false);
 		primaryStage.show();
 
@@ -120,27 +123,29 @@ public class OptimizedFishSim extends Application {
 		// Start animation loop
 		new AnimationTimer() {
 			@Override
-			public void handle(long now) {
-				frameCounter++;
-				if (frameCounter % UPDATE_INTERVAL == 0) {
-					executor.submit(() -> updateFish());
-				}
-
-				renderFish();
-
-				double elapsed = (now - lastTime) / 1_000_000_000.0;
-				if (elapsed >= 1.0) {
-					lastTime = now;
-					fps = frameCount / elapsed;
-					Platform.runLater(() -> {
-						fpsText.setText(String.format("%.1f FPS", fps));
-					});
-					frameCount = 0;
-				} else {
-					frameCount++;
-				}
-			}
+			public void handle(long now) { refreshLoop(now); }
 		}.start();
+	}
+
+	private void refreshLoop(long now) {
+		frameCounter++;
+		if (frameCounter % UPDATE_INTERVAL == 0) {
+			executor.submit(() -> updateFish());
+		}
+
+		renderFish();
+
+		double elapsed = (now - lastTime) / 1_000_000_000.0;
+		if (elapsed >= 1.0) {
+			lastTime = now;
+			fps = frameCount / elapsed;
+			Platform.runLater(() -> {
+				fpsText.setText(String.format("%4.2f FPS", fps));
+			});
+			frameCount = 0;
+		} else {
+			frameCount++;
+		}
 	}
 
 	private void updateFish() {
@@ -180,7 +185,7 @@ public class OptimizedFishSim extends Application {
 		executor.shutdown();
 	}
 
-	private static class Fish {
+	public static class Fish {
 		private static final double SEPARATION_DISTANCE = 22;
 		private static final double SEPARATION_FACTOR = 2;
 		private static final double SEPARATION_NONSIMILAR_DISTANCE = 42;
@@ -206,9 +211,13 @@ public class OptimizedFishSim extends Application {
 			this.color = color;
 		}
 
+		public boolean isSimilarTo(Fish o) {
+			return color.equals(o.color); /* TODO: use `Math.hypot()` (Euclidean distance) of color component differences, to allow close matches. Use a function (such as `javafx.scene.shape.Polygon.getPoints()`), for comparison of vertices. */
+		}
+
 		public void applyFlockingRules(List<Fish> allFish, List<Fish>[][] grid) {
-			int gridX = (int) (x / 100);
-			int gridY = (int) (y / 100);
+			int gridX = (int) (x / GRID_SIZE);
+			int gridY = (int) (y / GRID_SIZE);
 			List<Fish> nearbyFish = new ArrayList<>();
 
 			// Check neighboring grid cells
@@ -221,7 +230,7 @@ public class OptimizedFishSim extends Application {
 			applySeparation(nearbyFish);
 			applyAlignment(nearbyFish);
 			applyCohesion(nearbyFish);
-			applyWallAvoidance(2600, 1600);
+			applyWallAvoidance(WIDTH, HEIGHT);
 		}
 
 		private void applySeparation(List<Fish> nearbyFish) {
@@ -234,7 +243,7 @@ public class OptimizedFishSim extends Application {
 					double diffX = x - other.x;
 					double diffY = y - other.y;
 					double dist = Math.hypot(diffX, diffY);
-					if (color.equals(other.color)) {
+					if (isSimilarTo(other)) {
 						if (dist < SEPARATION_DISTANCE) {
 							sepX += diffX / dist;
 							sepY += diffY / dist;
@@ -275,7 +284,7 @@ public class OptimizedFishSim extends Application {
 			int count = 0;
 
 			for (Fish other : nearbyFish) {
-				if (other != this && color.equals(other.color)) {
+				if (other != this && isSimilarTo(other)) {
 					double dist = Math.hypot(x - other.x, y - other.y);
 					if (dist < ALIGNMENT_DISTANCE) {
 						avgDX += other.dx;
@@ -303,7 +312,7 @@ public class OptimizedFishSim extends Application {
 			int count = 0;
 
 			for (Fish other : nearbyFish) {
-				if (other != this && color.equals(other.color)) {
+				if (other != this && isSimilarTo(other)) {
 					double dist = Math.hypot(x - other.x, y - other.y);
 					if (dist < COHESION_DISTANCE) {
 						avgX += other.x;
@@ -354,13 +363,13 @@ public class OptimizedFishSim extends Application {
 				dy = (dy / speed) * MAX_SPEED;
 			}
 
-			// Update position
+			// Update position // TODO: move into future `Fish::setPos()`, which shall have the invariant `Fish.pos <= FishSim.resolution` established.
 			x += dx;
 			y += dy;
 
-			// Wrap around screen
-			x = (x + 2600) % 2600;
-			y = (y + 1600) % 1600;
+			// Wrap around screen // TODO: move into future `Fish::setPos()`, as one numerous (optional) solutions which ensure `Fish.pos <= FishSim.resolution` is established.
+			x = (x + WIDTH) % WIDTH;
+			y = (y + HEIGHT) % HEIGHT;
 		}
 
 		public void render(GraphicsContext gc) {
