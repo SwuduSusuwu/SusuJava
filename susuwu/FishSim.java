@@ -47,7 +47,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
   * @`applyFlockingRules()`: replaces magic constants (`100`) with `GRID_SIZE` (fixes undefined behaviour if `GRID_SIZE` changes).
   * @`Fish::applyFlockingRules()`, @`Fish::update()`: Replaces magic constants ({`2600`, `1600`}) with {`resolution[0]`, `resolution[1]`}.
   * @`class FishSim`: reduces `UPDATE_INTERVAL` (from `5`) to `2` (since `ExecutorService` is used, this does not lower `fps`) so physics is smooth.
-  * +`Fish::isSimilarTo()`: limits schools to similar `Fish`. @`apply*()`: uses this.
+  * +`Fish::isSimilarTo()`, +`isSimilarTolerance`: limits schools to similar `Fish`. @`apply*()`: uses thus.
   * +`FishSim::refreshLoop()`: houses `FishSim::ApplicationTimer::handle()`'s codeflow. Reason: so is simple for future versions to switch `new AnimationTimer() {@Override public void handle(long now) { refreshLoop(); }}.start();` to alternatives (such as to `Timeline timeline = new Timeline(new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(); })); timeline.setCycleCount(Animation.INDEFINITE); timeline.play();`).
     * @`FishSim::fpsText`: `String.format("%4.2f", fps)` (`4.` so `fpsText.size()` does not change if `fps` magnitude does, `.2` to show miniscule differences).
     * @`FishSim::fpsText`: show milliseconds used per monitor refresh ("draw ms"), plus per `updateFish()` ("physics ms"), plus show `fishList.size()`.
@@ -273,6 +273,7 @@ public class FishSim extends Application {
 		private static double BOUNDS_FACTOR = 1;
 		private static double MAX_SPEED = 3.0;
 		private static double ACCELERATION = 0.1;
+		private static double isSimilarTolerance = (400 < FISH_COUNT ? 0.2 : 0.4); // If `FISH_COUNT` is low, `Fish::isSimilarTo()` has more tolerance so that fish still school
 
 		private double[] pos;        // Position
 		private double[] dpos;       // Motion (derivative of position)
@@ -285,7 +286,9 @@ public class FishSim extends Application {
 		}
 
 		public boolean isSimilarTo(Fish o) {
-			return color.equals(o.color); /* TODO: use `Math.hypot()` (Euclidean distance) of color component differences, to allow close matches. Use a function (such as `javafx.scene.shape.Polygon.getPoints()`), for comparison of vertices. */
+//			return color.equals(o.color); // Less CPU use, but requires that `fishList` has just a few colors.
+//			return (isSimilarTolerance > Math.hypot(Math.abs(color.getRed() - o.color.getRed()), Math.abs(color.getGreen() - o.color.getGreen()), Math.abs(color.getBlue() - o.color.getBlue()))); // [`Math.hypot()` still does not support more dimensions?](https://esdiscuss.org/topic/how-about-more-args-for-math-hypot). Notice: if you use Euclidean distance, lower `isSimilarTolerance`.
+			return isSimilarTolerance > (Math.pow(color.getRed() - o.color.getRed(), 2) + Math.pow(color.getGreen() - o.color.getGreen(), 2) + Math.pow(color.getBlue() - o.color.getBlue(), 2)); // TODO: Use a function (such as `javafx.scene.shape.Polygon.getPoints()`) for comparison of vertices. */
 		}
 
 		public void setPos(double[] newPos) { // If `PosBounds.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.resolution[dim] > pos[dim]` is established.
