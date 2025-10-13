@@ -49,6 +49,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
   * @`class FishSim`: reduces `UPDATE_INTERVAL` (from `5`) to `2` (since `ExecutorService` is used, this does not lower `fps`) so physics is smooth.
   * +`Fish::isSimilarTo()`, +`isSimilarTolerance`: limits schools to similar `Fish`. @`apply*()`: uses thus.
     * +`boolean redFishAreAggressiveOrPoisonous`: changes how `isSimilarTo(Fish other)` uses `color.getRed()`
+    * @`FishSim::start()`: produces all possible colors of `Fish`. `Fish` schools are now more complex than fluid particles.
   * +`FishSim::refreshLoop()`: houses `FishSim::ApplicationTimer::handle()`'s codeflow. Reason: so is simple for future versions to switch `new AnimationTimer() {@Override public void handle(long now) { refreshLoop(); }}.start();` to alternatives (such as to `Timeline timeline = new Timeline(new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(); })); timeline.setCycleCount(Animation.INDEFINITE); timeline.play();`).
     * @`FishSim::fpsText`: `String.format("%4.2f", fps)` (`4.` so `fpsText.size()` does not change if `fps` magnitude does, `.2` to show miniscule differences).
     * @`FishSim::fpsText`: show milliseconds used per monitor refresh ("draw ms"), plus per `updateFish()` ("physics ms"), plus show `fishList.size()`.
@@ -179,7 +180,7 @@ public class FishSim extends Application {
 		for (int i = 0; i < FISH_COUNT; i++) {
 			double[] pos = {random.nextDouble() * resolution[0], random.nextDouble() * resolution[1]};
 			double[] dpos = {(random.nextDouble() * 2 - 1) * Fish.MAX_SPEED, (random.nextDouble() * 2 - 1) * Fish.MAX_SPEED};
-			fishList.add(new Fish(pos, dpos, random.nextBoolean() ? Color.BLUE : Color.GREEN));
+			fishList.add(new Fish(pos, dpos, Color.color(random.nextDouble(), random.nextDouble(), random.nextDouble())));
 		}
 
 		root.getChildren().add(canvas);
