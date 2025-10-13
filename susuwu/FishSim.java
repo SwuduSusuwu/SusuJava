@@ -69,12 +69,12 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
   * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / GRID_SIZE`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
     * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `GRID_SIZE`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
     * @`FishSim::updateFish()`: moves bounds test into `FishSim::posBound()`, which `Fish::setPos()` uses.
-    * @`class FishSim`: +`resVolume`, +`fishVolume`, +`fishLengthsSep`, `fishPerVolume`: so `FISH_COUNT` scales to resolution.
+    * @`class FishSim`: +`boundsVolume`, +`fishVolume`, +`fishLengthsSep`, `fishPerVolume`: so `FISH_COUNT` scales to resolution.
     * @`FishSim::renderFish()`: `if(isPosInBounds(fish.pos))` reduces calls to `fish.render()` (improves `fps` for sims with huge unshown groups of fish).
       * @`class Fish`: +`boolean isInBounds;` stores `boolean posBound()`'s `return` value (improves CPU use). TODO: rename to `isVisible`?
         * @`FishSim::updateFish()`: `if(fish.isInBounds) {}` around `grid[gridPos[0]][gridPos[1]].add(fish);`, so `FishSim` allows out-of-bounds `Fish`.
     * +`boolean FishSim::setResolution(newResolution)`: this sets all variables (plus uses all functions) required for `class FishSim` to switch to `newResolution`.
-  * +`FishSim::getBounds()`: to replace `FishSim::resolution` for physics uses. Future versions can `return` a separate `FishSim::bounds` (to allow out-of-view positions).
+  * +`FishSim::getBounds()`: to replace `FishSim::resolution` for physics uses. Introduced `bounds` for this (to allow out-of-view positions). Notice: for simple sims, this can `return resolutionf;`.
 
 ``` end of *Markdown*
 */
@@ -101,22 +101,22 @@ public class FishSim extends Application {
 
 	public enum PosBounds { // `PosBounds` says how the sim must do `pos[dim] += dpos[dim]` (derivatives of positions).
 		invalidArgumentException, // `if(!isPosInBounds(pos)) { throw new IllegalArgumentException(); }`
-		wrapAroundResolution, // `pos[dim] = (resolution[dim] + pos[dim] + dpos[dim]) % resolution[dim];`.
-		clampToResolution, // `pos[dim] = Math.max(0, Math.min(resolution[dim] - 1, pos[dim] + dpos[dim]));`.
+		wrapAroundResolution, // `pos[dim] = (getBounds()[dim] + pos[dim] + dpos[dim]) % getBounds()[dim];`.
+		clampToResolution, // `pos[dim] = Math.max(0, Math.min(getBounds()[dim] - 1, pos[dim] + dpos[dim]));`.
 		boundless, // `pos[dim] += dpos[dim];`.
 	} // Notice: to teleport to new positions, `dpos[dim] = newPos[dim] - pos[dim]`. but most sims use relative motions.
 
 	public static double[] getBounds() {
-		assert null != resolutionf;
-		return resolutionf; // Notice: future versions can replace this with a separate `bounds` (to allow out-of-view positions).
+		assert null != bounds;
+		return bounds; // Notice: for simple sims, can `return resolutionf`.
 	}
 
 	public boolean isPosInBounds(double[] pos) throws IllegalArgumentException {
-		if(resolution.length != pos.length) {
-			throw new IllegalArgumentException("`resolution.length != pos.length`");
+		if(getBounds().length != pos.length) {
+			throw new IllegalArgumentException("`getBounds().length != pos.length`");
 		} // TODO: If this test is used at the start of all `pos*()` functions, replace `[]` with `Pos2`, unless optimizer stores this.
 		for(int i = 0; i < pos.length; i++) {
-			if(0 > pos[i] || resolution[i] <= pos[i]) {
+			if(0 > pos[i] || getBounds()[i] <= pos[i]) {
 				return false;
 			}
 		} // TODO: replace `for(...) {...}` with `switch(pos.length) { case 2: ... }`, unless optimizer does this.
@@ -124,24 +124,25 @@ public class FishSim extends Application {
 	}
 
 	public String posOutOfBoundsStr(double[] pos, String posStr) {
-		return "`" + posStr + " = " + Arrays.toString(pos) + ";` `resolution = " + Arrays.toString(resolution) + ";` (`grid = new ArrayList[" + gridSize[0] + "][" + gridSize[1] + "];`), so `" + posStr + "` is out of bounds.";
+		return "`" + posStr + " = " + Arrays.toString(pos) + ";` `getBounds() = " + Arrays.toString(getBounds()) + ";` (`grid = new ArrayList[" + gridSize[0] + "][" + gridSize[1] + "];`), so `" + posStr + "` is out of bounds.";
 	}
 
-	public boolean posBound(double[] pos, PosBounds posBounds) throws IllegalArgumentException { // If `PosBounds.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.resolution[dim] > pos[dim]` is established.
+	public boolean posBound(double[] pos, PosBounds posBounds) throws IllegalArgumentException { // If `PosBounds.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.getBounds()[dim] > pos[dim]` is established.
 		switch(posBounds) { // `PosBounds.` is omitted from all `case`s, to support old `java --source` versions
 		case invalidArgumentException:
+		case PosBounds.invalidArgumentException:
 			if(!isPosInBounds(pos)) {
 				throw new IllegalArgumentException(posOutOfBoundsStr(pos, "double[] pos"));
 				// return false; // Notice: unsure of codeflow after the exception is handled. This gives an error if uncommented, but without this, if the exception is handled, the function will fall through to `return true`.
 			}
 			break;
 		case wrapAroundResolution:
-			pos[0] = (pos[0] + resolution[0]) % resolution[0];
-			pos[1] = (pos[1] + resolution[1]) % resolution[1];
+			pos[0] = (pos[0] + getBounds()[0]) % getBounds()[0];
+			pos[1] = (pos[1] + getBounds()[1]) % getBounds()[1];
 			break;
 		case clampToResolution:
-			pos[0] = Math.max(0, Math.min(resolution[0] - 1, pos[0])); // TODO: if `java` does not precompute `resolution[dim] - 1`, store `resolutionMinus1[]`
-			pos[1] = Math.max(0, Math.min(resolution[1] - 1, pos[1]));
+			pos[0] = Math.max(0, Math.min(getBounds()[0] - 1, pos[0])); // TODO: if `java` does not precompute `getBounds()[dim] - 1`, store `boundsMinus1[]`
+			pos[1] = Math.max(0, Math.min(getBounds()[1] - 1, pos[1]));
 			break;
 		case boundless:
 			return isPosInBounds(pos);
@@ -162,6 +163,9 @@ public class FishSim extends Application {
 		resolution = newResolution;
 		resolutionf[0] = resolution[0]; resolutionf[1] = resolution[1];
 		resVolume = resolution[0] * resolution[1];
+		bounds[0] = resolution[0];
+		bounds[1] = resolution[1];
+		boundsVolume = bounds[0] * bounds[1];
 		// canvas = new Canvas(resolution[0], resolution[1]); // TODO: replace with `canvas.setWidth(resolution[0]); canvas.setHeight(resolution[1]);`?
 		// gc = canvas.getGraphicsContext2D();
 		// scene = new Scene(root, resolution[0], resolution[1], Color.LIGHTBLUE); // replace with `scene.widthProperty().bind(primaryStage.widthProperty());`?
@@ -171,15 +175,17 @@ public class FishSim extends Application {
 	private static int[] resolution = {1280, 720};
 	private static double[] resolutionf = {resolution[0], resolution[1]};
 	private static int resVolume = resolution[0] * resolution[1];
+	private static double[] bounds = resolutionf; // can use `{resolution[0] * 2, resolution[1] * 2};`, but first wish to show switch to `getBounds()` is success.
+	private static double boundsVolume = bounds[0] * bounds[1];
 	private static double fishVolume = 200; // Uses resolution of `Fish::render()`.
 	private static double fishLengthsSep = 62; // Average `Fish`-lengths distance  from `Fish` to `Fish`.
 	private static double fishPerVolume = 1 / fishVolume / fishLengthsSep; // `Fish` per volume (for 2D, volume is resolution).
-	private static int FISH_COUNT = (int)(resVolume * fishPerVolume);
+	private static int FISH_COUNT = (int)(boundsVolume * fishPerVolume);
 	private static int GRID_SIZE = 100; // Notice: set this to `Colllections.max({*_DISTANCE})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
 	private static int UPDATE_INTERVAL = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
 
 	private List<Fish> fishList = new ArrayList<>();
-	private int[] gridSize = { (int)Math.ceil(resolution[0] / GRID_SIZE), (int)Math.ceil(resolution[1] / GRID_SIZE) };
+	private int[] gridSize = { (int)Math.ceil(getBounds()[0] / GRID_SIZE), (int)Math.ceil(getBounds()[1] / GRID_SIZE) };
 	private Random random = new Random();
 	private Pane root = new Pane();
 	private Canvas canvas = new Canvas(resolution[0], resolution[1]);
@@ -202,7 +208,7 @@ public class FishSim extends Application {
 	public void start(Stage primaryStage) {
 		// Initialize fish
 		for (int i = 0; i < FISH_COUNT; i++) {
-			double[] pos = {random.nextDouble() * resolution[0], random.nextDouble() * resolution[1]};
+			double[] pos = {random.nextDouble() * getBounds()[0], random.nextDouble() * getBounds()[1]};
 			double[] dpos = {(random.nextDouble() * 2 - 1) * Fish.MAX_SPEED, (random.nextDouble() * 2 - 1) * Fish.MAX_SPEED};
 			fishList.add(new Fish(pos, dpos, Color.color(random.nextDouble(), random.nextDouble(), random.nextDouble())));
 		}
@@ -337,7 +343,7 @@ public class FishSim extends Application {
 			return isSimilarTolerance > (Calculus.pow2(colorDis[0]) + Calculus.pow2(colorDis[1]) + Calculus.pow2(colorDis[2]));
 		} // TODO: Use a function (such as `javafx.scene.shape.Polygon.getPoints()`) for comparison of vertices. */
 
-		public void setPos(double[] newPos) { // If `PosBounds.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.resolution[dim] > pos[dim]` is established.
+		public void setPos(double[] newPos) { // If `PosBounds.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.getBounds()[dim] > pos[dim]` is established.
 			isInBounds = posBound(newPos, posBounds);
 			if(!isInBounds) {
 				outOfBounds("Fish::setPos", this);
@@ -359,7 +365,7 @@ public class FishSim extends Application {
 			applySeparation(nearbyFish);
 			applyAlignment(nearbyFish);
 			applyCohesion(nearbyFish);
-			applyWallAvoidance(resolutionf);
+			applyWallAvoidance(getBounds());
 		}
 
 		private void applySeparation(List<Fish> nearbyFish) {
