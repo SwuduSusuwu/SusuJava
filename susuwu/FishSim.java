@@ -58,12 +58,13 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
       * +`class ImmutablePos2`: 2-dimensional specialization of `class ImmutablePos`.
       * +`class Pos2`: 2-dimensional specialization of `class Pos`.
     * +`FishSim::outOfBounds()`: improves @`FishSim::updateFish()` (which now uses this if `Fish` not in `grid` bounds).
-    * +`enum FishSim::PosBounds`: this will store how `posBound()` enforces bounds.
-    * +`boolean FishSim::isPosInBounds(double[] pos)`: tests if `pos` is in bounds (dimension-agnostic).
-    * +`String posOutOfBoundsStr(double[] pos, String posStr)`, which `FishSim::posBound()` will use.
-	    * @`FishSim::outOfBounds()`: `String` replaced with `posOutOfBoundsStr(pos)`.
+    * +`enum FishSim::PosBounds`: which stores how `posBound()` enforces bounds.
+    * +`boolean FishSim::isPosInBounds(double[] pos)`: replaces duplicate code which tests for if `pos` is in bounds. Allows 2-dimensions or volumetric.
+    * +`String posOutOfBoundsStr(double[] pos, String posStr)`: produces out-of-bounds messages for {`FishSim::posBound()`, `FishSim::outOfBounds()`}.
+    * +`boolean posBound(double[] pos, PosBounds posBounds)`: which `Fish::setPos(newPos)` will use.
   * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / GRID_SIZE`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
     * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `GRID_SIZE`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
+    * @`FishSim::updateFish()`: moves bounds test into `FishSim::posBound()`.
 
 ``` end of *Markdown*
 */
@@ -88,7 +89,7 @@ import java.util.concurrent.Executors;
 public class FishSim extends Application {
 
 	public enum PosBounds { // `PosBounds` says how the sim must do `pos[dim] += dpos[dim]` (derivatives of positions).
-		invalidArgumentException, // `if(0 > pos[dim] || resolution[dim] <= pos[dim]) { throw new IllegalArgumentException(); }`
+		invalidArgumentException, // `if(!isPosInBounds(pos)) { throw new IllegalArgumentException(); }`
 		wrapAroundResolution, // `pos[dim] = (resolution[dim] + pos[dim] + dpos[dim]) % resolution[dim];`.
 		clampToResolution, // `pos[dim] = Math.max(0, Math.min(resolution[dim] - 1, pos[dim] + dpos[dim]));`.
 		boundless, // `pos[dim] += dpos[dim];`.
@@ -108,6 +109,30 @@ public class FishSim extends Application {
 
 	public String posOutOfBoundsStr(double[] pos, String posStr) {
 		return "`" + posStr + " = " + Arrays.toString(pos) + ";` `resolution = " + Arrays.toString(resolution) + ";` (`grid = new ArrayList[" + gridSize[0] + "][" + gridSize[1] + "];`), so `" + posStr + "` is out of bounds.";
+	}
+
+	public boolean posBound(double[] pos, PosBounds posBounds) throws IllegalArgumentException { // If `PosBounds.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.resolution[dim] > pos[dim]` is established.
+		switch(posBounds) { // `PosBounds.` is omitted from all `case`s, to support old `java --source` versions
+		case invalidArgumentException:
+			if(!isPosInBounds(pos)) {
+				throw new IllegalArgumentException(posOutOfBoundsStr(pos, "double[] pos"));
+				// return false; // Notice: unsure of codeflow after the exception is handled. This gives an error if uncommented, but without this, if the exception is handled, the function will fall through to `return true`.
+			}
+			break;
+		case wrapAroundResolution:
+			pos[0] = (pos[0] + resolution[0]) % resolution[0];
+			pos[1] = (pos[1] + resolution[1]) % resolution[1];
+			break;
+		case clampToResolution:
+			pos[0] = Math.max(0, Math.min(resolution[0] - 1, pos[0])); // TODO: if `java` does not precompute `resolution[dim] - 1`, store `resolutionMinus1[]`
+			pos[1] = Math.max(0, Math.min(resolution[1] - 1, pos[1]));
+			break;
+		case boundless:
+			return isPosInBounds(pos);
+		default:
+			throw new IllegalArgumentException("Unknown `PosBounds posbounds`: " + posBounds); // [The compiler does this for you](https://codingtechroom.com/question/what-exception-compiler-unknown-enum-values-switch-expressions), so this just serves to document the lack of `default` codeflow.
+		}
+		return true;
 	}
 
 //    public static class Pos2 extends double[2] {} // `{Pos2[0], Pos2[1]}` is `{x, y}` position (or resolution), or is `{pos[0], pos[0]}` motion (derivative of position), or is is `{d2x, d2y}` acceleration (derivative number 2). This was supposed to do what `typedef` does (wish for future-proof (limitless dimensions) virtual `class` with functions for numerous transforms).
