@@ -124,7 +124,7 @@ public class FishSim extends Application {
 		separateFps,          // `Timeline timeline = new Timeline( new KeyFrame(Duration.millis(1000.0 / physicsRefreshHertz), event -> { updateFish(); })`
 	}
 	private static PhysicsMode monitorRefreshMode = PhysicsMode.separateFps; // `monitorRefreshMode` must use `.separateUnbound` or `.separateFps`.
-	private static PhysicsMode physicsMode = PhysicsMode.asynchronousInterval; // `physicsMode` must use `.asynchronousInterval` or `.syncronousInterval`. TODO: allow all modes.
+	private static PhysicsMode physicsMode = PhysicsMode.asynchronousInterval; // `physicsMode` must use `.*synchronous*`. TODO: allow `.separate*`.
 
 	public double[] posDiff(double[] pos, double[] o) {
 		if(PosBounds.wrapAroundResolution == posBounds) {
@@ -329,17 +329,25 @@ public class FishSim extends Application {
 
 	private void refreshLoop(long now) {
 		frameCounter++;
-		if(frameCounter % positionInterval == 0) {
-			switch(physicsMode) {
-			case PhysicsMode.synchronousInterval:
+		switch(physicsMode) { // `PhysicsMode.` is omitted from all `case`s, to support old `java --source` versions
+		case synchronousHomo:
+			updateFish();
+			break;
+		case synchronousInterval:
+			if(frameCounter % positionInterval == 0) {
 				updateFish();
-				break;
-			case PhysicsMode.asynchronousInterval:
-				executor.submit(() -> updateFish());
-				break;
-			default:
-				throw new IllegalArgumentException("Unsupported `PhysicsMode physicsMode`: " + physicsMode);
 			}
+			break;
+		case asynchronousHomo:
+			executor.submit(() -> updateFish());
+			break;
+		case asynchronousInterval:
+			if(frameCounter % positionInterval == 0) {
+				executor.submit(() -> updateFish());
+			}
+			break;
+		default:
+			throw new IllegalArgumentException("Unsupported `PhysicsMode physicsMode`: " + physicsMode);
 		}
 
 		renderFish();
