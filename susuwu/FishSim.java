@@ -74,6 +74,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
       * @`class Fish`: +`boolean isInBounds;` stores `boolean posBound()`'s `return` value (improves CPU use). TODO: rename to `isVisible`?
         * @`FishSim::updateFish()`: `if(fish.isInBounds) {}` around `grid[gridPos[0]][gridPos[1]].add(fish);`, so `FishSim` allows out-of-bounds `Fish`.
     * +`boolean FishSim::setResolution(newResolution)`: this sets all variables (plus uses all functions) required for `class FishSim` to switch to `newResolution`.
+  * +`FishSim::getBounds()`: to replace `FishSim::resolution` for physics uses. Future versions can `return` a separate `FishSim::bounds` (to allow out-of-view positions).
 
 ``` end of *Markdown*
 */
@@ -104,6 +105,11 @@ public class FishSim extends Application {
 		clampToResolution, // `pos[dim] = Math.max(0, Math.min(resolution[dim] - 1, pos[dim] + dpos[dim]));`.
 		boundless, // `pos[dim] += dpos[dim];`.
 	} // Notice: to teleport to new positions, `dpos[dim] = newPos[dim] - pos[dim]`. but most sims use relative motions.
+
+	public static double[] getBounds() {
+		assert null != resolutionf;
+		return resolutionf; // Notice: future versions can replace this with a separate `bounds` (to allow out-of-view positions).
+	}
 
 	public boolean isPosInBounds(double[] pos) throws IllegalArgumentException {
 		if(resolution.length != pos.length) {
