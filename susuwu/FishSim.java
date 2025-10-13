@@ -30,6 +30,9 @@ Prefixes (used for variables / functions / classes): `` +`Class` `` introduces `
 * @`WIDTH`: (from `800`) to `1280`, @`HEIGHT`: (from `600`) to `720`, since most computers (plus smartphones) can show *720p* resolution.
   * @`FISH_COUNT`: (from `50`) to `102`, since the window now has more room.
 * @`Fish::createFishShape()`: produce 2 colors of fish.
+  * +`Fish::isSimilarTo()`: limits schools to similar `Fish`.
+  * @`Fish::applyAlignment()`, @`Fish::applyCohesion()`: use `Fish::isSimilarTo()`.
+  * @`class FishSim`: is now close to a fluid particle sim which has 2 types of molecules which group to similar molecules (such as [oleophilic compounds](https://thepetrosolutions.com/forums/topic/difference-between-oleophobic-and-oleophilic-impurities/#post-3508)), except the numerous steps of *Boids* formula cause some emergent phenomenon which simple molecules do not possess.
 
 ``` end of *Markdown*
 */
@@ -196,6 +199,10 @@ public class FishSim extends Application {
 			}
 		}
 
+		public boolean isSimilarTo(Fish other) {
+			return other.shape.getFill() == shape.getFill(); /* TODO: use `Math.hypot()` (Euclidean distance) of color component differences, to allow close matches. Use a function (such as `javafx.scene.shape.Polygon.getPoints()`), for comparison of vertices. */
+		}
+
 		public void applySeparation() {
 			double sepX = 0, sepY = 0;
 			int count = 0;
@@ -234,7 +241,7 @@ public class FishSim extends Application {
 			int count = 0;
 
 			for (Fish other : fishList) {
-				if (other != this) {
+				if (other != this && isSimilarTo(other)) {
 					double dist = Math.hypot(x - other.x, y - other.y);
 					if (dist < ALIGNMENT_DISTANCE) {
 						avgDX += other.dx;
@@ -265,7 +272,7 @@ public class FishSim extends Application {
 			int count = 0;
 
 			for (Fish other : fishList) {
-				if (other != this) {
+				if (other != this && isSimilarTo(other)) {
 					double dist = Math.hypot(x - other.x, y - other.y);
 					if (dist < COHESION_DISTANCE) {
 						avgX += other.x;
