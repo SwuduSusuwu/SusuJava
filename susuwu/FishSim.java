@@ -273,8 +273,8 @@ public class FishSim extends Application {
 		private static double ALIGNMENT_FACTOR = 1;
 		private static double COHESION_DISTANCE = 100;
 		private static double COHESION_FACTOR = 1;
-		private static double BOUNDS_DISTANCE = 20;
-		private static double BOUNDS_FACTOR = 1;
+		private static double BOUNDS_DISTANCE = 42;
+		private static double BOUNDS_FACTOR = 2;
 		private static double MAX_SPEED = 3.0;
 		private static double ACCELERATION = 0.1;
 		private static double isSimilarTolerance = 0.2;
