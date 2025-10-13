@@ -53,7 +53,8 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
   * +`FishSim::refreshLoop()`: houses `FishSim::ApplicationTimer::handle()`'s codeflow. Reason: so is simple for future versions to switch `new AnimationTimer() {@Override public void handle(long now) { refreshLoop(); }}.start();` to alternatives (such as to `Timeline timeline = new Timeline(new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(); })); timeline.setCycleCount(Animation.INDEFINITE); timeline.play();`).
     * @`FishSim::fpsText`: `String.format("%4.2f", fps)` (`4.` so `fpsText.size()` does not change if `fps` magnitude does, `.2` to show miniscule differences).
     * @`FishSim::fpsText`: show milliseconds used per monitor refresh ("draw ms"), plus per `updateFish()` ("physics ms"), plus show `fishList.size()`, plus `fishShown`.
-    * +`fpsTextRefresh()`: houses the `FishSim::fpsText` codeflow, which `refreshLoop()` uses.
+  * +`FishSim::fpsTextRefresh()`: houses the `FishSim::fpsText` codeflow, which `refreshLoop()` uses.
+    * +`FishSim::FpsTextMode()`: says which resources for `fpsText` to show. `fpsTextRefresh()` uses this.
   * @`FishSim::*`: replaces pairs of 2 `int`s with `int[2]` (replaced 2 `double`s with `double[2]`), to future-proof (for `class Pos2`). Such as: -`WIDTH`, -`HEIGHT`, +`resolution[]`.
     * +`double[] resolutionf = {resolution[0], resolution[1]};`: for physics code which requires `double[]`.
     * +[`./susuwu/Calculus.java`](../susuwu/Calculus.java): `public class Calculus` houses simple trigonometric (transcendental) `public static` functions. Future versions will include true calculus functions (such as "False Position" or "Quadratic Interpolation").
@@ -78,7 +79,6 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * +`boolean FishSim::setResolution(newResolution)`: this sets all variables (plus uses all functions) required for `class FishSim` to switch to `newResolution`.
   * +`FishSim::getBounds()`: to replace `FishSim::resolution` for physics uses. Introduced `bounds` for this (to allow out-of-view positions). Notice: for simple sims, this can `return resolutionf;`.
     * `bounds = {resolution[0] * 2, resolution[1] * 2};` `BOUNDS_FACTOR = (PosBounds.wrapAroundResolution == posBounds ? 0 : 2);`: if `wrapAroundResolution`, the view is close to a natural ocean.
-  * Introduced `FishSim::FpsTextMode()`: says which resources for `fpsText` to show.
 
 ``` end of *Markdown*
 */
@@ -210,7 +210,7 @@ public class FishSim extends Application {
 	private GraphicsContext gc = canvas.getGraphicsContext2D();
 	private Stage stage;
 
-	private Text fpsText = new Text("0 Fish shown, 0 Fish, 0 FPS, inf draw ms, inf physics ms");
+	private Text fpsText = new Text("0 FPS");
 	private int frameCount = 0; // Count of invocations (of functions such as `FishSim::renderFish()`) since `lastTime`.
 	private long lastTime = System.nanoTime();
 	private long physicsNs = -1; // Stores `nanoTime()` (at end of functions such as `FishSim::updateFish()`) minus `nanoTime()` at start of those.
@@ -329,7 +329,40 @@ public class FishSim extends Application {
 	}
 
 	private void fpsTextRefresh() {
-		fpsText.setText(String.format("%4d Fish (%4d shown), %4.2f FPS, %4.2f render ms, %4.2f physics ms", fishList.size(), fishShown, fps, renderMs, physicsMs));
+		boolean fpsTextMsSpec = (0 != ((FpsTextMode.msSpec.value | FpsTextMode.msFish.value) & fpsTextMode));
+		double totalMs = 1 / fps * 1000;
+		String fpsTextStr = "";
+		String strSep = ", ", strJoin = " (";
+		if(FpsTextMode.none.value == fpsTextMode) { return; }
+		if(0 != (FpsTextMode.fps.value & fpsTextMode)) {
+			fpsTextStr += String.format("%4.2f FPS" + strSep, fps);
+		}
+		if(0 != (FpsTextMode.ms.value & fpsTextMode)) {
+			fpsTextStr += String.format("%4.2f MS" + (fpsTextMsSpec ? strJoin : strSep), totalMs);
+		}
+		if(0 != (FpsTextMode.msSpec.value & fpsTextMode)) {
+			fpsTextStr += String.format("%4.2f drawMS, %4.2f physicsMS", renderMs, physicsMs);
+			fpsTextStr += (0 != (FpsTextMode.msFish.value & fpsTextMode) ? strSep : "");
+		}
+		if(0 != (FpsTextMode.msFish.value & fpsTextMode)) {
+			fpsTextStr += String.format("%2.4f drawMS / Fish shown, %2.4f physicsMS / Fish", renderMs / fishShown, physicsMs / fishList.size());
+		}
+		if(fpsTextMsSpec) {
+			if(0 != ((FpsTextMode.ms.value & fpsTextMode))) {
+				fpsTextStr += ")";
+			}
+			fpsTextStr += strSep;
+		}
+		if(0 != (FpsTextMode.fish.value & fpsTextMode)) {
+			fpsTextStr += String.format("%4d Fish", fishList.size());
+			fpsTextStr += (0 != (FpsTextMode.fishShown.value & fpsTextMode) ? strJoin : strSep);
+		}
+		if(0 != (FpsTextMode.fishShown.value & fpsTextMode)) {
+			fpsTextStr += String.format("%4d Fish shown", fishShown);
+			fpsTextStr += (0 != (FpsTextMode.fish.value & fpsTextMode) ? ")" : "");
+			fpsTextStr += strSep;
+		}
+		fpsText.setText(fpsTextStr.substring(0, fpsTextStr.length() - strSep.length()));
 	}
 
 	@Override
