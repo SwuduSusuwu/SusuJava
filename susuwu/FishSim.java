@@ -71,6 +71,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * @`FishSim::updateFish()`: moves bounds test into `FishSim::posBound()`, which `Fish::setPos()` uses.
     * @`class FishSim`: +`resVolume`, +`fishVolume`, +`fishLengthsSep`, `fishPerVolume`: so `FISH_COUNT` scales to resolution.
     * @`FishSim::renderFish()`: `if(isPosInBounds(fish.pos))` reduces calls to `fish.render()` (improves `fps` for sims with huge unshown groups of fish).
+      * @`class Fish`: +`boolean isInBounds;` stores `boolean posBound()`'s `return` value (improves CPU use). TODO: rename to `isVisible`?
 
 ``` end of *Markdown*
 */
@@ -259,13 +260,13 @@ public class FishSim extends Application {
 
 	private void renderFish() {
 		gc.clearRect(0, 0, resolution[0], resolution[1]);
-		if(PosBounds.boundless == posBounds) {
+		if(PosBounds.boundless == posBounds) { // TODO: if the overhead `if(fish.isInBounds)` is not noticeable, always use this.
 			for(Fish fish : fishList) {
-				if(isPosInBounds(fish.pos)) { // TODO: have `Fish::setPos()` store `posBound()`'s `return` value, so do not have to recompute this (is worth the storage space?)
+				if(fish.isInBounds) { // For `Fish` not in bounds, this condition improves `fps` (lowers `drawMs`).
 					fish.render(gc);
-				} // For `Fish` not in bounds, this condition improves `fps` (lowers `drawMs`).
+				}
 			}
-		} else { // Not `boundless`, so `Fish::setPos()` ensures `Fish.pos` in `resolution` bounds.
+		} else { // Not `boundless`, so `Fish::setPos()` ensures `true == Fish.isInBounds`.
 			for(Fish fish : fishList) {
 				fish.render(gc);
 			}
@@ -296,6 +297,7 @@ public class FishSim extends Application {
 		private double[] pos;        // Position
 		private double[] dpos;       // Motion (derivative of position)
 		private Color color;
+		public boolean isInBounds; // TODO: rename to `isVisible`?
 
 		public Fish(double[] pos, double[] dpos, Color color) {
 			this.pos = pos;
@@ -315,7 +317,8 @@ public class FishSim extends Application {
 		} // TODO: Use a function (such as `javafx.scene.shape.Polygon.getPoints()`) for comparison of vertices. */
 
 		public void setPos(double[] newPos) { // If `PosBounds.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.resolution[dim] > pos[dim]` is established.
-			if(!posBound(newPos, posBounds)) {
+			isInBounds = posBound(newPos, posBounds);
+			if(!isInBounds) {
 				outOfBounds("Fish::setPos", this);
 			}
 			pos = newPos;
