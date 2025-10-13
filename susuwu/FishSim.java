@@ -23,6 +23,7 @@ Prefixes (used for variables / functions / classes): `` +`Class` `` introduces `
 * @`Fish::applySeparation()`: reuse values.
 * @`Fish::applyWallAvoidance()`: reuse values, plus replace [magic constants](https://stackoverflow.com/questions/43950998/what-are-symbolic-constants-and-magic-constants) with `BOUNDS_DISTANCE`.
 * +`FishSim::refreshLoop()`: now houses `FishSim::ApplicationTimer::handle()`'s codeflow. Reason: so is simple for future versions to switch `new AnimationTimer() {@Override public void handle(long now) { refreshLoop(); }}.start();` to alternatives (such as to `Timeline timeline = new Timeline(new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(); })); timeline.setCycleCount(Animation.INDEFINITE); timeline.play();`).
+* @`Fish::update()`: if rotation is miniscule, this reuses transforms (to improve `fps`, but `fps` is too unstable to notice differences.)
 
 ``` end of *Markdown*
 */
@@ -173,9 +174,12 @@ public class FishSim extends Application {
 			// Update shape position and rotation
 			shape.setTranslateX(x);
 			shape.setTranslateY(y);
-			angle = Math.atan2(dy, dx);
-			shape.getTransforms().clear();
-			shape.getTransforms().add(javafx.scene.transform.Rotate.rotate(Math.toDegrees(angle) + 90, 0, 0));
+			double newAngle = Math.atan2(dy, dx);
+			if (0.002 < Math.abs(newAngle - angle)) {
+				angle = newAngle;
+				shape.getTransforms().clear();
+				shape.getTransforms().add(javafx.scene.transform.Rotate.rotate(Math.toDegrees(angle) + 90, 0, 0));
+			}
 		}
 
 		public void applySeparation() {
