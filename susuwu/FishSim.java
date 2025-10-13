@@ -197,9 +197,10 @@ public class FishSim extends Application {
 	private Stage stage;
 
 	private Text fpsText = new Text("0 Fish shown, 0 Fish, 0 FPS, inf draw ms, inf physics ms");
-	private int frameCount = 0;
+	private int frameCount = 0; // Count of invocations (of functions such as `FishSim::renderFish()`) since `lastTime`.
 	private long lastTime = System.nanoTime();
 	private long physicsNs = -1; // Stores `nanoTime()` (at end of functions such as `FishSim::updateFish()`) minus `nanoTime()` at start of those.
+	private long renderNs = -1; // Stores `frameCount` sum of `nanoTime()` (at end of functions such as `renderFish()`) minus `nanoTime()` at start of those.
 	private double fps = 0;
 	public double physicsMs = Double.NaN; // Stores average **ms** of **CPU** used for physics functions per second (`physicsNs / physicsCounter / 1_000_000.0`)
 	private int frameCounter = 0;
@@ -298,6 +299,7 @@ public class FishSim extends Application {
 	}
 
 	private void renderFish() {
+		long renderNsStart = System.nanoTime();
 		fishShown = 0;
 		gc.clearRect(0, 0, resolution[0], resolution[1]);
 		for(Fish fish : fishList) {
@@ -306,6 +308,7 @@ public class FishSim extends Application {
 				fish.render(gc);
 			}
 		}
+		renderNs += System.nanoTime() - renderNsStart;
 	}
 
 	private void fpsTextRefresh() {
