@@ -73,7 +73,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * @`FishSim::renderFish()`: `if(isPosInBounds(fish.pos))` reduces calls to `fish.render()` (improves `fps` for sims with huge unshown groups of fish).
       * @`class Fish`: +`boolean isInBounds;` stores `boolean posBound()`'s `return` value (improves CPU use). TODO: rename to `isVisible`?
         * @`FishSim::updateFish()`: `if(fish.isInBounds) {}` around `grid[gridPos[0]][gridPos[1]].add(fish);`, so `FishSim` allows out-of-bounds `Fish`.
-    * +`boolean FishSim::setResolution(newResolution)`: this shall set all variables (plus use all functions) required for `class FishSim` to switch to `newResolution`.
+    * +`boolean FishSim::setResolution(newResolution)`: this sets all variables (plus uses all functions) required for `class FishSim` to switch to `newResolution`.
 
 ``` end of *Markdown*
 */
@@ -156,6 +156,10 @@ public class FishSim extends Application {
 		resolution = newResolution;
 		resolutionf[0] = resolution[0]; resolutionf[1] = resolution[1];
 		resVolume = resolution[0] * resolution[1];
+		// canvas = new Canvas(resolution[0], resolution[1]); // TODO: replace with `canvas.setWidth(resolution[0]); canvas.setHeight(resolution[1]);`?
+		// gc = canvas.getGraphicsContext2D();
+		// scene = new Scene(root, resolution[0], resolution[1], Color.LIGHTBLUE); // replace with `scene.widthProperty().bind(primaryStage.widthProperty());`?
+		// stage.setScene(scene);
 		return true;
 	} //TODO: lock `updateFish()` plus `renderFish()` for this
 	private static int[] resolution = {1280, 720};
