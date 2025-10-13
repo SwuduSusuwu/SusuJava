@@ -78,6 +78,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * +`boolean FishSim::setResolution(newResolution)`: this sets all variables (plus uses all functions) required for `class FishSim` to switch to `newResolution`.
   * +`FishSim::getBounds()`: to replace `FishSim::resolution` for physics uses. Introduced `bounds` for this (to allow out-of-view positions). Notice: for simple sims, this can `return resolutionf;`.
     * `bounds = {resolution[0] * 2, resolution[1] * 2};` `BOUNDS_FACTOR = (PosBounds.wrapAroundResolution == posBounds ? 0 : 2);`: if `wrapAroundResolution`, the view is close to a natural ocean.
+  * Introduced `FishSim::FpsTextMode()`: says which resources for `fpsText` to show.
 
 ``` end of *Markdown*
 */
@@ -186,6 +187,19 @@ public class FishSim extends Application {
 	private static int FISH_COUNT = (int)(boundsVolume * fishPerVolume);
 	private static int GRID_SIZE = 100; // Notice: set this to `Colllections.max({*_DISTANCE})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
 	private static int UPDATE_INTERVAL = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
+
+	public enum FpsTextMode { // `FpsTextMode` says which resources `fpsText` will show.
+		none      (0     ), // `fpsText = "";`
+		fps       (1 << 0), // `fpsText` += `fps` "FPS";
+		ms        (2 << 1), // `fpsText` += `ms` "ms"; /* Notice: `ms = 1000 / fps;`, so includes idle CPU */
+		msSpec    (1 << 2), // `fpsText` += `renderMs` "renderMs," `physicsMs` "physicsMs"; /* Notice: uses `System.nanoTime()`, does not include idle CPU */
+		msFish    (1 << 3), // `fpsText` += `renderMs / fishShown` "renderMs / Fish shown," `physicsMs / fishList.size()` "physicsMs / Fish";
+		fish      (1 << 4), // `fpsText` += `fishList.size()` "Fish";
+		fishShown (1 << 5); // `fpsText` += `fishShown` "Fish shown";
+		long value; // Stores bitwise-or of those.
+		FpsTextMode(long value) { this.value = value; }
+	} // TODO: replace manual bitshifts with `java.util.EnumSet<E>`?
+	public long fpsTextMode = FpsTextMode.fps.value | FpsTextMode.ms.value | FpsTextMode.msSpec.value | FpsTextMode.msFish.value | FpsTextMode.fish.value | FpsTextMode.fishShown.value;
 
 	private List<Fish> fishList = new ArrayList<>();
 	private int fishShown = 0;
