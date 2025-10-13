@@ -188,6 +188,7 @@ public class FishSim extends Application {
 	private static int UPDATE_INTERVAL = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
 
 	private List<Fish> fishList = new ArrayList<>();
+	private int fishShown = 0;
 	private int[] gridSize = { (int)Math.ceil(getBounds()[0] / GRID_SIZE), (int)Math.ceil(getBounds()[1] / GRID_SIZE) };
 	private Random random = new Random();
 	private Pane root = new Pane();
@@ -286,9 +287,11 @@ public class FishSim extends Application {
 	}
 
 	private void renderFish() {
+		fishShown = 0;
 		gc.clearRect(0, 0, resolution[0], resolution[1]);
 		for(Fish fish : fishList) {
 			if(fish.isVisible) { // For `Fish` not shown, this condition improves `fps` (lowers `drawMs`).
+				fishShown++;
 				fish.render(gc);
 			}
 		}
