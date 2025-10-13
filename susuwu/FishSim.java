@@ -24,6 +24,9 @@ Prefixes (used for variables / functions / classes): `` +`Class` `` introduces `
 * @`Fish::applyWallAvoidance()`: reuse values, plus replace [magic constants](https://stackoverflow.com/questions/43950998/what-are-symbolic-constants-and-magic-constants) with `BOUNDS_DISTANCE`.
 * +`FishSim::refreshLoop()`: now houses `FishSim::ApplicationTimer::handle()`'s codeflow. Reason: so is simple for future versions to switch `new AnimationTimer() {@Override public void handle(long now) { refreshLoop(); }}.start();` to alternatives (such as to `Timeline timeline = new Timeline(new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(); })); timeline.setCycleCount(Animation.INDEFINITE); timeline.play();`).
 * @`Fish::update()`: if rotation is miniscule, this reuses transforms (to improve `fps`, but `fps` is too unstable to notice differences.)
+* +`*_FACTOR`: (`= 1` for original results), scales `Fish::apply*()` forces.
+  * @`SEPARATION_FACTOR`: (from `1`) to `2`, so schools are loose enough to view individual fish.
+  * @`SEPARATION_DISTANCE`: (from `50`) to `32`, so fish still school.
 
 ``` end of *Markdown*
 */
@@ -49,10 +52,14 @@ public class FishSim extends Application {
 	private static final int WIDTH = 800;
 	private static final int HEIGHT = 600;
 	private static final int FISH_COUNT = 50;
-	private static final double SEPARATION_DISTANCE = 50;
+	private static final double SEPARATION_DISTANCE = 32;
+	private static final double SEPARATION_FACTOR = 2;
 	private static final double ALIGNMENT_DISTANCE = 100;
+	private static final double ALIGNMENT_FACTOR = 1;
 	private static final double COHESION_DISTANCE = 100;
+	private static final double COHESION_FACTOR = 1;
 	private static final double BOUNDS_DISTANCE = 20;
+	private static final double BOUNDS_FACTOR = 1;
 	private static final double MAX_SPEED = 3.0;
 	private static final double ACCELERATION = 0.1;
 
@@ -206,8 +213,8 @@ public class FishSim extends Application {
 				// Normalize and scale separation force
 				double sepLength = Math.sqrt(sepX * sepX + sepY * sepY);
 				if (sepLength > 0) {
-					sepX = (sepX / sepLength) * ACCELERATION;
-					sepY = (sepY / sepLength) * ACCELERATION;
+					sepX = (sepX / sepLength) * ACCELERATION * SEPARATION_FACTOR;
+					sepY = (sepY / sepLength) * ACCELERATION * SEPARATION_FACTOR;
 				}
 
 				dx += sepX;
@@ -237,8 +244,8 @@ public class FishSim extends Application {
 				// Normalize and scale alignment force
 				double length = Math.sqrt(avgDX * avgDX + avgDY * avgDY);
 				if (length > 0) {
-					avgDX = (avgDX / length) * ACCELERATION;
-					avgDY = (avgDY / length) * ACCELERATION;
+					avgDX = (avgDX / length) * ACCELERATION * ALIGNMENT_FACTOR;
+					avgDY = (avgDY / length) * ACCELERATION * ALIGNMENT_FACTOR;
 				}
 
 				dx += avgDX;
@@ -268,8 +275,8 @@ public class FishSim extends Application {
 				// Normalize and scale cohesion force
 				double length = Math.sqrt(avgX * avgX + avgY * avgY);
 				if (length > 0) {
-					avgX = (avgX / length) * ACCELERATION;
-					avgY = (avgY / length) * ACCELERATION;
+					avgX = (avgX / length) * ACCELERATION * COHESION_FACTOR;
+					avgY = (avgY / length) * ACCELERATION * COHESION_FACTOR;
 				}
 
 				dx += avgX;
@@ -297,8 +304,8 @@ public class FishSim extends Application {
 				avoidanceY -= (y - (height - BOUNDS_DISTANCE));
 			}
 
-			dx += avoidanceX / BOUNDS_DISTANCE * ACCELERATION;
-			dy += avoidanceY / BOUNDS_DISTANCE * ACCELERATION;
+			dx += avoidanceX / BOUNDS_DISTANCE * ACCELERATION * BOUNDS_FACTOR;
+			dy += avoidanceY / BOUNDS_DISTANCE * ACCELERATION * BOUNDS_FACTOR;
 		}
 
 		public Polygon getShape() {
