@@ -60,6 +60,8 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * +`FishSim::outOfBounds()`: improves @`FishSim::updateFish()` (which now uses this if `Fish` not in `grid` bounds).
     * +`enum FishSim::PosBounds`: this will store how `posBound()` enforces bounds.
     * +`boolean FishSim::isPosInBounds(double[] pos)`: tests if `pos` is in bounds (dimension-agnostic).
+    * +`String posOutOfBoundsStr(double[] pos, String posStr)`, which `FishSim::posBound()` will use.
+	    * @`FishSim::outOfBounds()`: `String` replaced with `posOutOfBoundsStr(pos)`.
   * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / GRID_SIZE`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
     * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `GRID_SIZE`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
 
@@ -102,6 +104,10 @@ public class FishSim extends Application {
 			}
 		} // TODO: replace `for(...) {...}` with `switch(pos.length) { case 2: ... }`, unless optimizer does this.
 		return true;
+	}
+
+	public String posOutOfBoundsStr(double[] pos, String posStr) {
+		return "`" + posStr + " = " + Arrays.toString(pos) + ";` `resolution = " + Arrays.toString(resolution) + ";` (`grid = new ArrayList[" + gridSize[0] + "][" + gridSize[1] + "];`), so `" + posStr + "` is out of bounds.";
 	}
 
 //    public static class Pos2 extends double[2] {} // `{Pos2[0], Pos2[1]}` is `{x, y}` position (or resolution), or is `{pos[0], pos[0]}` motion (derivative of position), or is is `{d2x, d2y}` acceleration (derivative number 2). This was supposed to do what `typedef` does (wish for future-proof (limitless dimensions) virtual `class` with functions for numerous transforms).
@@ -184,7 +190,7 @@ public class FishSim extends Application {
 
 	private void outOfBounds(String function, Fish fish, int[] gridPos) {
 		/* Notice: `outOfBounds()` has numerous sensible actions other than to print to `stderr`: `fish.die()`, `fish.stop()`, `fish.reverse()`, `fish.wrapAround()` */
-		System.err.println("FishSim::updateFish(): `Fish.pos = " + Arrays.toString(fish.pos) + ", resolution = " + Arrays.toString(resolution) + ":` this computes to `grid[" + gridPos[0] + "][" + gridPos[1] + "]`, but `grid = new ArrayList[" + gridSize[0] + "][" + gridSize[1] + "], so the `Fish` is out of bounds.");
+		System.err.println(function + ": " + posOutOfBoundsStr(fish.pos, "Fish.pos"));
 	}
 
 	private void updateFish() {
