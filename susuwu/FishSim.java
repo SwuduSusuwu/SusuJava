@@ -53,6 +53,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
   * +`FishSim::refreshLoop()`: houses `FishSim::ApplicationTimer::handle()`'s codeflow. Reason: so is simple for future versions to switch `new AnimationTimer() {@Override public void handle(long now) { refreshLoop(); }}.start();` to alternatives (such as to `Timeline timeline = new Timeline(new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(); })); timeline.setCycleCount(Animation.INDEFINITE); timeline.play();`).
     * @`FishSim::fpsText`: `String.format("%4.2f", fps)` (`4.` so `fpsText.size()` does not change if `fps` magnitude does, `.2` to show miniscule differences).
     * @`FishSim::fpsText`: show milliseconds used per monitor refresh ("draw ms"), plus per `updateFish()` ("physics ms"), plus show `fishList.size()`.
+    * +`fpsTextRefresh()`: houses the `FishSim::fpsText` codeflow, which `refreshLoop()` uses.
   * @`FishSim::*`: replaces pairs of 2 `int`s with `int[2]` (replaced 2 `double`s with `double[2]`), to future-proof (for `class Pos2`). Such as: -`WIDTH`, -`HEIGHT`, +`resolution[]`.
     * +`double[] resolutionf = {resolution[0], resolution[1]};`: for physics code which requires `double[]`.
     * +[`./susuwu/Calculus.java`](../susuwu/Calculus.java): `public class Calculus` houses simple trigonometric (transcendental) `public static` functions. Future versions will include true calculus functions (such as "False Position" or "Quadratic Interpolation").
@@ -247,10 +248,7 @@ public class FishSim extends Application {
 		if (elapsed >= 1.0) {
 			lastTime = now;
 			fps = frameCount / elapsed;
-			Platform.runLater(() -> {
-				double drawMs = 1 / fps * 1000;
-				fpsText.setText(String.format("%4d Fish, %4.2f FPS, %4.2f draw ms, %4.2f physics ms", fishList.size(), fps, drawMs, UPDATE_INTERVAL * drawMs));
-			});
+			Platform.runLater(() -> fpsTextRefresh());
 			frameCount = 0;
 		} else {
 			frameCount++;
@@ -299,6 +297,11 @@ public class FishSim extends Application {
 				fish.render(gc);
 			}
 		}
+	}
+
+	private void fpsTextRefresh() {
+		double drawMs = 1 / fps * 1000;
+		fpsText.setText(String.format("%4d Fish, %4.2f FPS, %4.2f draw ms, %4.2f physics ms", fishList.size(), fps, drawMs, UPDATE_INTERVAL * drawMs));
 	}
 
 	@Override
