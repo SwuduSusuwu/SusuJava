@@ -17,4 +17,5 @@
 - [`../SusuPosts/posts/2_dimensional_forge.md`](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/2_dimensional_forge.md) is discussions of how to render on computers.
 - [`../SusuPosts/posts/GoogleStore_MicrosoftStore_Ubuntu_scripted_tool_sims.md#google-store-question`](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/GoogleStore_MicrosoftStore_Ubuntu_scripted_tool_sims.md#google-store-question) is discussions of sims for *Android OS* (*Android OS* uses *Java* for most programs).
 - [`../SusuPosts/posts/Code_generation_attributions.md`](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Code_generation_attributions.md) is how to give code generation tools attributions.
+- [`../SusuPosts/posts/Physics_sims_which_structures_to_use.md`](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Physics_sims_which_structures_to_use.md) discusses reasons to use `long`s versus `double`s (plus reasons to use primitives versus `class`s) for positions (plus for derivatives of positions).
 
