@@ -14,6 +14,7 @@
   - [Contributor conventions / rules](#contributor-conventions--rules)
     - [_Markdown_](#markdown)
     - [`git`](#git)
+    - [Code generation tool use.](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Code_generation_attributions.md)
   - [Sponsor](#sponsor)
     - [Escrow](#escrow)
     - [Affiliates](#affiliates)
@@ -28,6 +29,7 @@
 - [`../SusuPosts/posts/SakuraSchoolHowto.md`](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/SakuraSchoolHowto.md) is discussions of sims for *Android OS* (*Android OS* uses *Java* for most programs).
 - [`../SusuPosts/posts/2_dimensional_forge.md`](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/2_dimensional_forge.md) is discussions of how to render on computers.
 - [`../SusuPosts/posts/GoogleStore_MicrosoftStore_Ubuntu_scripted_tool_sims.md#google-store-question`](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/GoogleStore_MicrosoftStore_Ubuntu_scripted_tool_sims.md#google-store-question) is discussions of sims for *Android OS* (*Android OS* uses *Java* for most programs).
+- [`../SusuPosts/posts/Code_generation_attributions.md`](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Code_generation_attributions.md) is how to give code generation tools attributions.
 
 [`./hooks/`](./hooks/) is `git` scripts ([`man githooks`](https://git-scm.com/docs/githooks)) which assist you; install with `cp -ra ./hooks/* ./.git/hooks/`.
 - [`./hooks/pre-commit`](./pre-commit) is [custom `pre-commit`](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) [`.git/hooks/pre-commit.sample` (scans for non-ASCII filenames, conflict markers or whitespace errors)](https://github.com/auth0/gitzero/blob/master/tests/example/_git/hooks/pre-commit.sample)
