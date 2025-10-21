@@ -14,6 +14,7 @@
   - [Contributor conventions / rules](#contributor-conventions--rules)
     - [_Markdown_](#markdown)
     - [`git`](#git)
+    - [`java`](#java)
     - [Code generation tool use.](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Code_generation_attributions.md)
   - [Sponsor](#sponsor)
     - [Escrow](#escrow)
@@ -115,6 +116,29 @@ Do atomic commits: if swapping the new commit with a previous commit (such as th
 	@[Good first issues to contribute to]: (moved into `#How-to-contribute`)
 ```
 \[Notice: Commit titles can omit backticks (``) if not enough room; the backticks just allow _GitHub_ to do _Markdown_-format code / paths.\]
+
+## `java`
+*Java* source code uses similar rules as `../SusuLib/`'s [**C**/**C++** source](https://github.com/SwuduSusuwu/SusuLib/blob/preview/README.md#cc-source) uses, with a few differences:
+* Both should use `if(...)` for conditions (since searches for `if ` will include *English* sentences), which allows searches for `if(`.
+* Both should use `for(...)` for loops (since searches for `for ` will include *English* sentences), which allows searches for `for(`.
+* Both should use "*camelCase*" for local values (such as `double localValue;`), since this is the most common practice.
+* Both should use "*PascalCase*" for names of types (such as `class NewClass {};` or `enum NewEnum {enumValue};`), since this is the most common practice.
+* Since `java` (not *English*) is the "lowest common denominator":
+  * use `assert`s to document which arguments `interface`s (or `public` functions) can use.
+  * use `` `pseudocode` `` to document how `class`s (or `public` functions) are used.
+* Since *Java* does not have `#define`` macros,  `static` constant values at the top of `class`s can use "*CONSTANT_CASE*" (such as `static double VALUE_WHICH_IS_GLOBAL_TO_CLASS;`), which *C++* reserves for macros.
+* Since *Java*'s `Array` is improved (versus **C++**'s primitive version) to allow `primitive[] VALUE_WHICH_IS_AN_ARR;` (which is more simple to use with regular expressions such as `sed` than `primitive VALUE_WHICH_IS_AN_ARR[]` is), use `primitive[] VALUE_WHICH_IS_AN_ARR;`
+* Document new functions thus: `` +`Class::newFunction()` ``, or `` +`Class.newFunction()` ``. TODO: rules for which to use. For now, suggest to use `Class::newFunction()` for `static` (global) functions, but `Class.newFunction()` for instanced (local) functions.
+* `class`s with numerous functions (or with functions with numerous arguments) which accept other instances, should use `function(Class o)` (instead of `function(Class other)`) so the source code is brevose.
+* The syntax for classes is `class PascalCase {\n ... \n};`, since thus is most popular.
+  * If the window does not show the start of the `{\n ... \n}` enclosure, then `};` prevents confusion of `class`'s last `}` with `if(...) {\n ... \n}`'s last `}` .
+* How comments are used (notice: for now, not all versions follow this, have much to do):
+  * The `/* ... */` block quote format (as opposed to `// ...`) is used:
+    * to disable source code which still has possible future use (such as `^/*\n<source code>\n*/$`), or
+    * to store contiguous comments with multiple-rows (such as how to use the whole `class`).
+  * `// Notice: ...` is used for comments to users.
+  * `// TODO: ...` is used for internal dev comments. (Users, except prospective contributors to `SusuJava`, should ignore thus.)
+  * `// <source code>` is used to disable individual rows of source.
 
 ## Sponsor
 To sponsor this (which allows us to produce more source codes), you can use crypto (such as [**Bitcoin**](https://wikipedia.org/wiki/Bitcoin)) to [produce a one-time-use address](https://poe.com/s/IPhIMyuMY6SnYM0yqEJl) (which you deposit funds into), and send the address&private-key to [a contact which `./SECURITY.md` lists](./SECURITY.md#sensitive-issues).
