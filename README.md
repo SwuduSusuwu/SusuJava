@@ -1,6 +1,6 @@
 (C) 2024 Swudu Susuwu, dual licenses: choose [_GPLv2_](./LICENSE_GPLv2) or [_Creative Commons Attribution 2_](./LICENSE) (allows all uses).
 
-*Notice*: You switched to the [`preview`](https://github.com/SwuduSusuwu/SusuPosts/tree/preview/) branch, which has the newest posts, but is unstable, and has much use of `git rebase` + `git push --force` (which require you to use `git pull --rebase`); switch to [`trunk`](https://github.com/SwuduSusuwu/SusuPosts/blob/trunk/README.md#table-of-contents) (`git switch trunk`) for posts which are more stable plus have more support.
+*Notice*: You switched to the [`preview`](https://github.com/SwuduSusuwu/SusuJava/tree/preview/) branch, which has the newest posts, but is unstable, and has much use of `git rebase` + `git push --force` (which require you to use `git pull --rebase`); switch to [`trunk`](https://github.com/SwuduSusuwu/SusuJava/blob/trunk/README.md#table-of-contents) (`git switch trunk`) for posts which are more stable plus have more support.
 - This `preview` branch is for [beta tests (public review)](#beta-test-preview-branch) / [continuous integration (autonomous review)](https://google.com?q=continuous-integration-branch).
 
 # Table of Contents
@@ -10,7 +10,7 @@
   - [Signature/certificate](#signaturecertificate)
 - [How to contribute](#how-to-contribute)
   - [Beta test (preview branch)](#beta-test-preview-branch)
-  - [Good first issues to contribute to](https://github.com/SwuduSusuwu/SusuPosts/contribute)
+  - [Good first issues to contribute to](https://github.com/SwuduSusuwu/SusuJava/contribute)
   - [Contributor conventions/rules](#contributor-conventionsrules)
     - [_Markdown_](#markdown)
     - [`git`](#git)
@@ -28,10 +28,10 @@
 - [`./hooks/pre-commit`](./pre-commit) is [custom `pre-commit`](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) [`.git/hooks/pre-commit.sample` (scans for non-ASCII filenames, conflict markers or whitespace errors)](https://github.com/auth0/gitzero/blob/master/tests/example/_git/hooks/pre-commit.sample)
 
 # How to use this
-This repo is new. So that fixes do not require use of `git push --force` on the [`trunk`](https://github.com/SwuduSusuwu/SusuPosts/tree/trunk/) branch (or tons of trivial fixes which bloat `git log`), new posts go to the [`preview`](https://github.com/SwuduSusuwu/SusuPosts/tree/preview/) branch for review (which can last months).
+This repo is new. So that fixes do not require use of `git push --force` on the [`trunk`](https://github.com/SwuduSusuwu/SusuJava/tree/trunk/) branch (or tons of trivial fixes which bloat `git log`), new posts go to the [`preview`](https://github.com/SwuduSusuwu/SusuJava/tree/preview/) branch for review (which can last months).
 - For now, just the `preview` branch has posts.
 ## Download
-Download with `git clone https://github.com/SwuduSusuwu/SusuPosts.git` and browse local with `cd mid/ && ls`.
+Download with `git clone https://github.com/SwuduSusuwu/SusuJava.git` and browse local with `cd mid/ && ls`.
 - To opt-in to the beta (the preview), use `git switch preview` (opt-out with `get switch trunk`).
 ## Signature/certificate
 [`./.ssh/setup.sh`](./.ssh/setup.sh) is to setup `gpg.ssh.allowedSignersFile` (allows to use `git verify <ref>` or `git log --show-signature`).
@@ -41,16 +41,16 @@ Download with `git clone https://github.com/SwuduSusuwu/SusuPosts.git` and brows
 \[Notice: This [public crypto](https://docs.gitlab.com/ee/user/project/repository/signed_commits/ssh.html#verify-commits-locally) "signature", is not related to "signature analysis" ([Substr scans](https://github.com/SwuduSusuwu/blob/preview/SusuLib/README.md#purposes)).\]
 
 # How to contribute
-View [documented issues](https://github.com/SwuduSusuwu/SusuPosts/issues/) (for ideas on how to contribute, plus so you do not report documented issues.)
+View [documented issues](https://github.com/SwuduSusuwu/SusuJava/issues/) (for ideas on how to contribute, plus so you do not report documented issues.)
 ## Beta test (`preview` branch)
 - Use `git switch preview`
   - Preview samples / scripts symptoms of new issues (hint: listen to samples for glitches, or look through script outputs for "Warning:"s or "Error:"s).
-  - If you found new issue(s) (which aren't due to misconfigurations in your system), [comment on the pull request](https://github.com/SwuduSusuwu/SusuPosts/pull/1) or [post new issue(s)](https://github.com/SwuduSusuwu/SusuPosts/issues/new).
+  - If you found new issue(s) (which aren't due to misconfigurations in your system), [comment on the pull request](https://github.com/SwuduSusuwu/SusuJava/pull/1) or [post new issue(s)](https://github.com/SwuduSusuwu/SusuJava/issues/new).
     - Notice: [sensitive issue(s)](./SECURITY.md#sensitive-issues) have a separate protocol.
 
 # Contributor conventions/rules
 General comment/message syntax rules: `<>` goes around type of option/argument (such as `<commit-hash>`, `[]` goes around optional comments/options/arguments (such as `[<optional fallback value>]`, `...` is affixed to allow multiple options/arguments (such as `[; optional extra arguments]...`). This rule is used to document function arguments (such as `sh`, `C` or `C++` use), plus to document `git` uses.
-To ensure consistent code, submissions of code (such as through [pull requests](https://github.com/SwuduSusuwu/SusuPosts/pulls)) have language-specific syntax rules:
+To ensure consistent code, submissions of code (such as through [pull requests](https://github.com/SwuduSusuwu/SusuJava/pulls)) have language-specific syntax rules:
 ## _Markdown_
 `` *.md `` shall use:
 - [_GitHub flavored Markdown_](https://github.github.com/gfm/), which is not just compatible with [_GitHub_](https://github.com) but also:
@@ -101,8 +101,8 @@ To sponsor this (which allows us to produce more source codes), you can use cryp
 - Rather than us publish a send-to address (for a particular protocol), this allows us to accept all forms of crypto.
 - If amount is more than $100 and you don't trust the contact platforms, use [`./.ssh/id_ed25519.pub`](./.ssh/id_ed25519.pub) to [secure those](https://superuser.com/questions/576506/how-to-use-ssh-rsa-public-key-to-encrypt-a-text/1850928#1850928).
 ### Escrow
-If you want proof that your crypto/cash will go to produce specific systems, use [**escrow** services](https://wikipedia.org/wiki/Escrow) (what you send the **escrow** is: crypto/cash, plus contract which references an [open issue which you choose](https://github.com/SwuduSusuwu/SusuPosts/issues/)).
-- If none of those issues match what you want, you can [post your own issue](https://github.com/SwuduSusuwu/SusuPosts/issues/new) for this.
+If you want proof that your crypto/cash will go to produce specific systems, use [**escrow** services](https://wikipedia.org/wiki/Escrow) (what you send the **escrow** is: crypto/cash, plus contract which references an [open issue which you choose](https://github.com/SwuduSusuwu/SusuJava/issues/)).
+- If none of those issues match what you want, you can [post your own issue](https://github.com/SwuduSusuwu/SusuJava/issues/new) for this.
 - Ensure that the **escrow** contract includes specifics as to what will count as "issue closed" [to the **escrow** service (so you do not have to trust the author),](https://wikipedia.org/wiki/Online_dispute_resolution) which will release the crypto/cash (once the **escrow** service considers your issue as closed).
   - For example; "The **source code** (through `./build.sh`), must produce a **system** (a **shared object** or **executable**) which uses just half of the training data to [setup its neural network, which must produce virtual synapses](https://wikipedia.org/wiki/Backpropagation) which the **system** [uses to produce **accurate** results](https://wikipedia.org/wiki/Residual_neural_network#Forward_propagation) on the other half, where **accurate** (for [classifiers](https://wikipedia.org/wiki/Learning_classifier_system)) is less than 2% false negatives and less than 2% false positives, and **accurate** (for [generators](https://wikipedia.org/wiki/Generative_artificial_intelligence)) is [divergence](https://wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence) of less than 2%." is a contract which an **escrow** can use for [issue #6](https://github.com/SwuduSusuwu/SusuLib/issues/6).
 ### Affiliates
