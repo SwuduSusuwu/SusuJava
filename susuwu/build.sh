@@ -18,7 +18,7 @@ export JAVA_TEST_FLAGS="-verbose:module"
 if command -v sudo >/dev/null; then
 	APTITUDE="sudo apt -y install "
 else
-	APTITUDE="apt -y install " # /* Fixes "The program sudo is not installed." on smartphones */
+	APTITUDE="apt -y install " # /* Fixes "The program sudo is not installed." on platforms such as smartphones */
 fi
 if ! test -d "${PATH_TO_FX}"; then # /* TODO: search for this if default (**Ubuntu**'s) path is not found */
 	${APTITUDE} openjfx || ${APTITUDE} libopenjfx-java
