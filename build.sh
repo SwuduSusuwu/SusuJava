@@ -12,6 +12,7 @@ PATH_TO_SOURCE="${PATH_TO_CLASS}.java"
 JAVA_MODULES="${JAVA_MODULES} --module-path ${PATH_TO_FX} --add-modules javafx.controls,javafx.fxml" # /* Notice: quotes around `${PATH_TO_FX}` give errors, so ensure to escape the path in `PATH_TO_FX=...` */
 #JAVA_MODULES="${JAVA_MODULES} --module-path \"${PATH_TO_FX}\" --add-modules javafx.controls,javafx.fxml" # /* Notice: those quotes (around `${PATH_TO_FX}`) give "java.lang.module.FindException: Module javafx.controls not found" */
 JAVA_FLAGS="${JAVA_FLAGS} --enable-native-access=javafx.graphics"
+#JAVA_FLAGS="${JAVA_FLAGS} -XX:+HeapDumpOnOutOfMemoryError " # /* Notice: if "Exception java.lang.OutOfMemoryError occurred dispatching signal SIGINT to handler- the VM may need to be forcibly terminated" then uncomment this to use `jhat java_pid*.hprof` */
 JAVA_FLAGS="${JAVA_FLAGS} -enableassertions" # /* Notice: remove `-enableassertions` so performance improves */
 export JAVA_BUILD_TEST_FLAGS="-verbose"
 export JAVA_TEST_FLAGS="-verbose:module"
