@@ -25,6 +25,9 @@
 # Purposes
 [`./.ssh/`](./.ssh/) is to [use signatures / certificates](#signatures--certificates).
 
+[`./susuwu/`](./susuwu/) stores `package susuwu;`, which is [`java`](https://www.java.com/en/download/help/whatis_java.html) source code (`*.java`) for <https://GitHub.com/SwuduSusuwu/> (which is the `git` version of <https://SwuduSusuwu.SubStack.com/>). The goal is to publish modular (reusable) source code which future sims can use:
+- TODO
+
 [`./posts/`](./posts/) is *Markdown* which has to do with `java` sims, plus references to *Markdown* from other repos which has some use for `java` sims:
 - [`../SusuLib/posts/`](https://github.com/SwuduSusuwu/SusuPosts/tree/preview/posts/) is a work-in-progress which is supposed to mirror all posts from <https://SwuduSusuwu.SubStack.com/>, which starts with the oldest posts (so for now this does not include new posts, which <https://github.com/SwuduSusuwu/SusuLib/tree/preview/posts/> does, but `SusuLib` just includes posts which have use for `g++` tools).
 - [`../SusuLib/posts/CnsCompress.md`](https://github.com/SwuduSusuwu/SusuLib/blob/preview/posts/CnsCompress.md) discusses formulas for computers to produce textures plus meshes.
@@ -59,7 +62,7 @@ View [documented issues](https://github.com/SwuduSusuwu/SusuJava/issues/) (for i
 - [`trunk`](https://github.com/SwuduSusuwu/SusuJava/tree/trunk) publishes what most projects call "releases", with changes limited to what [*SemVer* calls "Patch" revisions](https://semver.org/spec/v2.0.0.html#spec-item-6)
 - [`new`](https://github.com/SwuduSusuwu/SusuJava/tree/new) publishes what most projects call "release candidates", with changes limited to what [*SemVer* calls "Minor" revisions](https://semver.org/spec/v2.0.0.html#spec-item-7)
 - [`preview`](https://github.com/SwuduSusuwu/SusuJava/tree/preview) publishes what most projects call "beta tests", with changes up to what [*SemVer* calls "Major" revisions](https://semver.org/spec/v2.0.0.html#spec-item-8)
-  - [`pos2`](https://github.com/SwuduSusuwu/SusuJava/tree/pos2) is one of what most projects call "topic branches" (or `experimental` branch), a work-in-progress which does not pass unit tests. For now, `pos2` has a few `java` exceptions, but those are limited to a few rows of code in [`FishSim.java`](https://github.com/SwuduSusuwu/SusuJava/blob/pos2/Java/FishSim.java) which have trouble with the switch from `double[]` to `Pos2`.
+  - [`pos2`](https://github.com/SwuduSusuwu/SusuJava/tree/pos2) is one of what most projects call "topic branches" (or `experimental` branch), a work-in-progress which does not pass unit tests. For now, `pos2` has a few `java` exceptions, but those are limited to a few rows of code in [`FishSim.java`](https://github.com/SwuduSusuwu/SusuJava/blob/pos2/susuwu/FishSim.java) which have trouble with the switch from `double[]` to `Pos2`.
 
 How to use the most new sources:
 - `git switch preview && ./build.sh`
