@@ -11,11 +11,13 @@ Intro to simple [*JavaFX*](https://github.com/openjdk/jfx) fish sim. Usage: `imp
 * This ([`./susuwu/FishSim.java`](./FishSim.java)) uses pseudo-*Markdown* for comments, but [`./posts/FishSim.md`](../posts/FishSim.md) is the actual [*Markdown*](https://github.github.com/gfm/) document for this.
 * [Comments with multiple rows](../README.md#java) tend to start all rows with " *", but this comment omits those, due to use of "* " for *Markdown* lists.
 * This *Java* source code is split from [`../SusuPosts/posts/Human_ancestors_are_fish.md#request-java-fish`](https://github.com/SwuduSusuwu/SusuPosts/blob/69b7b1545ab51a1c1a562c0ac838a950bb086442/posts/Human_ancestors_are_fish.md#request-java-fish).
-* The original version of this source code was [produced through *Solar-Pro-2*](https://poe.com/s/ehlOJYRJNsrGJttfJ4HK), but the goal is just to use thus as a template (for future versions to replace all with own source code).
+* The [original version of this source code](https://github.com/SwuduSusuwu/SusuJava/blob/solarPro2FishSim/Java/FishSim.java) was [produced through *Solar-Pro-2*](https://poe.com/s/ehlOJYRJNsrGJttfJ4HK), but the goal is just to use thus as a template (for future versions to replace all with own source code).
 
 ******************************************
 
-Notices: what follows is [*Solar-Pro-2*'s original version](https://poe.com/s/ehlOJYRJNsrGJttfJ4HK) (published for historical value), which `javac ./susuwu/FishSim.java` can not build as-is. Future versions will replace all of this.
+Notices:
+* Introduced `frameCount`, `lastTime`, `fps`, `fpsText` to show **FPS** (also [produced through _Solar-Pro-2_](https://poe.com/s/OSENRaU2uCb4TznzRPas)).
+  * Except those, what follows is [*Solar-Pro-2*'s original version](https://github.com/SwuduSusuwu/SusuJava/blob/solarPro2FishSim/susuwu/FishSim.java) (published for historical value).
 * Use `:%s/, 0, 0, 0/, 0, 0/` if *Java* says "error: method rotate in class Transform cannot be applied to given types; ... actual and formal argument lists differ in length"
 * You must improve `applySeparation` (such as `:%s/ACCELERATION/ACCELERATION * 2/`, to enforce more room) so you can view individual fish.
 * Use `sudo apt install openjfx openjdk-25-jdk-headless` for the packages on *Ubuntu*.
@@ -26,6 +28,7 @@ Notices: what follows is [*Solar-Pro-2*'s original version](https://poe.com/s/eh
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -33,6 +36,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +56,11 @@ public class FishSim extends Application {
 	private List<Fish> fishList = new ArrayList<>();
 	private Random random = new Random();
 	private Pane root = new Pane();
+
+	private Text fpsText = new Text("0 FPS");
+	private int frameCount = 0;
+	private long lastTime = System.nanoTime();
+	private double fps = 0;
 
 	public static void main(String[] args) {
 		launch(args);
@@ -75,11 +84,31 @@ public class FishSim extends Application {
 		primaryStage.setResizable(false);
 		primaryStage.show();
 
+		fpsText.setX(10);
+		fpsText.setY(30);
+		fpsText.setFill(Color.WHITE);
+		root.getChildren().add(fpsText);
+
 		// Start animation loop
 		new AnimationTimer() {
 			@Override
 			public void handle(long now) {
 				updateFish();
+
+				double elapsed = (now - lastTime) / 1_000_000_000.0;
+				lastTime = now;
+
+				if (elapsed >= 1.0) {
+					fps = frameCount / elapsed;
+					frameCount = 0;
+				} else {
+					frameCount++;
+				}
+
+				// Update FPS display
+				Platform.runLater(() -> {
+					fpsText.setText(String.format("%.1f FPS", fps));
+				});
 			}
 		}.start();
 	}
