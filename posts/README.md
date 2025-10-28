@@ -11,4 +11,5 @@
 # Purposes
 [`./posts/`](./) is *Markdown* which has to do with `java` sims, plus references to *Markdown* from other repos which has some use for `java` sims:
 - [`../SusuLib/posts/`](https://github.com/SwuduSusuwu/SusuPosts/tree/preview/posts/) is a work-in-progress which is supposed to mirror all posts from <https://SwuduSusuwu.SubStack.com/>, which starts with the oldest posts (so for now this does not include new posts, which <https://github.com/SwuduSusuwu/SusuLib/tree/preview/posts/> does, but `SusuLib` just includes posts which have use for `g++` tools).
+- [`../SusuLib/posts/CnsCompress.md`](https://github.com/SwuduSusuwu/SusuLib/blob/preview/posts/CnsCompress.md) discusses formulas for computers to produce textures plus meshes.
 
