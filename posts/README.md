@@ -9,6 +9,6 @@
   - [Sponsor](../README.md#sponsor)
 
 # Purposes
-[`./posts/`](./) stages posts (virtual schools) for <https://SwuduSusuwu.SubStack.com/> (which includes <https://GitHub.com/SwuduSusuwu/SusuLib/tree/preview/posts/> plus posts which are not about artificial neural tissue, antiviruses, assistants, or autonomous tools).
-- <https://github.com/SwuduSusuwu/SusuPosts.git> is a work-in-progress which is supposed to mirror all posts, which starts with the oldest posts (so for now this does not include new posts, which <https://github.com/SwuduSusuwu/SusuLib/tree/preview/posts/> does).
+[`./posts/`](./) is *Markdown* which has to do with `java` sims, plus references to *Markdown* from other repos which has some use for `java` sims:
+- [`../SusuLib/posts/`](https://github.com/SwuduSusuwu/SusuPosts/tree/preview/posts/) is a work-in-progress which is supposed to mirror all posts from <https://SwuduSusuwu.SubStack.com/>, which starts with the oldest posts (so for now this does not include new posts, which <https://github.com/SwuduSusuwu/SusuLib/tree/preview/posts/> does, but `SusuLib` just includes posts which have use for `g++` tools).
 
