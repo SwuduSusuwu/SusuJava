@@ -71,6 +71,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * +`String posOutOfBoundsStr(double[] pos, String posStr)`: produces out-of-bounds messages for {`FishSim::posBound()`, `FishSim::outOfBounds()`}.
     * +`boolean posBound(double[] pos, PosBounds posBounds)`: enforces bounds onto `pos` (`Fish::setPos(newPos)` uses this). If `PosBounds.boundless`, just tests `pos`.
     * +`void Fish::setPos(double[] newPos)`: if `Fish` not in bounds, uses `FishSim::outOfBounds()`.
+    * +`public double[] posDiff(double[] pos, double[] o)`: will reduce duplicate code for complex (such as `PosBounds.wrapAroundResolution`) distances.
   * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / GRID_SIZE`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
     * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `GRID_SIZE`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
     * @`FishSim::updateFish()`: moves bounds test into `FishSim::posBound()`, which `Fish::setPos()` uses.
@@ -111,6 +112,23 @@ import susuwu.Calculus; /* `Calculus.pow2()` */
 import susuwu.Forces; /* `class Forces implements java.lang.Cloneable` */
 
 public class FishSim extends Application {
+
+	public double[] posDiff(double[] pos, double[] o) {
+		if(PosBounds.wrapAroundResolution == posBounds) {
+			double[] posDiff = new double[pos.length];
+			for(int i = 0; pos.length > i; ++i) { /* Notice: ensure that `java` [unrolls this](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Physics_sims_which_structures_to_use.md#separate-variables-versus-dim-lists) */
+				posDiff[i] = pos[i] - o[i];
+				if(getBoundsSlash2()[i] < posDiff[i]) {
+					posDiff[i] -= getBounds()[i];
+				} else if(-getBoundsSlash2()[i] > posDiff[i]) {
+					posDiff[i] += getBounds()[i];
+				}
+			}
+			return posDiff;
+		} else {
+			return new double[] {pos[0] - o[0], pos[1] - o[1]};
+		}
+	}
 
 	public enum PosBounds { // `PosBounds` says how the sim must do `pos[dim] += dpos[dim]` (derivatives of positions).
 		invalidArgumentException, // `if(!isPosInBounds(pos)) { throw new IllegalArgumentException(); }`
