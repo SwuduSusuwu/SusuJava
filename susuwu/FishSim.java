@@ -71,8 +71,8 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * +`String posOutOfBoundsStr(double[] pos, String posStr)`: produces out-of-bounds messages for {`FishSim::posBound()`, `FishSim::outOfBounds()`}.
     * +`boolean posBound(double[] pos, PosBounds posBounds)`: enforces bounds onto `pos` (`Fish::setPos(newPos)` uses this). If `PosBounds.boundless`, just tests `pos`.
     * +`void Fish::setPos(double[] newPos)`: if `Fish` not in bounds, uses `FishSim::outOfBounds()`.
-    * +`public double[] posDiff(double[] pos, double[] o)`: will reduce duplicate code for complex (such as `PosBounds.wrapAroundResolution`) distances.
-      * +`Fish::getPosDiff(Fish o)`: will replace `Fish::apply*()`'s duplicate code.
+    * +`public double[] posDiff(double[] pos, double[] o)`: reduces duplicate code for complex (such as `PosBounds.wrapAroundResolution`) distances.
+      * +`Fish::getPosDiff(Fish o)`: replaces `Fish::apply*()`'s duplicate code.
   * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / GRID_SIZE`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
     * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `GRID_SIZE`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
     * @`FishSim::updateFish()`: moves bounds test into `FishSim::posBound()`, which `Fish::setPos()` uses.
@@ -491,14 +491,14 @@ public class FishSim extends Application {
 
 			for(Fish other : nearbyFish) {
 				if(other != this) {
-					double[] diffPos = {pos[0] - other.pos[0], pos[1] - other.pos[1]};
-					double dist = Math.hypot(diffPos[0], diffPos[1]);
+					double[] posDiff = getPosDiff(other);
+					double dist = Math.hypot(posDiff[0], posDiff[1]);
 					if(isSimilarTo(other)) {
-						if(forcesSeparation.posIfDistScaleSum(sepDpos, diffPos, dist)) {
+						if(forcesSeparation.posIfDistScaleSum(sepDpos, posDiff, dist)) {
 							count++;
 						}
 					} else {
-						if(forcesSeparationNonsimilar.posIfDistScaleSum(sepNonsimilarDpos, diffPos, dist)) {
+						if(forcesSeparationNonsimilar.posIfDistScaleSum(sepNonsimilarDpos, posDiff, dist)) {
 							countNonsimilar++;
 						}
 					}
@@ -523,7 +523,8 @@ public class FishSim extends Application {
 
 			for(Fish other : nearbyFish) {
 				if(other != this && isSimilarTo(other)) {
-					double distPow2 = Calculus.pow2(pos[0] - other.pos[0]) + Calculus.pow2(pos[1] - other.pos[1]);
+					double[] posDiff = getPosDiff(other);
+					double distPow2 = Calculus.pow2(posDiff[0]) + Calculus.pow2(posDiff[1]);
 					if(forcesAlignment.posIfDistPow2Sum(avgDpos, other.dpos, distPow2)) {
 						count++;
 					}
@@ -543,7 +544,8 @@ public class FishSim extends Application {
 
 			for(Fish other : nearbyFish) {
 				if(other != this && isSimilarTo(other)) {
-					double distPow2 = Calculus.pow2(pos[0] - other.pos[0]) + Calculus.pow2(pos[1] - other.pos[1]);
+					double[] posDiff = getPosDiff(other);
+					double distPow2 = Calculus.pow2(posDiff[0]) + Calculus.pow2(posDiff[1]);
 					if(forcesCohesion.posIfDistPow2Sum(avgPos, other.pos, distPow2)) {
 						count++;
 					}
@@ -551,9 +553,9 @@ public class FishSim extends Application {
 			}
 
 			if(count > 0) {
-				avgPos[0] = (avgPos[0] / count) - pos[0];
-				avgPos[1] = (avgPos[1] / count) - pos[1];
-				forcesCohesion.dposScaleSum(dpos, d2Pos, avgPos);
+				avgPos[0] /= count;
+				avgPos[1] /= count;
+				forcesCohesion.dposScaleSum(dpos, d2Pos, posDiff(avgPos, pos));
 			}
 		}
 
