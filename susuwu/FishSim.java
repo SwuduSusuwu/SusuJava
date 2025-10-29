@@ -174,6 +174,7 @@ public class FishSim extends Application {
 		assert 0 < newResolution[1];
 		resolution = newResolution;
 		resolutionf[0] = resolution[0]; resolutionf[1] = resolution[1];
+		resolutionfSlash2[0] = resolution[0] / 2; resolutionfSlash2[1] = resolution[1] / 2;
 		resVolume = resolution[0] * resolution[1];
 		bounds[0] = resolution[0];
 		bounds[1] = resolution[1];
@@ -186,6 +187,7 @@ public class FishSim extends Application {
 	} //TODO: lock `updateFish()` plus `renderFish()` for this
 	private static int[] resolution = {1280, 720};
 	private static double[] resolutionf = {resolution[0], resolution[1]};
+	private static double[] resolutionfSlash2 = {resolution[0] / 2, resolution[1] / 2}; // Improves execution of inner loops which use this
 	private static int resVolume = resolution[0] * resolution[1];
 	private static double[] bounds = {resolution[0] * 2, resolution[1] * 2}; // for simple sims, use `bounds = resolutionf;`
 	private static double boundsVolume = bounds[0] * bounds[1];
