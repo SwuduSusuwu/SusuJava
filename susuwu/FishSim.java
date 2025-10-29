@@ -82,6 +82,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * +`boolean FishSim::setResolution(newResolution)`: this sets all variables (plus uses all functions) required for `class FishSim` to switch to `newResolution`.
   * +`FishSim::getBounds()`: to replace `FishSim::resolution` for physics uses. Introduced `bounds` for this (to allow out-of-view positions). Notice: for simple sims, this can `return resolutionf;`.
     * `bounds = {resolution[0] * 2, resolution[1] * 2};` `BOUNDS_FACTOR = (PosBounds.wrapAroundResolution == posBounds ? 0 : 2);`: if `wrapAroundResolution`, the view is close to a natural ocean.
+    * +`FishSim::getBoundsSlash2()`: caches `resolutionf[dim] / 2` for physics uses. Future versions will use `bounds[dim] / 2` for this (to allow out-of-view positions).
 
 ``` end of *Markdown*
 */
@@ -121,6 +122,10 @@ public class FishSim extends Application {
 	public static double[] getBounds() {
 		assert null != bounds;
 		return bounds; // Notice: for simple sims, can `return resolutionf`.
+	}
+	public static double[] getBoundsSlash2() { // Caches `resolutionf[dim] / 2` for physics uses (improves inner loops).
+		assert null != resolutionfSlash2;
+		return resolutionfSlash2; // TODO: use `boundsSlash2` for this (to allow out-of-view positions).
 	}
 
 	public boolean isPosInBounds(double[] pos) throws IllegalArgumentException {
