@@ -220,10 +220,11 @@ public class FishSim extends Application {
 		resolutionf[0] = resolution[0]; resolutionf[1] = resolution[1];
 		resolutionfSlash2[0] = resolution[0] / 2; resolutionfSlash2[1] = resolution[1] / 2;
 		resVolume = resolution[0] * resolution[1];
-		bounds[0] = resolution[0];
-		bounds[1] = resolution[1];
-		boundsSlash2[0] = bounds[0] / 2; boundsSlash2[1] = bounds[1] / 2;
-		boundsVolume = bounds[0] * bounds[1];
+		getBounds()[0] = resolution[0];
+		getBounds()[1] = resolution[1];
+		getBoundsSlash2()[0] = getBounds()[0] / 2;
+		getBoundsSlash2()[1] = getBounds()[1] / 2;
+		boundsVolume = getBounds()[0] * getBounds()[1];
 		// canvas = new Canvas(resolution[0], resolution[1]); // TODO: replace with `canvas.setWidth(resolution[0]); canvas.setHeight(resolution[1]);`?
 		// gc = canvas.getGraphicsContext2D();
 		// scene = new Scene(root, resolution[0], resolution[1], Color.LIGHTBLUE); // replace with `scene.widthProperty().bind(primaryStage.widthProperty());`?
@@ -237,8 +238,8 @@ public class FishSim extends Application {
 	private static double[] resolutionfSlash2 = {resolution[0] / 2, resolution[1] / 2}; // Improves execution of inner loops which use this
 	private static int resVolume = resolution[0] * resolution[1];
 	private static double[] bounds = {resolution[0] * 2, resolution[1] * 2}; // for simple sims, use `bounds = resolutionf;`
-	private static double[] boundsSlash2 = {bounds[0] / 2, bounds[1] / 2}; // Improves execution of inner loops which use this
-	private static double boundsVolume = bounds[0] * bounds[1];
+	private static double[] boundsSlash2 = {getBounds()[0] / 2, getBounds()[1] / 2}; // Improves execution of inner loops which use this
+	private static double boundsVolume = getBounds()[0] * getBounds()[1];
 	private static double fishVolume = 200; // Uses resolution of `Fish::render()`.
 	private static double fishLengthsSep = 62; // Average `Fish`-lengths distance  from `Fish` to `Fish`.
 	private static double fishPerVolume = 1 / fishVolume / fishLengthsSep; // `Fish` per volume (for 2D, volume is resolution).
