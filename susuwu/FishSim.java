@@ -85,7 +85,10 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
 ``` end of *Markdown*
 */
 
-import javafx.animation.AnimationTimer;
+import javafx.animation.Animation;
+//import javafx.animation.AnimationTimer;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -95,6 +98,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -190,6 +194,7 @@ public class FishSim extends Application {
 	private static int FISH_COUNT = (int)(boundsVolume * fishPerVolume);
 	private static int GRID_SIZE = 100; // Notice: set this to `Colllections.max({forces*.distance})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
 	private static int UPDATE_INTERVAL = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
+	public static double monitorRefreshHertz = 60.0; // The `fps` to wish for // Notice: since this limits `fps` to `monitorRefreshHertz`, this prevents benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`). Benchmarks can still use `FpsTextMode.msSpec` (or `FpsTextMode.msFish`).
 
 	public enum FpsTextMode { // `FpsTextMode` says which resources `fpsText` will show.
 		none      (0     ), // `fpsText = "";`
@@ -254,10 +259,17 @@ public class FishSim extends Application {
 		fpsText.setFill(Color.WHITE);
 
 		// Start animation loop
+/*
 		new AnimationTimer() {
 			@Override
 			public void handle(long now) { refreshLoop(now); }
-		}.start();
+		}.start(); // Notice: replace `Timeline` with this for benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`).
+*/
+		Timeline timeline = new Timeline(
+			new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(System.nanoTime()); })
+		); // Notice: since this limits `fps` to `monitorRefreshHertz`, this prevents benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`). Benchmarks can still use `FpsTextMode.msSpec` (or `FpsTextMode.msFish`).
+		timeline.setCycleCount(Animation.INDEFINITE);
+		timeline.play();
 	}
 
 	private void refreshLoop(long now) {
