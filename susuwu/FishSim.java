@@ -11,17 +11,17 @@ Intro to simple [*JavaFX*](https://github.com/openjdk/jfx) fish sim. Usage: `imp
 * This ([`./susuwu/FishSim.java`](./FishSim.java)) uses pseudo-*Markdown* for comments, but [`./posts/FishSim.md`](../posts/FishSim.md) is the actual [*Markdown*](https://github.github.com/gfm/) document for this.
 * [Comments with multiple rows](../README.md#java) tend to start all rows with " *", but this comment omits those, due to use of "* " for *Markdown* lists.
 * This *Java* source code is split from [`../SusuPosts/posts/Human_ancestors_are_fish.md#request-java-fish`](https://github.com/SwuduSusuwu/SusuPosts/blob/69b7b1545ab51a1c1a562c0ac838a950bb086442/posts/Human_ancestors_are_fish.md#request-java-fish).
-* The [original version of this source code](https://github.com/SwuduSusuwu/SusuJava/blob/solarPro2FishSim/Java/FishSim.java) was [produced through *Solar-Pro-2*](https://poe.com/s/ehlOJYRJNsrGJttfJ4HK), but the goal is just to use thus as a template (for future versions to replace all with own source code).
+* The [original version of this source code](https://github.com/SwuduSusuwu/SusuJava/blob/solarPro2FishSim/susuwu/FishSim.java) was [produced through *Solar-Pro-2*](https://poe.com/s/ehlOJYRJNsrGJttfJ4HK), but the goal is just to use thus as a template (for future versions to replace all with own source code).
 
 ******************************************
 
-Notices:
-* Introduced `frameCount`, `lastTime`, `fps`, `fpsText` to show **FPS** (also [produced through _Solar-Pro-2_](https://poe.com/s/OSENRaU2uCb4TznzRPas)).
-  * Except those, what follows is [*Solar-Pro-2*'s original version](https://github.com/SwuduSusuwu/SusuJava/blob/solarPro2FishSim/susuwu/FishSim.java) (published for historical value).
-* Use `:%s/, 0, 0, 0/, 0, 0/` if *Java* says "error: method rotate in class Transform cannot be applied to given types; ... actual and formal argument lists differ in length"
-* You must improve `applySeparation` (such as `:%s/ACCELERATION/ACCELERATION * 2/`, to enforce more room) so you can view individual fish.
-* Use `sudo apt install openjfx openjdk-25-jdk-headless` for the packages on *Ubuntu*.
-  * use `PATH_TO_FX=/usr/share/openjfx/lib/` to build on *Ubuntu*.
+Prefixes (used for variables / functions / classes): `` +`Class` `` introduces `Class`, `` -`Class` `` removes `Class`, `` @`Class` `` changes (neutral or improves) `Class` (as [used for `git commit` messages](../README.md#git)). `:%s/from/to/` shows `vim` regular expressions.
+**Notice**: this `git branch` improves [*Solar-Pro-2*'s original source code](https://github.com/SwuduSusuwu/SusuJava/blob/solarPro2FishSim/susuwu/FishSim.java) as this list (plus [*GitHub*'s `/compare/` tool shows](https://github.com/SwuduSusuwu/SusuJava/compare/solarPro2FishSim..susuFishSim#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4)) shows:
+* `:%s/, 0, 0, 0/, 0, 0/`: fixes "error: method rotate in class Transform cannot be applied to given types; ... actual and formal argument lists differ in length"
+* [+`frameCount`, +`lastTime`, +`fps`, +`fpsText`](https://github.com/SwuduSusuwu/SusuJava/commit/50319ff075fc3a31f761c8fdc1fcce46a2471218) to show **FPS** ([produced through _Solar-Pro-2_](https://poe.com/s/OSENRaU2uCb4TznzRPas)).
+  * @`AnimationTimer::handle()`: show true **FPS**, plus do not to redraw `fpsText` unless `fps` changes.
+* @`Fish::applySeparation()`: reuse values.
+* @`Fish::applyWallAvoidance()`: reuse values, plus replace [magic constants](https://stackoverflow.com/questions/43950998/what-are-symbolic-constants-and-magic-constants) with `BOUNDS_DISTANCE`.
 
 ``` end of *Markdown*
 */
@@ -50,6 +50,7 @@ public class FishSim extends Application {
 	private static final double SEPARATION_DISTANCE = 50;
 	private static final double ALIGNMENT_DISTANCE = 100;
 	private static final double COHESION_DISTANCE = 100;
+	private static final double BOUNDS_DISTANCE = 20;
 	private static final double MAX_SPEED = 3.0;
 	private static final double ACCELERATION = 0.1;
 
@@ -96,19 +97,16 @@ public class FishSim extends Application {
 				updateFish();
 
 				double elapsed = (now - lastTime) / 1_000_000_000.0;
-				lastTime = now;
-
 				if (elapsed >= 1.0) {
+					lastTime = now;
 					fps = frameCount / elapsed;
+					Platform.runLater(() -> {
+						fpsText.setText(String.format("%.1f FPS", fps));
+					});
 					frameCount = 0;
 				} else {
 					frameCount++;
 				}
-
-				// Update FPS display
-				Platform.runLater(() -> {
-					fpsText.setText(String.format("%.1f FPS", fps));
-				});
 			}
 		}.start();
 	}
@@ -127,7 +125,7 @@ public class FishSim extends Application {
 	}
 
 	// Fish class representing each fish
-	private class Fish {
+	public class Fish {
 		private double x, y;        // Position
 		private double dx, dy;      // Velocity
 		private double angle;       // Direction fish is facing
@@ -153,7 +151,7 @@ public class FishSim extends Application {
 			fish.setFill(Color.ORANGERED);
 			fish.setTranslateX((int) x);
 			fish.setTranslateY((int) y);
-			fish.getTransforms().add(javafx.scene.transform.Rotate.rotate(Math.toDegrees(angle) + 90, 0, 0, 0));
+			fish.getTransforms().add(javafx.scene.transform.Rotate.rotate(Math.toDegrees(angle) + 90, 0, 0));
 			return fish;
 		}
 
@@ -174,7 +172,7 @@ public class FishSim extends Application {
 			shape.setTranslateY(y);
 			angle = Math.atan2(dy, dx);
 			shape.getTransforms().clear();
-			shape.getTransforms().add(javafx.scene.transform.Rotate.rotate(Math.toDegrees(angle) + 90, 0, 0, 0));
+			shape.getTransforms().add(javafx.scene.transform.Rotate.rotate(Math.toDegrees(angle) + 90, 0, 0));
 		}
 
 		public void applySeparation() {
@@ -183,10 +181,10 @@ public class FishSim extends Application {
 
 			for (Fish other : fishList) {
 				if (other != this) {
-					double dist = Math.hypot(x - other.x, y - other.y);
+					double diffX = x - other.x;
+					double diffY = y - other.y;
+					double dist = Math.hypot(diffX, diffY);
 					if (dist < SEPARATION_DISTANCE) {
-						double diffX = x - other.x;
-						double diffY = y - other.y;
 						sepX += diffX / dist;
 						sepY += diffY / dist;
 						count++;
@@ -276,24 +274,24 @@ public class FishSim extends Application {
 			double avoidanceX = 0, avoidanceY = 0;
 
 			// Left wall
-			if (x < 20) {
-				avoidanceX += (20 - x) / 20 * ACCELERATION;
+			if (x < BOUNDS_DISTANCE) {
+				avoidanceX += (BOUNDS_DISTANCE - x);
 			}
 			// Right wall
-			if (x > width - 20) {
-				avoidanceX -= (x - (width - 20)) / 20 * ACCELERATION;
+			if (x > width - BOUNDS_DISTANCE) {
+				avoidanceX -= (x - (width - BOUNDS_DISTANCE));
 			}
 			// Top wall
-			if (y < 20) {
-				avoidanceY += (20 - y) / 20 * ACCELERATION;
+			if (y < BOUNDS_DISTANCE) {
+				avoidanceY += (BOUNDS_DISTANCE - y);
 			}
 			// Bottom wall
-			if (y > height - 20) {
-				avoidanceY -= (y - (height - 20)) / 20 * ACCELERATION;
+			if (y > height - BOUNDS_DISTANCE) {
+				avoidanceY -= (y - (height - BOUNDS_DISTANCE));
 			}
 
-			dx += avoidanceX;
-			dy += avoidanceY;
+			dx += avoidanceX / BOUNDS_DISTANCE * ACCELERATION;
+			dy += avoidanceY / BOUNDS_DISTANCE * ACCELERATION;
 		}
 
 		public Polygon getShape() {
