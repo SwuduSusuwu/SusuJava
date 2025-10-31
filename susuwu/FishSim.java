@@ -72,7 +72,9 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * +`boolean posBound(double[] pos, PosBounds posBounds)`: enforces bounds onto `pos` (`Fish::setPos(newPos)` uses this). If `PosBounds.boundless`, just tests `pos`.
     * +`void Fish::setPos(double[] newPos)`: if `Fish` not in bounds, uses `FishSim::outOfBounds()`.
     * +`public double[] posDiff(double[] pos, double[] o)`: reduces duplicate code for complex (such as `PosBounds.wrapAroundResolution`) distances.
-      * +`Fish::getPosDiff(Fish o)`: replaces `Fish::apply*()`'s duplicate code.
+      * +`Fish::getPosDiff(Fish o)`: uses `FishSim::posDiff` so distances follow `PosBounds.wrapAroundResolution`.
+        * @`Fish::apply*()`: use `Fish::getPosDiff(o)`.
+        * @`Fish::applyFlockingRules()`: `gridPos` now uses `Fish::getPosDiff(o)`.
   * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / GRID_SIZE`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
     * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `GRID_SIZE`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
     * @`FishSim::updateFish()`: moves bounds test into `FishSim::posBound()`, which `Fish::setPos()` uses.
@@ -428,7 +430,7 @@ public class FishSim extends Application {
 		private static double dposMax = 3.0;   // Motion lim (limit of derivative of position)
 		private static double d2Pos = 0.1;     // Motion<sup>2</sup> (derivative #2 of position)
 		private static double isSimilarTolerance = 0.2;
-		public static boolean applyWallAvoidanceTru = (PosBounds.wrapAroundResolution == posBounds);
+		public static boolean applyWallAvoidanceTru = (PosBounds.wrapAroundResolution != posBounds);
 		public static boolean redFishAreAggressiveOrPoisonous = true; // changes how `isSimilarTo(Fish other)` uses `color.getRed()`
 
 		private double[] pos;        // Position
@@ -472,16 +474,26 @@ public class FishSim extends Application {
 			List<Fish> nearbyFish = new ArrayList<>();
 
 			// Check neighboring grid cells
-			for(int i = Math.max(0, gridPos[0] - 1); i <= Math.min(grid.length - 1, gridPos[0] + 1); i++) {
-				for(int j = Math.max(0, gridPos[1] - 1); j <= Math.min(grid[0].length - 1, gridPos[1] + 1); j++) {
-					nearbyFish.addAll(grid[i][j]);
+			if(PosBounds.wrapAroundResolution == posBounds) {
+				for(int i = gridPos[0] - 1; i <= gridPos[0] + 1; i++) {
+					for(int j = gridPos[1] - 1; j <= gridPos[1] + 1; j++) {
+						nearbyFish.addAll(grid[(i + grid.length) % grid.length][(j + grid[0].length) % grid[0].length]);
+					} /* TODO: move expensive `%`s into outer loop somehow. With `1000 == fishList.size() && 100 == monitorRefreshHertz`, 2 `%`s in inner loop executes 200,000 `%`/s. The most simple solution is to use outer branches to choose from loops which hardcode this, but thus duplicates codeflow. Does `java` do this for you if the loop uses most of the CPU? */
+				}
+			} else {
+				for(int i = Math.max(0, gridPos[0] - 1); i <= Math.min(grid.length - 1, gridPos[0] + 1); i++) {
+					for(int j = Math.max(0, gridPos[1] - 1); j <= Math.min(grid[0].length - 1, gridPos[1] + 1); j++) {
+						nearbyFish.addAll(grid[i][j]);
+					} /* TODO: move expensive `Math.{min,max}`s into outer loop somehow. With `1000 == fishList.size() && 100 == monitorRefreshHertz`, inner loop executes 200,000 `Math.{min,max}`/s */
 				}
 			}
 
 			applySeparation(nearbyFish);
 			applyAlignment(nearbyFish);
 			applyCohesion(nearbyFish);
-			applyWallAvoidance(getBounds());
+			if(applyWallAvoidanceTru) {
+				applyWallAvoidance(getBounds());
+			}
 		}
 
 		private void applySeparation(List<Fish> nearbyFish) {
@@ -560,7 +572,6 @@ public class FishSim extends Application {
 		}
 
 		private void applyWallAvoidance(double[] res) {
-			if(!applyWallAvoidanceTru) { return; }
 			double[] avoidancePos = {0, 0};
 
 			if(pos[0] < forcesBounds.distance) {
