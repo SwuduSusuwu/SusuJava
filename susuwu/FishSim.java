@@ -397,7 +397,7 @@ public class FishSim extends Application {
 		public static Forces forcesCohesion = new Forces(100.0, 1.0);
 		public static Forces forcesBounds = new Forces(100.0, 2.0);
 		private static double MAX_SPEED = 3.0;
-		private static double ACCELERATION = 0.1;
+		private static double d2Pos = 0.1;     // Motion<sup>2</sup> (derivative #2 of position)
 		private static double isSimilarTolerance = 0.2;
 		public static boolean applyWallAvoidanceTru = (PosBounds.wrapAroundResolution == posBounds);
 		public static boolean redFishAreAggressiveOrPoisonous = true; // changes how `isSimilarTo(Fish other)` uses `color.getRed()`
@@ -479,12 +479,12 @@ public class FishSim extends Application {
 			if(count > 0) {
 				sepDpos[0] /= count;
 				sepDpos[1] /= count;
-				forcesSeparation.dposScaleSum(dpos, ACCELERATION, sepDpos);
+				forcesSeparation.dposScaleSum(dpos, d2Pos, sepDpos);
 			}
 			if(countNonsimilar > 0) {
 				sepNonsimilarDpos[0] /= countNonsimilar;
 				sepNonsimilarDpos[1] /= countNonsimilar;
-				forcesSeparationNonsimilar.dposScaleSum(dpos, ACCELERATION, sepNonsimilarDpos);
+				forcesSeparationNonsimilar.dposScaleSum(dpos, d2Pos, sepNonsimilarDpos);
 			}
 		}
 
@@ -506,7 +506,7 @@ public class FishSim extends Application {
 			if(count > 0) {
 				avgDpos[0] /= count;
 				avgDpos[1] /= count;
-				forcesAlignment.dposScaleSum(dpos, ACCELERATION, avgDpos);
+				forcesAlignment.dposScaleSum(dpos, d2Pos, avgDpos);
 			}
 		}
 
@@ -528,7 +528,7 @@ public class FishSim extends Application {
 			if(count > 0) {
 				avgPos[0] = (avgPos[0] / count) - pos[0];
 				avgPos[1] = (avgPos[1] / count) - pos[1];
-				forcesCohesion.dposScaleSum(dpos, ACCELERATION, avgPos);
+				forcesCohesion.dposScaleSum(dpos, d2Pos, avgPos);
 			}
 		}
 
@@ -549,8 +549,8 @@ public class FishSim extends Application {
 				avoidancePos[1] -= (pos[1] - (res[1] - forcesBounds.distance));
 			}
 
-			dpos[0] += avoidancePos[0] / forcesBounds.distance * ACCELERATION * forcesBounds.factor;
-			dpos[1] += avoidancePos[1] / forcesBounds.distance * ACCELERATION * forcesBounds.factor;
+			dpos[0] += avoidancePos[0] / forcesBounds.distance * d2Pos * forcesBounds.factor;
+			dpos[1] += avoidancePos[1] / forcesBounds.distance * d2Pos * forcesBounds.factor;
 		}
 
 		public void update() {
