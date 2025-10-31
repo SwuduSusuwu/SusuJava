@@ -238,7 +238,7 @@ public class FishSim extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		// Initialize fish
-		for (int i = 0; i < FISH_COUNT; i++) {
+		for(int i = 0; i < FISH_COUNT; i++) {
 			double[] pos = {random.nextDouble() * getBounds()[0], random.nextDouble() * getBounds()[1]};
 			double[] dpos = {(random.nextDouble() * 2 - 1) * Fish.MAX_SPEED, (random.nextDouble() * 2 - 1) * Fish.MAX_SPEED};
 			fishList.add(new Fish(pos, dpos, Color.color(random.nextDouble(), random.nextDouble(), random.nextDouble())));
@@ -274,14 +274,14 @@ public class FishSim extends Application {
 
 	private void refreshLoop(long now) {
 		frameCounter++;
-		if (frameCounter % UPDATE_INTERVAL == 0) {
+		if(frameCounter % UPDATE_INTERVAL == 0) {
 			executor.submit(() -> updateFish());
 		}
 
 		renderFish();
 
 		double elapsed = (now - lastTime) / 1_000_000_000.0;
-		if (elapsed >= 1.0) {
+		if(elapsed >= 1.0) {
 			lastTime = now;
 			fps = frameCount / elapsed;
 			renderMs = renderNs / frameCount / 1_000_000.0;
@@ -306,14 +306,14 @@ public class FishSim extends Application {
 
 		// Use spatial partitioning (simple grid system)
 		List<Fish>[][] grid = new ArrayList[gridSize[0]][gridSize[1]];
-		for (int i = 0; i < grid.length; i++) {
-			for (int j = 0; j < grid[i].length; j++) {
+		for(int i = 0; i < grid.length; i++) {
+			for(int j = 0; j < grid[i].length; j++) {
 				grid[i][j] = new ArrayList<>();
 			}
 		}
 
 		// Assign fish to grid cells
-		for (Fish fish : fishList) {
+		for(Fish fish : fishList) {
 			if(fish.isInBounds) { // TODO: allow `PosBounds.boundless == posBounds` (but more `grid`s will use more **CPU**).
 				int[] gridPos = {(int) (fish.pos[0] / GRID_SIZE), (int) (fish.pos[1] / GRID_SIZE)};
 				grid[gridPos[0]][gridPos[1]].add(fish); // if `gridPos` is not in bounds, this will `throw new IndexOutOfBoundsException()`. But `Fish.setPos()` uses `FishSim::posBound()` which uses `FishSim::isPosInBounds()`, which ensures the `.pos` bounds to `resolution`.
@@ -321,7 +321,7 @@ public class FishSim extends Application {
 		}
 
 		// Update each fish
-		for (Fish fish : fishList) {
+		for(Fish fish : fishList) {
 			fish.applyFlockingRules(fishList, grid);
 			fish.update();
 		}
@@ -439,8 +439,8 @@ public class FishSim extends Application {
 			List<Fish> nearbyFish = new ArrayList<>();
 
 			// Check neighboring grid cells
-			for (int i = Math.max(0, gridPos[0] - 1); i <= Math.min(grid.length - 1, gridPos[0] + 1); i++) {
-				for (int j = Math.max(0, gridPos[1] - 1); j <= Math.min(grid[0].length - 1, gridPos[1] + 1); j++) {
+			for(int i = Math.max(0, gridPos[0] - 1); i <= Math.min(grid.length - 1, gridPos[0] + 1); i++) {
+				for(int j = Math.max(0, gridPos[1] - 1); j <= Math.min(grid[0].length - 1, gridPos[1] + 1); j++) {
 					nearbyFish.addAll(grid[i][j]);
 				}
 			}
@@ -456,18 +456,18 @@ public class FishSim extends Application {
 			double[] sepNonsimilarDpos = {0, 0};
 			int count = 0, countNonsimilar = 0;
 
-			for (Fish other : nearbyFish) {
-				if (other != this) {
+			for(Fish other : nearbyFish) {
+				if(other != this) {
 					double[] diffPos = {pos[0] - other.pos[0], pos[1] - other.pos[1]};
 					double dist = Math.hypot(diffPos[0], diffPos[1]);
-					if (isSimilarTo(other)) {
-						if (dist < forcesSeparation.distance) {
+					if(isSimilarTo(other)) {
+						if(dist < forcesSeparation.distance) {
 							sepDpos[0] += diffPos[0] / dist;
 							sepDpos[1] += diffPos[1] / dist;
 							count++;
 						}
 					} else {
-						if (dist < forcesSeparationNonsimilar.distance) {
+						if(dist < forcesSeparationNonsimilar.distance) {
 							sepNonsimilarDpos[0] += diffPos[0] / dist;
 							sepNonsimilarDpos[1] += diffPos[1] / dist;
 							countNonsimilar++;
@@ -476,12 +476,12 @@ public class FishSim extends Application {
 				}
 			}
 
-			if (count > 0) {
+			if(count > 0) {
 				sepDpos[0] /= count;
 				sepDpos[1] /= count;
 				forcesSeparation.dposScaleSum(dpos, ACCELERATION, sepDpos);
 			}
-			if (countNonsimilar > 0) {
+			if(countNonsimilar > 0) {
 				sepNonsimilarDpos[0] /= countNonsimilar;
 				sepNonsimilarDpos[1] /= countNonsimilar;
 				forcesSeparationNonsimilar.dposScaleSum(dpos, ACCELERATION, sepNonsimilarDpos);
@@ -492,10 +492,10 @@ public class FishSim extends Application {
 			double[] avgDpos = {0, 0};
 			int count = 0;
 
-			for (Fish other : nearbyFish) {
-				if (other != this && isSimilarTo(other)) {
+			for(Fish other : nearbyFish) {
+				if(other != this && isSimilarTo(other)) {
 					double dist = Math.hypot(pos[0] - other.pos[0], pos[1] - other.pos[1]);
-					if (dist < forcesAlignment.distance) {
+					if(dist < forcesAlignment.distance) {
 						avgDpos[0] += other.dpos[0];
 						avgDpos[1] += other.dpos[1];
 						count++;
@@ -503,7 +503,7 @@ public class FishSim extends Application {
 				}
 			}
 
-			if (count > 0) {
+			if(count > 0) {
 				avgDpos[0] /= count;
 				avgDpos[1] /= count;
 				forcesAlignment.dposScaleSum(dpos, ACCELERATION, avgDpos);
@@ -514,10 +514,10 @@ public class FishSim extends Application {
 			double[] avgPos = {0, 0};
 			int count = 0;
 
-			for (Fish other : nearbyFish) {
-				if (other != this && isSimilarTo(other)) {
+			for(Fish other : nearbyFish) {
+				if(other != this && isSimilarTo(other)) {
 					double dist = Math.hypot(pos[0] - other.pos[0], pos[1] - other.pos[1]);
-					if (dist < forcesCohesion.distance) {
+					if(dist < forcesCohesion.distance) {
 						avgPos[0] += other.pos[0];
 						avgPos[1] += other.pos[1];
 						count++;
@@ -525,7 +525,7 @@ public class FishSim extends Application {
 				}
 			}
 
-			if (count > 0) {
+			if(count > 0) {
 				avgPos[0] = (avgPos[0] / count) - pos[0];
 				avgPos[1] = (avgPos[1] / count) - pos[1];
 				forcesCohesion.dposScaleSum(dpos, ACCELERATION, avgPos);
@@ -536,16 +536,16 @@ public class FishSim extends Application {
 			if(!applyWallAvoidanceTru) { return; }
 			double[] avoidancePos = {0, 0};
 
-			if (pos[0] < forcesBounds.distance) {
+			if(pos[0] < forcesBounds.distance) {
 				avoidancePos[0] += (forcesBounds.distance - pos[0]);
 			}
-			if (pos[0] > res[0] - forcesBounds.distance) {
+			if(pos[0] > res[0] - forcesBounds.distance) {
 				avoidancePos[0] -= (pos[0] - (res[0] - forcesBounds.distance));
 			}
-			if (pos[1] < forcesBounds.distance) {
+			if(pos[1] < forcesBounds.distance) {
 				avoidancePos[1] += (forcesBounds.distance - pos[1]);
 			}
-			if (pos[1] > res[1] - forcesBounds.distance) {
+			if(pos[1] > res[1] - forcesBounds.distance) {
 				avoidancePos[1] -= (pos[1] - (res[1] - forcesBounds.distance));
 			}
 
@@ -556,7 +556,7 @@ public class FishSim extends Application {
 		public void update() {
 			// Limit speed
 			double speed = Math.sqrt(dpos[0] * dpos[0] + dpos[1] * dpos[1]);
-			if (speed > MAX_SPEED) {
+			if(speed > MAX_SPEED) {
 				dpos[0] = (dpos[0] / speed) * MAX_SPEED;
 				dpos[1] = (dpos[1] / speed) * MAX_SPEED;
 			}
