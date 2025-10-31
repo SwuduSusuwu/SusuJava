@@ -537,7 +537,7 @@ public class FishSim extends Application {
 			return posDiff(pos, o.pos);
 		}
 
-		public void setPos(double[] newPos) { // If `PosBounds.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.getBounds()[dim] > pos[dim]` is established.
+		public synchronized void setPos(double[] newPos) { // If `PosBounds.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.getBounds()[dim] > pos[dim]` is established.
 			isInBounds = posBound(newPos, posBounds);
 			isVisible = (0 <= newPos[0] && resolution[0] > newPos[0] && 0 <= newPos[1]  && resolution[1] > newPos[1]);
 			if((!isInBounds) && PosBounds.boundless != posBounds) {
@@ -546,7 +546,7 @@ public class FishSim extends Application {
 			pos = newPos;
 		}
 
-		public void applyFlockingRules(List<Fish> allFish, List<Fish>[][] grid) {
+		public synchronized void applyFlockingRules(List<Fish> allFish, List<Fish>[][] grid) {
 			int[] gridPos = {(int) (pos[0] / gridResolution), (int) (pos[1] / gridResolution)};
 			List<Fish> nearbyFish = new ArrayList<>();
 
@@ -573,7 +573,7 @@ public class FishSim extends Application {
 			}
 		}
 
-		private void applySeparation(List<Fish> nearbyFish) {
+		private synchronized void applySeparation(List<Fish> nearbyFish) {
 			double[] sepDpos = {0, 0};
 			double[] sepNonsimilarDpos = {0, 0};
 			int count = 0, countNonsimilar = 0;
@@ -606,7 +606,7 @@ public class FishSim extends Application {
 			}
 		}
 
-		private void applyAlignment(List<Fish> nearbyFish) {
+		private synchronized void applyAlignment(List<Fish> nearbyFish) {
 			double[] avgDpos = {0, 0};
 			int count = 0;
 
@@ -627,7 +627,7 @@ public class FishSim extends Application {
 			}
 		}
 
-		private void applyCohesion(List<Fish> nearbyFish) {
+		private synchronized void applyCohesion(List<Fish> nearbyFish) {
 			double[] avgPos = {0, 0};
 			int count = 0;
 
@@ -648,7 +648,7 @@ public class FishSim extends Application {
 			}
 		}
 
-		private void applyWallAvoidance(double[] res) {
+		private synchronized void applyWallAvoidance(double[] res) {
 			double[] avoidancePos = {0, 0};
 
 			if(pos[0] < forcesBounds.distance) {
@@ -668,7 +668,7 @@ public class FishSim extends Application {
 			dpos[1] += avoidancePos[1] / forcesBounds.distance * d2Pos * forcesBounds.factor;
 		}
 
-		public void update() {
+		public synchronized void update() {
 			// Limit speed
 			double speed = Math.sqrt(dpos[0] * dpos[0] + dpos[1] * dpos[1]);
 			if(speed > dposMax) {
@@ -680,7 +680,7 @@ public class FishSim extends Application {
 			setPos(new double[] {pos[0] + dpos[0], pos[1] + dpos[1]});
 		}
 
-		public void render(GraphicsContext gc) {
+		public synchronized void render(GraphicsContext gc) {
 			gc.save();
 			gc.translate(pos[0], pos[1]);
 			gc.rotate(Math.toDegrees(Math.atan2(dpos[1], dpos[0])) + 90);
