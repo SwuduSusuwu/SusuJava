@@ -18,6 +18,7 @@
   - [Sponsor](#sponsor)
     - [Escrow](#escrow)
     - [Affiliates](#affiliates)
+  - [Contributors / sponsors list](#contributors--sponsors)
 
 # Purposes
 [`./.ssh/`](./.ssh/) is to [use signatures / certificates](#signatures--certificates).
@@ -117,6 +118,7 @@ Do atomic commits: if swapping the new commit with a previous commit (such as th
 ## Sponsor
 To sponsor this (which allows us to produce more source codes), you can use crypto (such as [**Bitcoin**](https://wikipedia.org/wiki/Bitcoin)) to [produce a one-time-use address](https://poe.com/s/IPhIMyuMY6SnYM0yqEJl) (which you deposit funds into), and send the address&private-key to [a contact which `./SECURITY.md` lists](./SECURITY.md#sensitive-issues).
 - Rather than us publish a send-to address (for a particular protocol), this allows us to accept all forms of crypto.
+- If asked, will include sponsorship info into the [contributors / sponsors list](#contributors--sponsors).
 - If amount is more than $100 and you don't trust the contact platforms, use [`./.ssh/id_ed25519.pub`](./.ssh/id_ed25519.pub) to [secure those](https://superuser.com/questions/576506/how-to-use-ssh-rsa-public-key-to-encrypt-a-text/1850928#1850928).
 - If crypto is not suitable, you can also send gift card codes or [virtual cards](https://www.forbes.com/advisor/credit-cards/virtual-credit-card-numbers-guide/) to use.
 ### Escrow
@@ -126,4 +128,8 @@ If you want proof that your crypto/cash will go to produce specific systems, use
   - For example; "The **source code** (through `./build.sh`), must produce a **system** (a **shared object** or **executable**) which uses just half of the training data to [setup its neural network, which must produce virtual synapses](https://wikipedia.org/wiki/Backpropagation) which the **system** [uses to produce **accurate** results](https://wikipedia.org/wiki/Residual_neural_network#Forward_propagation) on the other half, where **accurate** (for [classifiers](https://wikipedia.org/wiki/Learning_classifier_system)) is less than 2% false negatives and less than 2% false positives, and **accurate** (for [generators](https://wikipedia.org/wiki/Generative_artificial_intelligence)) is [divergence](https://wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence) of less than 2%." is a contract which an **escrow** can use for [issue #6](https://github.com/SwuduSusuwu/SusuLib/issues/6).
 ### Affiliates
 You can use [_Capital 1_'s affiliate program](https://i.capitalone.com/JgR02Y4pE) to allow us to publish more for you.
+
+## Contributors / sponsors
+This section will show contributors (of code, or sponsors) who request inclusion into the contributors / sponsors list.
+* Since published, `SusuJava` has no follows, no sponsors. The producers of [tools used](#tools-used) are indirect contributors.
 
