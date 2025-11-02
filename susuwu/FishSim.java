@@ -98,8 +98,8 @@ public class FishSim extends Application {
 			}
 			break;
 		case wrapAroundResolution:
-			pos[0] = (pos[0] + getBounds()[0]) % getBounds()[0];
-			pos[1] = (pos[1] + getBounds()[1]) % getBounds()[1];
+			pos[0] = ((pos[0] % getBounds()[0]) + getBounds()[0]) % getBounds()[0];
+			pos[1] = ((pos[1] % getBounds()[1]) + getBounds()[1]) % getBounds()[1];
 			break;
 		case clampToResolution:
 			pos[0] = Math.max(0, Math.min(getBounds()[0] - 1, pos[0])); // TODO: if `java` does not precompute `getBounds()[dim] - 1`, store `boundsMinus1[]`
