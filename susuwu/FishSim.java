@@ -124,7 +124,7 @@ public class FishSim extends Application {
 		separateFps,          // `Timeline timeline = new Timeline( new KeyFrame(Duration.millis(1000.0 / physicsRefreshHertz), event -> { updateFish(); })`
 	}
 	private static PhysicsMode monitorRefreshMode = PhysicsMode.separateFps; // `monitorRefreshMode` must use `.separateUnbound` or `.separateFps`.
-	private static PhysicsMode physicsMode = PhysicsMode.asynchronousInterval; // `physicsMode` must use `.*synchronous*`. TODO: allow `.separate*`.
+	private static PhysicsMode physicsMode = PhysicsMode.asynchronousInterval; // Notice: if `PhysicsMode.*Interval`, must set `positionInterval`. if `PhysicsMode.separateFps`, must set `physicsRefreshHertz`.
 
 	public double[] posDiff(double[] pos, double[] o) {
 		if(PosBounds.wrapAroundResolution == posBounds) {
@@ -236,6 +236,7 @@ public class FishSim extends Application {
 	private static int gridResolution = 100; // Notice: set this to `Colllections.max({forces*.distance})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
 	private static int positionInterval = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
 	public static double monitorRefreshHertz = 60.0; // The `fps` to wish for // Notice: since this limits `fps` to `monitorRefreshHertz`, this prevents benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`). Benchmarks can still use `FpsTextMode.msSpec` (or `FpsTextMode.msFish`).
+	public static double physicsRefreshHertz = monitorRefreshHertz / positionInterval; // The `1 / physicsMs` to wish for // Notice: unknown what `javafx.animation.Timeline` does if `physicsRefreshHertz > (1 / physicsMs)`, but guess thus stalls or consumes multiple executors
 
 	public enum FpsTextMode { // `FpsTextMode` says which resources `fpsText` will show.
 		none      (0     ), // `fpsText = "";`
@@ -325,6 +326,21 @@ public class FishSim extends Application {
 		default:
 			throw new IllegalArgumentException("Unsupported `PhysicsMode monitorRefreshMode`: " + monitorRefreshMode);
 		}
+		switch(physicsMode) { // `PhysicsMode.` is omitted from all `case`s, to support old `java --source` versions
+		case separateUnbound:
+			new AnimationTimer() {
+				@Override
+				public void handle(long now) { updateFish(); }
+			}.start();
+			break;
+		case separateFps:
+			Timeline loopPerSecond = new Timeline(
+				new KeyFrame(Duration.millis(1000.0 / physicsRefreshHertz), event -> { updateFish(); })
+			);
+			loopPerSecond.setCycleCount(Animation.INDEFINITE);
+			loopPerSecond.play();
+			break;
+		}
 	}
 
 	private void refreshLoop(long now) {
@@ -346,6 +362,9 @@ public class FishSim extends Application {
 				executor.submit(() -> updateFish());
 			}
 			break;
+		case separateUnbound:
+		case separateFps:
+			break; // no-op for both, since `start(Stage primaryStage)` processes thus
 		default:
 			throw new IllegalArgumentException("Unsupported `PhysicsMode physicsMode`: " + physicsMode);
 		}
