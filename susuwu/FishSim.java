@@ -58,7 +58,8 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
       * +`class ImmutablePos2`: 2-dimensional specialization of `class ImmutablePos`.
       * +`class Pos2`: 2-dimensional specialization of `class Pos`.
     * +`FishSim::outOfBounds()`: improves @`FishSim::updateFish()` (which now uses this if `Fish` not in `grid` bounds).
-+    * +`enum FishSim::PosBounds`: this will store how `posBound()` enforces bounds.
+    * +`enum FishSim::PosBounds`: this will store how `posBound()` enforces bounds.
+    * +`boolean FishSim::isPosInBounds(double[] pos)`: tests if `pos` is in bounds (dimension-agnostic).
   * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / GRID_SIZE`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
     * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `GRID_SIZE`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
 
@@ -90,6 +91,18 @@ public class FishSim extends Application {
 		clampToResolution, // `pos[dim] = Math.max(0, Math.min(resolution[dim] - 1, pos[dim] + dpos[dim]));`.
 		boundless, // `pos[dim] += dpos[dim];`.
 	} // Notice: to teleport to new positions, `dpos[dim] = newPos[dim] - pos[dim]`. but most sims use relative motions.
+
+	public boolean isPosInBounds(double[] pos) throws IllegalArgumentException {
+		if(resolution.length != pos.length) {
+			throw new IllegalArgumentException("`resolution.length != pos.length`");
+		} // TODO: If this test is used at the start of all `pos*()` functions, replace `[]` with `Pos2`, unless optimizer stores this.
+		for(int i = 0; i < pos.length; i++) {
+			if(0 > pos[i] || resolution[i] <= pos[i]) {
+				return false;
+			}
+		} // TODO: replace `for(...) {...}` with `switch(pos.length) { case 2: ... }`, unless optimizer does this.
+		return true;
+	}
 
 //    public static class Pos2 extends double[2] {} // `{Pos2[0], Pos2[1]}` is `{x, y}` position (or resolution), or is `{pos[0], pos[0]}` motion (derivative of position), or is is `{d2x, d2y}` acceleration (derivative number 2). This was supposed to do what `typedef` does (wish for future-proof (limitless dimensions) virtual `class` with functions for numerous transforms).
 // Will use `double[]` for now. TODO: test how much of `java`'s [static `Array` overhead](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Physics_sims_which_structures_to_use.md#separate-variables-versus-dim-lists) `java`'s toolkit optimizes for you. If performance is a problem, choose a new approach to use.
