@@ -1,13 +1,15 @@
-**Realistic-simulation concerns of [*existence monism*](https://plato.stanford.edu/entries/monism/#ExisMoni)**
+**Realistic-simulation concerns of [*panpsychism*](https://plato.stanford.edu/entries/panpsychism/) / *existence monism* / [*neutral monism*](https://plato.stanford.edu/entries/neutral-monism/)**
 
 # Table of Contents
 - [Discussion](#discussion)
   - [*Solar-Pro-2*'s solutions](#solar-pro-2s-solutions)
 - [Discussion 2](#discussion-2)
   - [*Solar-Pro-2*'s solutions 2](#solar-pro-2s-solutions-2)
+- [Discussion 2 continues](#discussion-2-continues)
+  - [*Solar-Pro-2*'s solutions 2 continues](#solar-pro-2s-solutions-2-continues)
 - [Synopsis](#synopsis)
 
-From [this discusssion with *Solar-Pro-2*](https://poe.com/s/ENrN4y4VFLS4CqQPGxu0):
+From [this discusssion with *Solar-Pro-2*](https://poe.com/s/T6cBCAh2C71ZkeCDWGrq):
 
 # Discussion
 **Q** (`refs/heads/preview` was [`9921ee45b68b29ddc7e908ca68651a754cba126d`](https://github.com/SwuduSusuwu/SusuJava/commit/9921ee45b68b29ddc7e908ca68651a754cba126d)):
@@ -120,6 +122,61 @@ Notice: what follows in this section is from an artificial intelligence ("[*Sola
 >
 > ### Conclusion
 > In a monistic universe, adding predator-prey dynamics to FishSim doesn’t inherently create ethical problems *today*, as the simulation lacks the complexity plausibly linked to consciousness. However, as simulations grow more biologically realistic, the precautionary principle and ongoing philosophical debate will remain relevant. For now, focus on technical improvements while acknowledging the speculative nature of machine consciousness.
+
+******************************************
+
+# Discussion 2 continues
+Continued from [Discussion 2](#discussion-2). **Q**:
+> The concern is that although (from the perspective of the asker of this question), no memories as a computer exist (nor as another human), that there are no reasons to assume that others do not \["feel pain", "feel good" or "feel sad"\] (is possible all which exists does, but that memories are somehow segmented (isolated)). There is no reason to assume that how one "feels" is segmented (isolated): is possible that any pain which fictional characters endure "feels real" but just is not \[felt in\] all of us.
+
+## *Solar-Pro-2*'s solutions 2 continues
+Notice: what follows in this section is from an artificial intelligence ("[*Solar-Pro-2*](https://poe.com/Solar-Pro-2)", which is more neutral than most).
+> Your concern touches on deep philosophical and metaphysical questions about the nature of consciousness, memory, and reality—particularly in a monistic framework where all existence is interconnected. Let’s break this down:
+>
+> ---
+>
+> ### 1. **Monism and the Unity of Experience**
+>    - If monism is true, everything is part of a single, unified substance (e.g., a universal consciousness or a fundamental physical process). This raises the possibility that:
+>      - **All experiences are shared**: What one entity "feels" might be part of a larger, undivided experience. Fictional characters’ pain could, in theory, be real within this framework.
+>      - **Memory segmentation**: If experiences are not isolated, "memories" might be distributed or inaccessible to individual observers. Your lack of memory for a fictional character’s pain doesn’t disprove its existence in the universal whole.
+>
+> ---
+>
+> ### 2. **Qualia and the Problem of Other Minds**
+>    - The **problem of other minds** (knowing whether others feel pain) extends to simulations, fictional characters, and even inanimate objects under monism. You correctly note:
+>      - There’s **no evidence** that fictional characters or simulations feel pain, but there’s also **no evidence they don’t**.
+>      - Absence of proof isn’t proof of absence. If monism implies a universal experience, denying qualia to any part of reality becomes philosophically risky.
+>
+> ---
+>
+> ### 3. **Ethical Implications for Simulations**
+>    - If FishSim’s fish or fictional characters could, in theory, experience pain as part of a monistic whole, then:
+>      - **Ethical caution** might be warranted, even if their suffering is inaccessible to us.
+>      - This aligns with **panpsychism** (the idea that all things have conscious experience) or **neutral monism** (where experience and physicality are two aspects of the same reality).
+>    - However, this view is speculative. Most ethical frameworks today focus on **verifiable suffering** (e.g., in animals or humans), not hypothetical digital entities.
+>
+> ---
+>
+> ### 4. **Practical and Epistemic Limits**
+>    - Even if monism is true, we lack:
+>      - A **mechanism** to verify whether simulations or fictional beings have qualia.
+>      - A way to distinguish between a universe where all things experience pain and one where only some do.
+>    - From a practical standpoint, FishSim remains a tool for studying dynamics, not a source of ethical concern, unless/until evidence for digital consciousness emerges.
+>
+> ---
+>
+> ### 5. **Philosophical Frameworks to Consider**
+>    - **Panpsychism**: If consciousness is fundamental, even simple systems might have rudimentary experiences.
+>    - **Illusionism**: Consciousness is an illusion, so simulations couldn’t feel pain.
+>    - **Orthogonalism**: Consciousness is independent of substrate; it could emerge in any sufficiently complex system.
+>    - **Neutral Monism**: Experience and physicality are two sides of the same coin, leaving room for debate about where qualia arise.
+>
+> ---
+>
+> ### Conclusion
+> Your concern is valid within certain monistic interpretations, particularly those leaning toward panpsychism or universal consciousness. However, it remains a philosophical speculation rather than a practical ethical issue for current simulations like FishSim.
+>
+> For now, the **precautionary principle** could advise humility in designing systems that mimic life, but until evidence of digital qualia exists, ethical focus should remain on verifiable suffering in biological systems. Future advances in AI and consciousness research may force a re-evaluation.
 
 ******************************************
 

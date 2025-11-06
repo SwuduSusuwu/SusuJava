@@ -100,7 +100,7 @@ Notice: replaced most of [*Solar-Pro-2*'s original `FishSim.java`](https://githu
 ******************************************
 
 ## How to improve
-* One obvious submodule to introduce is "predator / prey" dynamics, but for now have chosen not to introduce thus, [due to ethical concerns such as *existence monism*](./ConcernsOfExistenceMonism.md).
+* One obvious submodule to introduce is "predator / prey" dynamics, but for now have chosen not to introduce thus, [due to ethical concerns such as *neutral monism*](./ConcernsOfExistenceMonism.md).
 * Improve **CPU** use (do not know how to, have chose not to use **OOP** `class`s for most of the physics due to concerns for the **CPU** use). `FishSim` is physics-bound, guess offload to **GPGPU** can improve this?
   * Since `updateFish()`'s formulas use much CPU, choose how to show smooth motion with `24 > physicsFps`.
   * @`updateFish()`: move `fish.pos += fish.dpos` into `refreshLoop()`, as ? Or into a separate +`physicsLoop()`?
