@@ -4,6 +4,7 @@
 
 # Table of Contents
 - [Intro](#intro)
+- [How to improve](#how-to-improve)
 - [Synopsis](#synopsis)
 
 # Intro
@@ -95,6 +96,28 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
       * +`ReentrantLock renderFishLock`: @`renderFish()` blocks unless has exclusive access to this.
 
 Notice: replaced most of [*Solar-Pro-2*'s original `FishSim.java`](https://github.com/SwuduSusuwu/SusuJava/blob/solarPro2FishSim/susuwu/FishSim.java), as this intro documents (plus [*GitHub*'s `/compare/` tool shows](https://github.com/SwuduSusuwu/SusuJava/compare/solarPro2FishSim..susuFishSim#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4)).
+
+******************************************
+
+## How to improve
+* One obvious submodule to introduce is "predator / prey" dynamics, but for now have chosen not to introduce thus, [due to ethical concerns such as *existence monism*](https://poe.com/s/FaWImqyoxE5IFskBKTRE).
+* Improve **CPU** use (do not know how to, have chose not to use **OOP** `class`s for most of the physics due to concerns for the **CPU** use). `FishSim` is physics-bound, guess offload to **GPGPU** can improve this?
+  * Since `updateFish()`'s formulas use much CPU, choose how to show smooth motion with `24 > physicsFps`.
+  * @`updateFish()`: move `fish.pos += fish.dpos` into `refreshLoop()`, as ? Or into a separate +`physicsLoop()`?
+  * Replace `fish.pos += fish.dpos` with `fish.pos += fish.dpos * factor` to ensure motion is continuous.
+  * `factor = physicsRefreshHertz / fps` or `factor = physicsRefreshHertz / physicsFps`?
+* Improve the user interface (now is just [`fpsTextRefresh()`, which shows resource use](https://github.com/SwuduSusuwu/SusuJava/blob/d21ed39be6640e94f3091e934717e8c7cfbdc758/susuwu/SimUsages.java#L103-L143), plus [`renderFish()`](https://github.com/SwuduSusuwu/SusuJava/blob/bff7b245616f80327587b3ba1fa8a254acdad5b8/susuwu/FishSim.java#L314-L327)' viewport which shows the models of `class Fish`), to allow to scroll the viewport around (requires [`resolution`](https://github.com/SwuduSusuwu/SusuJava/blob/bff7b245616f80327587b3ba1fa8a254acdad5b8/susuwu/FishSim.java#L150) to include 2 more `double`s, to store viewport offset, which `fish.isVisible` must use), plus allow to set numerous options (which for now have "functional constness" so those invariants allow `java` to use more efficient execution), plus allow the user to control one of the organisms (which for now are just `Fish`).
+  * `FishSim`'s renderer (`renderFish`) is separate from [`FishSim`'s physics loop (`updateFish`)](https://github.com/SwuduSusuwu/SusuJava/blob/bff7b245616f80327587b3ba1fa8a254acdad5b8/susuwu/FishSim.java#L298-L312) (`PhysicsMode physicsMode` allows to execute on separate **CPU**s through [`AnimationTimer`](https://github.com/SwuduSusuwu/SusuJava/blob/bff7b245616f80327587b3ba1fa8a254acdad5b8/susuwu/FishSim.java#L230-L235), [`Timeline`](https://github.com/SwuduSusuwu/SusuJava/blob/bff7b245616f80327587b3ba1fa8a254acdad5b8/susuwu/FishSim.java#L236-L242), or [`ExecutorService`](https://github.com/SwuduSusuwu/SusuJava/blob/bff7b245616f80327587b3ba1fa8a254acdad5b8/susuwu/FishSim.java#L260-L264)), but still shares the process with the physics loop.
+    * Can [still execute `updateFish()` as part of `renderFish()` if `physicsMode = PhysicsMode.synchronous*`](https://github.com/SwuduSusuwu/SusuJava/blob/bff7b245616f80327587b3ba1fa8a254acdad5b8/susuwu/FishSim.java#L252-L256), but future versions are supposed to drop synchronous modes.
+    * Should split `updateFish()` into a new executable (such as +`./susuwu/PhysicsLoop.java`) which produces (plus moves) instances of `class Fish`, with `Fish` positions sent to +`./susuwu/GraphicsShow.java` (which shows `Fish` at those positions), to allow servers for `FishSim`.
+    * `updateFish()` is difficult to do at 24fps (the minimum which shows smooth motion to humans) with thousands of `Fish`. If `FishSim`'s [`monitorRefreshHertz`](https://github.com/SwuduSusuwu/SusuJava/blob/bff7b245616f80327587b3ba1fa8a254acdad5b8/susuwu/FishSim.java#L164) is > [`physicsRefreshHertz`](https://github.com/SwuduSusuwu/SusuJava/blob/bff7b245616f80327587b3ba1fa8a254acdad5b8/susuwu/FishSim.java#L165) (in particular, if `24 > physicsRefreshHertz`): sum `pos += dpos` on monitor refresh (or some sort of simple motion loop), so movement is smooth.
+  * Introduce [servers](https://codingtechroom.com/question/create-basic-java-server) for shared experiences. But until `FishSim` has interfaces for user interactions, servers are limited to **RO** `./susuwu/PhysicsLoop.java` hosts with passive users. Due to variable latencies to / from servers, what those `./susuwu/PhysicsLoop.java` servers must do:
+    * [`PhysicsMode physicsMode`](https://github.com/SwuduSusuwu/SusuJava/blob/bff7b245616f80327587b3ba1fa8a254acdad5b8/susuwu/FishSim.java#L45) = [`PhysicsMode.separateFps`](https://github.com/SwuduSusuwu/SusuJava/blob/bff7b245616f80327587b3ba1fa8a254acdad5b8/susuwu/FishSim.java#L42).
+    * Send the derivative of position (`dpos`), so that (even in the presence of server congestion) each monitor refresh continues to show smooth movement of `Fish`s.
+    * Send the absolute positions (`pos`), so that position drifts (due to server congestion, or due to insufficient monitor refresh to follow the physics loop) are set back to shared, true position values.
+* Introduce continuous goals for `class Fish` (with no predator / prey dynamics, though, goals are limited), whose progress is stored.
+  * Introduce new organisms (for now `class FishSim` is limited to `class Fish`). Do not know specifics, but guess more numerous organisms improves the total list of goals for `FishSim` organisms to pursue.
+* Introduce volumetrics (for now the renderer is 2-dimensional, but most of `FishSim` was produced as "dimension-agnostic" (future-proof) source code (on the [`pos2` branch version of `FishSim.java`](https://github.com/SwuduSusuwu/SusuJava/blob/pos2/susuwu/FishSim.java)), so guess is simple to do (but new to `java`, so do not know which libs to use).
 
 ******************************************
 
