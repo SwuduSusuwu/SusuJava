@@ -16,6 +16,7 @@
     - [`git`](#git)
     - [`java`](#java)
     - [Code generation tool use.](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Code_generation_attributions.md)
+  - [`./posts/FishSim.md#how-to-improve`](./posts/FishSim.md#how-to-improve)
   - [Sponsor](#sponsor)
     - [Escrow](#escrow)
     - [Affiliates](#affiliates)
