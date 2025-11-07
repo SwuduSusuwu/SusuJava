@@ -22,6 +22,7 @@ Prefixes (used for variables / functions / classes): `` +`Class` `` introduces `
   * @`AnimationTimer::handle()`: show true **FPS**, plus do not to redraw `fpsText` unless `fps` changes.
 * @`Fish::applySeparation()`: reuse values.
 * @`Fish::applyWallAvoidance()`: reuse values, plus replace [magic constants](https://stackoverflow.com/questions/43950998/what-are-symbolic-constants-and-magic-constants) with `BOUNDS_DISTANCE`.
+* +`FishSim::refreshLoop()`: now houses `FishSim::ApplicationTimer::handle()`'s codeflow. Reason: so is simple for future versions to switch `new AnimationTimer() {@Override public void handle(long now) { refreshLoop(); }}.start();` to alternatives (such as to `Timeline timeline = new Timeline(new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(); })); timeline.setCycleCount(Animation.INDEFINITE); timeline.play();`).
 
 ``` end of *Markdown*
 */
@@ -93,22 +94,24 @@ public class FishSim extends Application {
 		// Start animation loop
 		new AnimationTimer() {
 			@Override
-			public void handle(long now) {
-				updateFish();
-
-				double elapsed = (now - lastTime) / 1_000_000_000.0;
-				if (elapsed >= 1.0) {
-					lastTime = now;
-					fps = frameCount / elapsed;
-					Platform.runLater(() -> {
-						fpsText.setText(String.format("%.1f FPS", fps));
-					});
-					frameCount = 0;
-				} else {
-					frameCount++;
-				}
-			}
+			public void handle(long now) { refreshLoop(now); }
 		}.start();
+	}
+
+	private void refreshLoop(long now) {
+		updateFish();
+
+		double elapsed = (now - lastTime) / 1_000_000_000.0;
+		if (elapsed >= 1.0) {
+			lastTime = now;
+			fps = frameCount / elapsed;
+			Platform.runLater(() -> {
+				fpsText.setText(String.format("%.1f FPS", fps));
+			});
+			frameCount = 0;
+		} else {
+			frameCount++;
+		}
 	}
 
 	private void updateFish() {
