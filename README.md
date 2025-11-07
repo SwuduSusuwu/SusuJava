@@ -43,10 +43,16 @@ Download with `git clone https://github.com/SwuduSusuwu/SusuJava.git` and browse
 # How to contribute
 View [documented issues](https://github.com/SwuduSusuwu/SusuJava/issues/) (for ideas on how to contribute, plus so you do not report documented issues.)
 ## Beta tests (`preview` branch)
-- Use `git switch preview`
-  - Preview samples / scripts symptoms of new issues (hint: listen to samples for glitches, or look through script outputs for "Warning:"s or "Error:"s).
-  - If you found new issue(s) (which aren't due to misconfigurations in your system), [comment on the pull request](https://github.com/SwuduSusuwu/SusuJava/pull/1) or [post new issue(s)](https://github.com/SwuduSusuwu/SusuJava/issues/new).
-    - Notice: [sensitive issue(s)](./SECURITY.md#sensitive-issues) have a separate protocol.
+`git branch`s:
+- [`trunk`](https://github.com/SwuduSusuwu/SusuJava/tree/trunk) publishes what most projects call "releases", with changes limited to what [*SemVer* calls "Patch" revisions](https://semver.org/spec/v2.0.0.html#spec-item-6)
+- [`new`](https://github.com/SwuduSusuwu/SusuJava/tree/new) publishes what most projects call "release candidates", with changes limited to what [*SemVer* calls "Minor" revisions](https://semver.org/spec/v2.0.0.html#spec-item-7)
+- [`preview`](https://github.com/SwuduSusuwu/SusuJava/tree/preview) publishes what most projects call "beta tests", with changes up to what [*SemVer* calls "Major" revisions](https://semver.org/spec/v2.0.0.html#spec-item-8)
+
+How to use the most new sources:
+- `git switch preview && ./build.sh`
+  - View results for symptoms of new issues (hint: look for "Warning:"s or "Error:"s).
+  - If you found new issue(s) (which aren't due to misconfigurations in your system), [comment on this pull request](https://github.com/SwuduSusuwu/SusuJava/pull/1) or [post new issue(s)](https://github.com/SwuduSusuwu/SusuLib/issues/new).
+    - Notice: [sensitive issue(s) have this separate mechanism to use](./SECURITY.md#sensitive-issues).
 
 # Contributor conventions/rules
 General comment/message syntax rules: `<>` goes around type of option/argument (such as `<commit-hash>`, `[]` goes around optional comments/options/arguments (such as `[<optional fallback value>]`, `...` is affixed to allow multiple options/arguments (such as `[; optional extra arguments]...`). This rule is used to document function arguments (such as `sh`, `C` or `C++` use), plus to document `git` uses.
