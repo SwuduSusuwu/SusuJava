@@ -35,6 +35,19 @@ Prefixes (used for variables / functions / classes): `` +`Class` `` introduces `
   * @`Fish::applyAlignment()`, @`Fish::applyCohesion()`: use `Fish::isSimilarTo()`.
   * @`class FishSim`: is now close to a fluid particle sim which has 2 types of molecules which group to similar molecules (such as [oleophilic compounds](https://thepetrosolutions.com/forums/topic/difference-between-oleophobic-and-oleophilic-impurities/#post-3508)) plus separate from nonsimilar molecules ([such as oleophobic compounds](https://poe.com/s/dYx54tOaDTaDnaBT9TRm)), except the numerous steps of *Boids* formula cause some emergent phenomenon which simple molecules do not possess.
 
+******************************************
+
+Notice: used *Solar-Pro-2* to improve codeflow (of the ancestor `git commit` --- "@`FishSim.java`: +`double SEPARATION_NONSIMILAR_*`" --- to this) [so `fps` improves](https://poe.com/s/ifeHY8AcpVmVC7R5aPB7):
+* @`class FishSim`: move `class Fish`-specific values into @`class Fish`.
+* @`class FishSim`: use `java.util.concurrent.Executor{s,Service}` to offload `updateFish()` physics (now uses 2 **CPU**s).
+* +`GRID_SIZE`, @`updateFish()`: use `GRID_SIZE` to split `List<Fish> fishList` into `List<Fish>[][] grid` (which reduces *O(n^2)* to *O(n^2 / (WIDTH / GRID_SIZE) / (HEIGHT / GRID_SIZE))* **CPU** use).
+* -`javafx.scene.shape.Polygon`, +`javafx.scene.canvas.Canvas`, +`javafx.scene.canvas.GraphicsContext`: improves renderer **CPU** use?
+* @`class FishSim`: replaces `1.0 / 2 < random.nextDouble()` with `random.nextBoolean()`.
+* {-`Fish::createFishShape()`, -`Fish::getShape()`}, {+`Fish::render()`, +`FishSim::renderFish()`}: switch to `GraphicsContext`.
+* @`Fish::update`: `Fish` now wrap around (to opposite edges) if out-of-bounds.
+* @`WIDTH`: (from `1280`) to `2600`, @`HEIGHT`: (from `720`) to `1600`. Since that is too much for most devices, future versions will lower those (or use resizable windows).
+* @`class FishSim`: is now `class OptimizedFishSim`.
+
 ``` end of *Markdown*
 */
 
@@ -42,44 +55,39 @@ import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Polygon;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class FishSim extends Application {
+public class OptimizedFishSim extends Application {
 
-	private static final int WIDTH = 1280;
-	private static final int HEIGHT = 720;
+	private static final int WIDTH = 2600;
+	private static final int HEIGHT = 1600;
 	private static final int FISH_COUNT = 102;
-	private static final double SEPARATION_DISTANCE = 22;
-	private static final double SEPARATION_FACTOR = 2;
-	private static final double SEPARATION_NONSIMILAR_DISTANCE = 42;
-	private static final double SEPARATION_NONSIMILAR_FACTOR = 2.2;
-	private static final double ALIGNMENT_DISTANCE = 100;
-	private static final double ALIGNMENT_FACTOR = 1;
-	private static final double COHESION_DISTANCE = 100;
-	private static final double COHESION_FACTOR = 1;
-	private static final double BOUNDS_DISTANCE = 20;
-	private static final double BOUNDS_FACTOR = 1;
-	private static final double MAX_SPEED = 3.0;
-	private static final double ACCELERATION = 0.1;
+	private static final int GRID_SIZE = 100;
+	private static final int UPDATE_INTERVAL = 5; // Update flocking rules every 5 frames
 
 	private List<Fish> fishList = new ArrayList<>();
 	private Random random = new Random();
 	private Pane root = new Pane();
+	private Canvas canvas = new Canvas(WIDTH, HEIGHT);
+	private GraphicsContext gc = canvas.getGraphicsContext2D();
 
 	private Text fpsText = new Text("0 FPS");
 	private int frameCount = 0;
 	private long lastTime = System.nanoTime();
 	private double fps = 0;
+	private int frameCounter = 0;
+
+	private ExecutorService executor = Executors.newSingleThreadExecutor();
 
 	public static void main(String[] args) {
 		launch(args);
@@ -91,132 +99,142 @@ public class FishSim extends Application {
 		for (int i = 0; i < FISH_COUNT; i++) {
 			double x = random.nextDouble() * WIDTH;
 			double y = random.nextDouble() * HEIGHT;
-			double dx = (random.nextDouble() * 2 - 1) * MAX_SPEED;
-			double dy = (random.nextDouble() * 2 - 1) * MAX_SPEED;
-			fishList.add(new Fish(x, y, dx, dy));
-			root.getChildren().add(fishList.get(i).getShape());
+			double dx = (random.nextDouble() * 2 - 1) * Fish.MAX_SPEED;
+			double dy = (random.nextDouble() * 2 - 1) * Fish.MAX_SPEED;
+			fishList.add(new Fish(x, y, dx, dy, random.nextBoolean() ? Color.BLUE : Color.GREEN));
 		}
+
+		root.getChildren().add(canvas);
+		root.getChildren().add(fpsText);
 
 		Scene scene = new Scene(root, WIDTH, HEIGHT, Color.LIGHTBLUE);
 		primaryStage.setScene(scene);
-		primaryStage.setTitle("Fish Simulation (Boids)");
+		primaryStage.setTitle("Optimized Fish Simulation (Boids)");
 		primaryStage.setResizable(false);
 		primaryStage.show();
 
 		fpsText.setX(10);
 		fpsText.setY(30);
 		fpsText.setFill(Color.WHITE);
-		root.getChildren().add(fpsText);
 
 		// Start animation loop
 		new AnimationTimer() {
 			@Override
-			public void handle(long now) { refreshLoop(now); }
+			public void handle(long now) {
+				frameCounter++;
+				if (frameCounter % UPDATE_INTERVAL == 0) {
+					executor.submit(() -> updateFish());
+				}
+
+				renderFish();
+
+				double elapsed = (now - lastTime) / 1_000_000_000.0;
+				if (elapsed >= 1.0) {
+					lastTime = now;
+					fps = frameCount / elapsed;
+					Platform.runLater(() -> {
+						fpsText.setText(String.format("%.1f FPS", fps));
+					});
+					frameCount = 0;
+				} else {
+					frameCount++;
+				}
+			}
 		}.start();
 	}
 
-	private void refreshLoop(long now) {
-		updateFish();
-
-		double elapsed = (now - lastTime) / 1_000_000_000.0;
-		if (elapsed >= 1.0) {
-			lastTime = now;
-			fps = frameCount / elapsed;
-			Platform.runLater(() -> {
-				fpsText.setText(String.format("%.1f FPS", fps));
-			});
-			frameCount = 0;
-		} else {
-			frameCount++;
-		}
-	}
-
 	private void updateFish() {
-		for (Fish fish : fishList) {
-			// Apply flocking rules
-			fish.applySeparation();
-			fish.applyAlignment();
-			fish.applyCohesion();
-			fish.applyWallAvoidance(WIDTH, HEIGHT);
+		// Use spatial partitioning (simple grid system)
+		List<Fish>[][] grid = new ArrayList[WIDTH / GRID_SIZE][HEIGHT / GRID_SIZE];
+		for (int i = 0; i < WIDTH / GRID_SIZE; i++) {
+			for (int j = 0; j < HEIGHT / GRID_SIZE; j++) {
+				grid[i][j] = new ArrayList<>();
+			}
+		}
 
-			// Update position and velocity
+		// Assign fish to grid cells
+		for (Fish fish : fishList) {
+			int gridX = (int) (fish.x / GRID_SIZE);
+			int gridY = (int) (fish.y / GRID_SIZE);
+			if (gridX >= 0 && gridX < WIDTH / GRID_SIZE && gridY >= 0 && gridY < HEIGHT / GRID_SIZE) {
+				grid[gridX][gridY].add(fish);
+			}
+		}
+
+		// Update each fish
+		for (Fish fish : fishList) {
+			fish.applyFlockingRules(fishList, grid);
 			fish.update();
 		}
 	}
 
-	// Fish class representing each fish
-	public class Fish {
+	private void renderFish() {
+		gc.clearRect(0, 0, WIDTH, HEIGHT);
+		for (Fish fish : fishList) {
+			fish.render(gc);
+		}
+	}
+
+	@Override
+	public void stop() {
+		executor.shutdown();
+	}
+
+	private static class Fish {
+		private static final double SEPARATION_DISTANCE = 22;
+		private static final double SEPARATION_FACTOR = 2;
+		private static final double SEPARATION_NONSIMILAR_DISTANCE = 42;
+		private static final double SEPARATION_NONSIMILAR_FACTOR = 2.2;
+		private static final double ALIGNMENT_DISTANCE = 100;
+		private static final double ALIGNMENT_FACTOR = 1;
+		private static final double COHESION_DISTANCE = 100;
+		private static final double COHESION_FACTOR = 1;
+		private static final double BOUNDS_DISTANCE = 20;
+		private static final double BOUNDS_FACTOR = 1;
+		private static final double MAX_SPEED = 3.0;
+		private static final double ACCELERATION = 0.1;
+
 		private double x, y;        // Position
 		private double dx, dy;      // Velocity
-		private double angle;       // Direction fish is facing
-		private Polygon shape;      // Visual representation
+		private Color color;
 
-		public Fish(double x, double y, double dx, double dy) {
+		public Fish(double x, double y, double dx, double dy, Color color) {
 			this.x = x;
 			this.y = y;
 			this.dx = dx;
 			this.dy = dy;
-			this.angle = Math.atan2(dy, dx);
-			this.shape = createFishShape();
+			this.color = color;
 		}
 
-		private Polygon createFishShape() {
-			Polygon fish = new Polygon(
-				0, -10,    // Top (head)
-				-5, 10,    // Left (tail)
-				-2, 0,     // Middle-left
-				2, 0,      // Middle-right
-				5, 10      // Right (tail)
-			);
-			if(1.0 / 2 < random.nextDouble()) {
-				fish.setFill(Color.BLUE);
-			} else {
-				fish.setFill(Color.GREEN);
-			}
-			fish.setTranslateX((int) x);
-			fish.setTranslateY((int) y);
-			fish.getTransforms().add(javafx.scene.transform.Rotate.rotate(Math.toDegrees(angle) + 90, 0, 0));
-			return fish;
-		}
+		public void applyFlockingRules(List<Fish> allFish, List<Fish>[][] grid) {
+			int gridX = (int) (x / 100);
+			int gridY = (int) (y / 100);
+			List<Fish> nearbyFish = new ArrayList<>();
 
-		public void update() {
-			// Limit speed
-			double speed = Math.sqrt(dx * dx + dy * dy);
-			if (speed > MAX_SPEED) {
-				dx = (dx / speed) * MAX_SPEED;
-				dy = (dy / speed) * MAX_SPEED;
+			// Check neighboring grid cells
+			for (int i = Math.max(0, gridX - 1); i <= Math.min(grid.length - 1, gridX + 1); i++) {
+				for (int j = Math.max(0, gridY - 1); j <= Math.min(grid[0].length - 1, gridY + 1); j++) {
+					nearbyFish.addAll(grid[i][j]);
+				}
 			}
 
-			// Update position
-			x += dx;
-			y += dy;
-
-			// Update shape position and rotation
-			shape.setTranslateX(x);
-			shape.setTranslateY(y);
-			double newAngle = Math.atan2(dy, dx);
-			if (0.002 < Math.abs(newAngle - angle)) {
-				angle = newAngle;
-				shape.getTransforms().clear();
-				shape.getTransforms().add(javafx.scene.transform.Rotate.rotate(Math.toDegrees(angle) + 90, 0, 0));
-			}
+			applySeparation(nearbyFish);
+			applyAlignment(nearbyFish);
+			applyCohesion(nearbyFish);
+			applyWallAvoidance(2600, 1600);
 		}
 
-		public boolean isSimilarTo(Fish other) {
-			return other.shape.getFill() == shape.getFill(); /* TODO: use `Math.hypot()` (Euclidean distance) of color component differences, to allow close matches. Use a function (such as `javafx.scene.shape.Polygon.getPoints()`), for comparison of vertices. */
-		}
-
-		public void applySeparation() {
+		private void applySeparation(List<Fish> nearbyFish) {
 			double sepX = 0, sepY = 0;
 			double sepNonsimilarX = 0, sepNonsimilarY = 0;
 			int count = 0, countNonsimilar = 0;
 
-			for (Fish other : fishList) {
+			for (Fish other : nearbyFish) {
 				if (other != this) {
 					double diffX = x - other.x;
 					double diffY = y - other.y;
 					double dist = Math.hypot(diffX, diffY);
-					if (isSimilarTo(other)) {
+					if (color.equals(other.color)) {
 						if (dist < SEPARATION_DISTANCE) {
 							sepX += diffX / dist;
 							sepY += diffY / dist;
@@ -235,35 +253,29 @@ public class FishSim extends Application {
 			if (count > 0) {
 				sepX /= count;
 				sepY /= count;
-
-				// Normalize and scale separation force
 				double sepLength = Math.sqrt(sepX * sepX + sepY * sepY);
 				if (sepLength > 0) {
 					dx += (sepX / sepLength) * ACCELERATION * SEPARATION_FACTOR;
 					dy += (sepY / sepLength) * ACCELERATION * SEPARATION_FACTOR;
 				}
-
 			}
 			if (countNonsimilar > 0) {
 				sepNonsimilarX /= countNonsimilar;
 				sepNonsimilarY /= countNonsimilar;
-
-				// Normalize and scale separation force
 				double sepLength = Math.sqrt(sepNonsimilarX * sepNonsimilarX + sepNonsimilarY * sepNonsimilarY);
 				if (sepLength > 0) {
 					dx += (sepNonsimilarX / sepLength) * ACCELERATION * SEPARATION_NONSIMILAR_FACTOR;
 					dy += (sepNonsimilarY / sepLength) * ACCELERATION * SEPARATION_NONSIMILAR_FACTOR;
 				}
-
 			}
 		}
 
-		public void applyAlignment() {
+		private void applyAlignment(List<Fish> nearbyFish) {
 			double avgDX = 0, avgDY = 0;
 			int count = 0;
 
-			for (Fish other : fishList) {
-				if (other != this && isSimilarTo(other)) {
+			for (Fish other : nearbyFish) {
+				if (other != this && color.equals(other.color)) {
 					double dist = Math.hypot(x - other.x, y - other.y);
 					if (dist < ALIGNMENT_DISTANCE) {
 						avgDX += other.dx;
@@ -276,25 +288,22 @@ public class FishSim extends Application {
 			if (count > 0) {
 				avgDX /= count;
 				avgDY /= count;
-
-				// Normalize and scale alignment force
 				double length = Math.sqrt(avgDX * avgDX + avgDY * avgDY);
 				if (length > 0) {
 					avgDX = (avgDX / length) * ACCELERATION * ALIGNMENT_FACTOR;
 					avgDY = (avgDY / length) * ACCELERATION * ALIGNMENT_FACTOR;
 				}
-
 				dx += avgDX;
 				dy += avgDY;
 			}
 		}
 
-		public void applyCohesion() {
+		private void applyCohesion(List<Fish> nearbyFish) {
 			double avgX = 0, avgY = 0;
 			int count = 0;
 
-			for (Fish other : fishList) {
-				if (other != this && isSimilarTo(other)) {
+			for (Fish other : nearbyFish) {
+				if (other != this && color.equals(other.color)) {
 					double dist = Math.hypot(x - other.x, y - other.y);
 					if (dist < COHESION_DISTANCE) {
 						avgX += other.x;
@@ -307,35 +316,28 @@ public class FishSim extends Application {
 			if (count > 0) {
 				avgX = (avgX / count) - x;
 				avgY = (avgY / count) - y;
-
-				// Normalize and scale cohesion force
 				double length = Math.sqrt(avgX * avgX + avgY * avgY);
 				if (length > 0) {
 					avgX = (avgX / length) * ACCELERATION * COHESION_FACTOR;
 					avgY = (avgY / length) * ACCELERATION * COHESION_FACTOR;
 				}
-
 				dx += avgX;
 				dy += avgY;
 			}
 		}
 
-		public void applyWallAvoidance(double width, double height) {
+		private void applyWallAvoidance(double width, double height) {
 			double avoidanceX = 0, avoidanceY = 0;
 
-			// Left wall
 			if (x < BOUNDS_DISTANCE) {
 				avoidanceX += (BOUNDS_DISTANCE - x);
 			}
-			// Right wall
 			if (x > width - BOUNDS_DISTANCE) {
 				avoidanceX -= (x - (width - BOUNDS_DISTANCE));
 			}
-			// Top wall
 			if (y < BOUNDS_DISTANCE) {
 				avoidanceY += (BOUNDS_DISTANCE - y);
 			}
-			// Bottom wall
 			if (y > height - BOUNDS_DISTANCE) {
 				avoidanceY -= (y - (height - BOUNDS_DISTANCE));
 			}
@@ -344,8 +346,37 @@ public class FishSim extends Application {
 			dy += avoidanceY / BOUNDS_DISTANCE * ACCELERATION * BOUNDS_FACTOR;
 		}
 
-		public Polygon getShape() {
-			return shape;
+		public void update() {
+			// Limit speed
+			double speed = Math.sqrt(dx * dx + dy * dy);
+			if (speed > MAX_SPEED) {
+				dx = (dx / speed) * MAX_SPEED;
+				dy = (dy / speed) * MAX_SPEED;
+			}
+
+			// Update position
+			x += dx;
+			y += dy;
+
+			// Wrap around screen
+			x = (x + 2600) % 2600;
+			y = (y + 1600) % 1600;
+		}
+
+		public void render(GraphicsContext gc) {
+			gc.save();
+			gc.translate(x, y);
+			gc.rotate(Math.toDegrees(Math.atan2(dy, dx)) + 90);
+			gc.setFill(color);
+			gc.beginPath();
+			gc.moveTo(0, -10);
+			gc.lineTo(-5, 10);
+			gc.lineTo(-2, 0);
+			gc.lineTo(2, 0);
+			gc.lineTo(5, 10);
+			gc.closePath();
+			gc.fill();
+			gc.restore();
 		}
 	};
 };
