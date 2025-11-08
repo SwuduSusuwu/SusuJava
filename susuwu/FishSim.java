@@ -46,7 +46,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
   * @`GRID_SIZE`: documents minimum value which enforces `*_DISTANCE`s.
   * @`applyFlockingRules()`: replaces magic constants (`100`) with `GRID_SIZE` (fixes undefined behaviour if `GRID_SIZE` changes).
   * @`Fish::applyFlockingRules()`, @`Fish::update()`: Replaces magic constants ({`2600`, `1600`}) with {`resolution[0]`, `resolution[1]`}.
-  * @`class FishSim`: reduces `UPDATE_INTERVAL` (from `5`) to `2` (since `ExecutorService` is used, this does not lower `fps`) so physics is smooth.
+  * @`class FishSim`: reduces `positionInterval` (from `5`) to `2` (since `ExecutorService` is used, this does not lower `fps`) so physics is smooth.
   * +`Fish::isSimilarTo()`, +`isSimilarTolerance`: limits schools to similar `Fish`. @`apply*()`: uses thus.
     * +`boolean redFishAreAggressiveOrPoisonous`: changes how `isSimilarTo(Fish other)` uses `color.getRed()`
     * @`FishSim::start()`: produces all possible colors of `Fish`. `Fish` schools are now more complex than fluid particles.
@@ -224,7 +224,7 @@ public class FishSim extends Application {
 	private static double fishPerVolume = 1 / fishVolume / fishLengthsSep; // `Fish` per volume (for 2D, volume is resolution).
 	private static int FISH_COUNT = (int)(boundsVolume * fishPerVolume);
 	private static int GRID_SIZE = 100; // Notice: set this to `Colllections.max({forces*.distance})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
-	private static int UPDATE_INTERVAL = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
+	private static int positionInterval = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
 	public static double monitorRefreshHertz = 60.0; // The `fps` to wish for // Notice: since this limits `fps` to `monitorRefreshHertz`, this prevents benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`). Benchmarks can still use `FpsTextMode.msSpec` (or `FpsTextMode.msFish`).
 
 	public enum FpsTextMode { // `FpsTextMode` says which resources `fpsText` will show.
@@ -313,7 +313,7 @@ public class FishSim extends Application {
 
 	private void refreshLoop(long now) {
 		frameCounter++;
-		if(frameCounter % UPDATE_INTERVAL == 0) {
+		if(frameCounter % positionInterval == 0) {
 			executor.submit(() -> updateFish());
 		}
 
