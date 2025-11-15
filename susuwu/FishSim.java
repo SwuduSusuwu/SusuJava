@@ -48,11 +48,13 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
   * @`Fish::applyFlockingRules()`, @`Fish::update()`: Replaces magic constants ({`2600`, `1600`}) with {`resolution[0]`, `resolution[1]`}.
   * @`class FishSim`: reduces `UPDATE_INTERVAL` (from `5`) to `2` (since `ExecutorService` is used, this does not lower `fps`) so physics is smooth.
   * +`Fish::isSimilarTo()`, +`isSimilarTolerance`: limits schools to similar `Fish`. @`apply*()`: uses thus.
+    * +`boolean redFishAreAggressiveOrPoisonous`: changes how `isSimilarTo(Fish other)` uses `color.getRed()`
   * +`FishSim::refreshLoop()`: houses `FishSim::ApplicationTimer::handle()`'s codeflow. Reason: so is simple for future versions to switch `new AnimationTimer() {@Override public void handle(long now) { refreshLoop(); }}.start();` to alternatives (such as to `Timeline timeline = new Timeline(new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(); })); timeline.setCycleCount(Animation.INDEFINITE); timeline.play();`).
     * @`FishSim::fpsText`: `String.format("%4.2f", fps)` (`4.` so `fpsText.size()` does not change if `fps` magnitude does, `.2` to show miniscule differences).
     * @`FishSim::fpsText`: show milliseconds used per monitor refresh ("draw ms"), plus per `updateFish()` ("physics ms"), plus show `fishList.size()`.
   * @`FishSim::*`: replaces pairs of 2 `int`s with `int[2]` (replaced 2 `double`s with `double[2]`), to future-proof (for `class Pos2`). Such as: -`WIDTH`, -`HEIGHT`, +`resolution[]`.
     * +`double[] resolutionf = {resolution[0], resolution[1]};`: for physics code which requires `double[]`.
+    * +[`./susuwu/Calculus.java`](../susuwu/Calculus.java): `public class Calculus` houses simple trigonometric (transcendental) `public static` functions. Future versions will include true calculus functions (such as "False Position" or "Quadratic Interpolation").
     * +`class ImmutablePos`: stores constant vectors (first-order tensors), to future-proof (for volumetrics). [Usage: `double acceptsConsts(ImmutablePos pos)`](https://github.com/SwuduSusuwu/SusuJava/compare/preview..pos2#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4).
       * +`class Pos`: `Pos` stores vectors (first-order tensors), to future-proof (for volumetrics). Usage: `double setsMembersOfPos(Pos pos)`.
       * +`class ImmutablePos2`: 2-dimensional specialization of `class ImmutablePos`.
@@ -87,6 +89,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import susuwu.Calculus; /* `Calculus.pow2()` */
 
 public class FishSim extends Application {
 
@@ -263,7 +266,7 @@ public class FishSim extends Application {
 	public class Fish { /* `static Fish` causes "{posBounds,posBound()} cannot be referenced from a static context" (unless those are set to `static`, which prevents `FishSim` from use of separate values with multiple windows) */
 		private static double SEPARATION_DISTANCE = 22;
 		private static double SEPARATION_FACTOR = 2;
-		private static double SEPARATION_NONSIMILAR_DISTANCE = 42;
+		private static double SEPARATION_NONSIMILAR_DISTANCE = 100;
 		private static double SEPARATION_NONSIMILAR_FACTOR = 2.2;
 		private static double ALIGNMENT_DISTANCE = 100;
 		private static double ALIGNMENT_FACTOR = 1;
@@ -273,7 +276,8 @@ public class FishSim extends Application {
 		private static double BOUNDS_FACTOR = 1;
 		private static double MAX_SPEED = 3.0;
 		private static double ACCELERATION = 0.1;
-		private static double isSimilarTolerance = (400 < FISH_COUNT ? 0.2 : 0.4); // If `FISH_COUNT` is low, `Fish::isSimilarTo()` has more tolerance so that fish still school
+		private static double isSimilarTolerance = 0.2;
+		public static boolean redFishAreAggressiveOrPoisonous = true; // changes how `isSimilarTo(Fish other)` uses `color.getRed()`
 
 		private double[] pos;        // Position
 		private double[] dpos;       // Motion (derivative of position)
@@ -287,9 +291,14 @@ public class FishSim extends Application {
 
 		public boolean isSimilarTo(Fish o) {
 //			return color.equals(o.color); // Less CPU use, but requires that `fishList` has just a few colors.
-//			return (isSimilarTolerance > Math.hypot(Math.abs(color.getRed() - o.color.getRed()), Math.abs(color.getGreen() - o.color.getGreen()), Math.abs(color.getBlue() - o.color.getBlue()))); // [`Math.hypot()` still does not support more dimensions?](https://esdiscuss.org/topic/how-about-more-args-for-math-hypot). Notice: if you use Euclidean distance, lower `isSimilarTolerance`.
-			return isSimilarTolerance > (Math.pow(color.getRed() - o.color.getRed(), 2) + Math.pow(color.getGreen() - o.color.getGreen(), 2) + Math.pow(color.getBlue() - o.color.getBlue(), 2)); // TODO: Use a function (such as `javafx.scene.shape.Polygon.getPoints()`) for comparison of vertices. */
-		}
+//			Color colorDis = Color.color(color.getRed() - o.color.getRed(), color.getGreen() - o.color.getGreen(), color.getBlue() - o.color.getBlue()); // Notice: `Color` is more intuitive to use, but was concerned that `java` will not fold this
+			double[] colorDis = {color.getRed() - o.color.getRed(), color.getGreen() - o.color.getGreen(), color.getBlue() - o.color.getBlue()};
+			if(redFishAreAggressiveOrPoisonous) {
+				colorDis[0] = Calculus.pow2(colorDis[0]);
+			}
+//			return isSimilarTolerance > (Math.hypot(Math.abs(colorDis[0]), Math.abs(colorDis[1]), Math.abs(colorDis[2]))); // [`Math.hypot()` still does not support > 2 dimensions?](https://esdiscuss.org/topic/how-about-more-args-for-math-hypot). Notice: if you use Euclidean distance, lower `isSimilarTolerance`.
+			return isSimilarTolerance > (Calculus.pow2(colorDis[0]) + Calculus.pow2(colorDis[1]) + Calculus.pow2(colorDis[2]));
+		} // TODO: Use a function (such as `javafx.scene.shape.Polygon.getPoints()`) for comparison of vertices. */
 
 		public void setPos(double[] newPos) { // If `PosBounds.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.resolution[dim] > pos[dim]` is established.
 			if(!posBound(newPos, posBounds)) {
