@@ -67,7 +67,11 @@ Makefile
 build.sh.bash
 bin/
 obj/
-index.xhtml
-robots.txt
 compile_commands.json
+todo/
+
+# `remark-cli` temp
+package.json
+package-lock.json
+node_modules/
 
