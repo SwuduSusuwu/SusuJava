@@ -57,6 +57,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
       * +`class Pos`: `Pos` stores vectors (first-order tensors), to future-proof (for volumetrics). Usage: `double setsMembersOfPos(Pos pos)`.
       * +`class ImmutablePos2`: 2-dimensional specialization of `class ImmutablePos`.
       * +`class Pos2`: 2-dimensional specialization of `class Pos`.
+    * +`FishSim::outOfBounds()`: improves @`FishSim::updateFish()` (which now uses this if `Fish` not in `grid` bounds).
   * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / GRID_SIZE`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
     * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `GRID_SIZE`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
 
@@ -74,6 +75,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -90,6 +92,7 @@ public class FishSim extends Application {
 	private static int UPDATE_INTERVAL = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
 
 	private List<Fish> fishList = new ArrayList<>();
+	private int[] gridSize = { (int)Math.ceil(resolution[0] / GRID_SIZE), (int)Math.ceil(resolution[1] / GRID_SIZE) };
 	private Random random = new Random();
 	private Pane root = new Pane();
 	private Canvas canvas = new Canvas(resolution[0], resolution[1]);
@@ -157,9 +160,13 @@ public class FishSim extends Application {
 		}
 	}
 
+	private void outOfBounds(String function, Fish fish, int[] gridPos) {
+		/* Notice: `outOfBounds()` has numerous sensible actions other than to print to `stderr`: `fish.die()`, `fish.stop()`, `fish.reverse()`, `fish.wrapAround()` */
+		System.err.println("FishSim::updateFish(): `Fish.pos = " + Arrays.toString(fish.pos) + ", resolution = " + Arrays.toString(resolution) + ":` this computes to `grid[" + gridPos[0] + "][" + gridPos[1] + "]`, but `grid = new ArrayList[" + gridSize[0] + "][" + gridSize[1] + "], so the `Fish` is out of bounds.");
+	}
+
 	private void updateFish() {
 		// Use spatial partitioning (simple grid system)
-		int[] gridSize = { (int)Math.ceil(resolution[0] / GRID_SIZE), (int)Math.ceil(resolution[1] / GRID_SIZE) };
 		List<Fish>[][] grid = new ArrayList[gridSize[0]][gridSize[1]];
 		for (int i = 0; i < grid.length; i++) {
 			for (int j = 0; j < grid[i].length; j++) {
@@ -172,6 +179,8 @@ public class FishSim extends Application {
 			int[] gridPos = {(int) (fish.pos[0] / GRID_SIZE), (int) (fish.pos[1] / GRID_SIZE)};
 			if (gridPos[0] >= 0 && gridPos[0] < grid.length && gridPos[1] >= 0 && gridPos[1] < grid[gridPos[0]].length) {
 				grid[gridPos[0]][gridPos[1]].add(fish); // TODO: unconditional execution (no `if()`) once the invariant `Fish.pos <= FishSim.resolution` establishes.
+			} else {
+				outOfBounds("FishSim::updateFish()", fish, gridPos); // TODO: move into future `Fish::setPos()`, which shall have the invariant `Fish.pos <= FishSim.resolution` established.
 			}
 		}
 
