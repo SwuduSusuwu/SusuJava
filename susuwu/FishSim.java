@@ -73,6 +73,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * @`FishSim::renderFish()`: `if(isPosInBounds(fish.pos))` reduces calls to `fish.render()` (improves `fps` for sims with huge unshown groups of fish).
       * @`class Fish`: +`boolean isInBounds;` stores `boolean posBound()`'s `return` value (improves CPU use). TODO: rename to `isVisible`?
         * @`FishSim::updateFish()`: `if(fish.isInBounds) {}` around `grid[gridPos[0]][gridPos[1]].add(fish);`, so `FishSim` allows out-of-bounds `Fish`.
+    * +`boolean FishSim::setResolution(newResolution)`: this shall set all variables (plus use all functions) required for `class FishSim` to switch to `newResolution`.
 
 ``` end of *Markdown*
 */
@@ -148,6 +149,15 @@ public class FishSim extends Application {
 // Will use `double[]` for now. TODO: test how much of `java`'s [static `Array` overhead](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Physics_sims_which_structures_to_use.md#separate-variables-versus-dim-lists) `java`'s toolkit optimizes for you. If performance is a problem, choose a new approach to use.
 
 	private static PosBounds posBounds = PosBounds.wrapAroundResolution;
+	public static boolean setResolution(int[] newResolution) {
+		assert 2 == newResolution.length;
+		assert 0 < newResolution[0]; //TODO: allow "headless" instances with `resolution = {0, 0}`?
+		assert 0 < newResolution[1];
+		resolution = newResolution;
+		resolutionf[0] = resolution[0]; resolutionf[1] = resolution[1];
+		resVolume = resolution[0] * resolution[1];
+		return true;
+	} //TODO: lock `updateFish()` plus `renderFish()` for this
 	private static int[] resolution = {1280, 720};
 	private static double[] resolutionf = {resolution[0], resolution[1]};
 	private static int resVolume = resolution[0] * resolution[1];
