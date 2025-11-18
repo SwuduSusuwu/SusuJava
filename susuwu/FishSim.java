@@ -50,7 +50,6 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
   * +`Fish::isSimilarTo()`: limits schools to similar `Fish`. @`apply*()`: uses this.
   * +`FishSim::refreshLoop()`: houses `FishSim::ApplicationTimer::handle()`'s codeflow. Reason: so is simple for future versions to switch `new AnimationTimer() {@Override public void handle(long now) { refreshLoop(); }}.start();` to alternatives (such as to `Timeline timeline = new Timeline(new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(); })); timeline.setCycleCount(Animation.INDEFINITE); timeline.play();`).
     * @`FishSim::fpsText`: `String.format("%4.2f", fps)` (`4.` so `fpsText.size()` does not change if `fps` magnitude does, `.2` to show miniscule differences).
-  * @`Fish::update()`: documents future `Fish::setPos()`, which will have alternatives (versus wraparound) to ensure `Fish` are in bounds.
   * @`FishSim::*`: replaces pairs of 2 `int`s with `int[2]` (replaced 2 `double`s with `double[2]`), to future-proof (for `class Pos2`). Such as: -`WIDTH`, -`HEIGHT`, +`resolution[]`.
     * +`double[] resolutionf = {resolution[0], resolution[1]};`: for physics code which requires `double[]`.
     * +`class ImmutablePos`: stores constant vectors (first-order tensors), to future-proof (for volumetrics). [Usage: `double acceptsConsts(ImmutablePos pos)`](https://github.com/SwuduSusuwu/SusuJava/compare/preview..pos2#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4).
@@ -61,10 +60,11 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * +`enum FishSim::PosBounds`: which stores how `posBound()` enforces bounds.
     * +`boolean FishSim::isPosInBounds(double[] pos)`: replaces duplicate code which tests for if `pos` is in bounds. Allows 2-dimensions or volumetric.
     * +`String posOutOfBoundsStr(double[] pos, String posStr)`: produces out-of-bounds messages for {`FishSim::posBound()`, `FishSim::outOfBounds()`}.
-    * +`boolean posBound(double[] pos, PosBounds posBounds)`: which `Fish::setPos(newPos)` will use.
+    * +`boolean posBound(double[] pos, PosBounds posBounds)`: enforces bounds onto `pos` (`Fish::setPos(newPos)` uses this). If `PosBounds.boundless`, just tests `pos`.
+    * +`void Fish::setPos(double[] newPos)`: if `Fish` not in bounds, uses `FishSim::outOfBounds()`.
   * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / GRID_SIZE`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
     * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `GRID_SIZE`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
-    * @`FishSim::updateFish()`: moves bounds test into `FishSim::posBound()`.
+    * @`FishSim::updateFish()`: moves bounds test into `FishSim::posBound()`, which `Fish::setPos()` uses.
 
 ``` end of *Markdown*
 */
@@ -213,7 +213,7 @@ public class FishSim extends Application {
 		}
 	}
 
-	private void outOfBounds(String function, Fish fish, int[] gridPos) {
+	private void outOfBounds(String function, Fish fish) {
 		/* Notice: `outOfBounds()` has numerous sensible actions other than to print to `stderr`: `fish.die()`, `fish.stop()`, `fish.reverse()`, `fish.wrapAround()` */
 		System.err.println(function + ": " + posOutOfBoundsStr(fish.pos, "Fish.pos"));
 	}
@@ -230,11 +230,7 @@ public class FishSim extends Application {
 		// Assign fish to grid cells
 		for (Fish fish : fishList) {
 			int[] gridPos = {(int) (fish.pos[0] / GRID_SIZE), (int) (fish.pos[1] / GRID_SIZE)};
-			if (gridPos[0] >= 0 && gridPos[0] < grid.length && gridPos[1] >= 0 && gridPos[1] < grid[gridPos[0]].length) {
-				grid[gridPos[0]][gridPos[1]].add(fish); // TODO: unconditional execution (no `if()`) once the invariant `Fish.pos <= FishSim.resolution` establishes.
-			} else {
-				outOfBounds("FishSim::updateFish()", fish, gridPos); // TODO: move into future `Fish::setPos()`, which shall have the invariant `Fish.pos <= FishSim.resolution` established.
-			}
+			grid[gridPos[0]][gridPos[1]].add(fish); // if `gridPos` is not in bounds, this will `throw new IndexOutOfBoundsException()`. But `Fish.setPos()` uses `FishSim::posBound()` which uses `FishSim::isPosInBounds()`, which ensures the `.pos` bounds to `resolution`.
 		}
 
 		// Update each fish
@@ -256,7 +252,7 @@ public class FishSim extends Application {
 		executor.shutdown();
 	}
 
-	public static class Fish {
+	public class Fish { /* `static Fish` causes "{posBounds,posBound()} cannot be referenced from a static context" (unless those are set to `static`, which prevents `FishSim` from use of separate values with multiple windows) */
 		private static double SEPARATION_DISTANCE = 22;
 		private static double SEPARATION_FACTOR = 2;
 		private static double SEPARATION_NONSIMILAR_DISTANCE = 42;
@@ -282,6 +278,13 @@ public class FishSim extends Application {
 
 		public boolean isSimilarTo(Fish o) {
 			return color.equals(o.color); /* TODO: use `Math.hypot()` (Euclidean distance) of color component differences, to allow close matches. Use a function (such as `javafx.scene.shape.Polygon.getPoints()`), for comparison of vertices. */
+		}
+
+		public void setPos(double[] newPos) { // If `PosBounds.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.resolution[dim] > pos[dim]` is established.
+			if(!posBound(newPos, posBounds)) {
+				outOfBounds("Fish::setPos", this);
+			}
+			pos = newPos;
 		}
 
 		public void applyFlockingRules(List<Fish> allFish, List<Fish>[][] grid) {
@@ -430,13 +433,8 @@ public class FishSim extends Application {
 				dpos[1] = (dpos[1] / speed) * MAX_SPEED;
 			}
 
-			// Update position // TODO: move into future `Fish::setPos()`, which shall have the invariant `Fish.pos <= FishSim.resolution` established.
-			pos[0] += dpos[0];
-			pos[1] += dpos[1];
-
-			// Wrap around screen // TODO: move into future `Fish::setPos()`, as one numerous (optional) solutions which ensure `Fish.pos <= FishSim.resolution` is established.
-			pos[0] = (pos[0] + resolution[0]) % resolution[0];
-			pos[1] = (pos[1] + resolution[1]) % resolution[1];
+			// Update position
+			setPos(new double[] {pos[0] + dpos[0], pos[1] + dpos[1]});
 		}
 
 		public void render(GraphicsContext gc) {
