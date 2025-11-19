@@ -59,6 +59,7 @@ View [documented issues](https://github.com/SwuduSusuwu/SusuJava/issues/) (for i
 - [`trunk`](https://github.com/SwuduSusuwu/SusuJava/tree/trunk) publishes what most projects call "releases", with changes limited to what [*SemVer* calls "Patch" revisions](https://semver.org/spec/v2.0.0.html#spec-item-6)
 - [`new`](https://github.com/SwuduSusuwu/SusuJava/tree/new) publishes what most projects call "release candidates", with changes limited to what [*SemVer* calls "Minor" revisions](https://semver.org/spec/v2.0.0.html#spec-item-7)
 - [`preview`](https://github.com/SwuduSusuwu/SusuJava/tree/preview) publishes what most projects call "beta tests", with changes up to what [*SemVer* calls "Major" revisions](https://semver.org/spec/v2.0.0.html#spec-item-8)
+  - [`pos2`](https://github.com/SwuduSusuwu/SusuJava/tree/pos2) is one of what most projects call "topic branches" (or `experimental` branch), a work-in-progress which does not pass unit tests. For now, `pos2` has a few `java` exceptions, but those are limited to a few rows of code in [`FishSim.java`](https://github.com/SwuduSusuwu/SusuJava/blob/pos2/Java/FishSim.java) which have trouble with the switch from `double[]` to `Pos2`.
 
 How to use the most new sources:
 - `git switch preview && ./build.sh`
