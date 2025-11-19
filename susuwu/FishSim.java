@@ -27,7 +27,7 @@ Prefixes (used for variables / functions / classes): `` +`Class` `` introduces `
   * @`SEPARATION_FACTOR`: (from `1`) to `2`, so schools are loose enough to view individual fish.
   * @`SEPARATION_DISTANCE`: (from `50`) to `22`, so fish still school.
 * @`resolution`: (from {800, 600}) to {1280, 720}, since most computers (plus smartphones) can show *720p* resolution.
-  * @`FISH_COUNT`: (from `50`) to `102`, since the window now has more room.
+  * @`fishCount`: (from `50`) to `102`, since the window now has more room.
 * @`Fish::createFishShape()`: produce 2 colors of fish.
   * @`class FishSim`: is now close to a fluid particle sim which has 2 types of molecules which group to similar molecules (such as [oleophilic compounds](https://thepetrosolutions.com/forums/topic/difference-between-oleophobic-and-oleophilic-impurities/#post-3508)) plus separate from nonsimilar molecules ([such as oleophobic compounds](https://poe.com/s/dYx54tOaDTaDnaBT9TRm)), except the numerous steps of *Boids* formula cause some emergent phenomenon which simple molecules do not possess.
 
@@ -78,7 +78,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
   * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / gridResolution`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
     * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `gridResolution`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
     * @`FishSim::updateFish()`: moves bounds test into `FishSim::posBound()`, which `Fish::setPos()` uses.
-    * @`class FishSim`: +`boundsVolume`, +`fishVolume`, +`fishLengthsSep`, `fishPerVolume`: so `FISH_COUNT` scales to resolution.
+    * @`class FishSim`: +`boundsVolume`, +`fishVolume`, +`fishLengthsSep`, `fishPerVolume`: so `fishCount` scales to resolution.
     * @`FishSim::renderFish()`: `if(isPosInBounds(fish.pos))` reduces calls to `fish.render()` (improves `fps` for sims with huge unshown groups of fish).
       * @`class Fish`: +`boolean isInBounds;` stores `boolean posBound()`'s `return` value (improves CPU use). TODO: rename to `isVisible`?
         * @`FishSim::updateFish()`: `if(fish.isInBounds) {}` around `grid[gridPos[0]][gridPos[1]].add(fish);`, so `FishSim` allows out-of-bounds `Fish`.
@@ -222,7 +222,7 @@ public class FishSim extends Application {
 	private static double fishVolume = 200; // Uses resolution of `Fish::render()`.
 	private static double fishLengthsSep = 62; // Average `Fish`-lengths distance  from `Fish` to `Fish`.
 	private static double fishPerVolume = 1 / fishVolume / fishLengthsSep; // `Fish` per volume (for 2D, volume is resolution).
-	private static int FISH_COUNT = (int)(boundsVolume * fishPerVolume);
+	private static int fishCount = (int)(boundsVolume * fishPerVolume);
 	private static int gridResolution = 100; // Notice: set this to `Colllections.max({forces*.distance})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
 	private static int positionInterval = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
 	public static double monitorRefreshHertz = 60.0; // The `fps` to wish for // Notice: since this limits `fps` to `monitorRefreshHertz`, this prevents benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`). Benchmarks can still use `FpsTextMode.msSpec` (or `FpsTextMode.msFish`).
@@ -270,7 +270,7 @@ public class FishSim extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		// Initialize fish
-		for(int i = 0; i < FISH_COUNT; i++) {
+		for(int i = 0; i < fishCount; i++) {
 			double[] pos = {random.nextDouble() * getBounds()[0], random.nextDouble() * getBounds()[1]};
 			double[] dpos = {(random.nextDouble() * 2 - 1) * Fish.dposMax, (random.nextDouble() * 2 - 1) * Fish.dposMax};
 			fishList.add(new Fish(pos, dpos, Color.color(random.nextDouble(), random.nextDouble(), random.nextDouble())));
