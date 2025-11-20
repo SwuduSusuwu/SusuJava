@@ -58,7 +58,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
   * @`FishSim::*`: replaces pairs of 2 `int`s with `int[2]` (replaced 2 `double`s with `double[2]`), to future-proof (for `class Pos2`). Such as: -`WIDTH`, -`HEIGHT`, +`resolution[]`.
     * +`double[] resolutionf = {resolution[0], resolution[1]};`: for physics code which requires `double[]`.
     * +[`./susuwu/Calculus.java`](../susuwu/Calculus.java): `public class Calculus` houses simple trigonometric (transcendental) `public static` functions. Future versions will include true calculus functions (such as "False Position" or "Quadratic Interpolation").
-    * +[`./susuwu/Forces.java`](../susuwu/Forces.java): will replace `double *Distance; double *Factor;` with `Forces forces*;`, so other `double`s are not confused with those.
+    * +[`./susuwu/Forces.java`](../susuwu/Forces.java): replaces `double *Distance; double *Factor;` with `Forces forces*;`, so other `double`s are not confused with those.
       * +`Forces.dposScaleSum(dposDes, d2pos, dposSource)`: for Boids groups: `if(dposScaleSum(derivativeOfPosition, secondDerivOfPos, averageDposOfGroup)) { position += derivativeOfPosition; }`, will reduce duplicate code.
     * +`class ImmutablePos`: stores constant vectors (first-order tensors), to future-proof (for volumetrics). [Usage: `double acceptsConsts(ImmutablePos pos)`](https://github.com/SwuduSusuwu/SusuJava/compare/preview..pos2#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4).
       * +`class Pos`: `Pos` stores vectors (first-order tensors), to future-proof (for volumetrics). Usage: `double setsMembersOfPos(Pos pos)`.
@@ -102,6 +102,7 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import susuwu.Calculus; /* `Calculus.pow2()` */
+import susuwu.Forces; /* `class Forces implements java.lang.Cloneable` */
 
 public class FishSim extends Application {
 
@@ -187,7 +188,7 @@ public class FishSim extends Application {
 	private static double fishLengthsSep = 62; // Average `Fish`-lengths distance  from `Fish` to `Fish`.
 	private static double fishPerVolume = 1 / fishVolume / fishLengthsSep; // `Fish` per volume (for 2D, volume is resolution).
 	private static int FISH_COUNT = (int)(boundsVolume * fishPerVolume);
-	private static int GRID_SIZE = 100; // Notice: set this to `Colllections.max({*_DISTANCE})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
+	private static int GRID_SIZE = 100; // Notice: set this to `Colllections.max({forces*.distance})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
 	private static int UPDATE_INTERVAL = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
 
 	public enum FpsTextMode { // `FpsTextMode` says which resources `fpsText` will show.
@@ -378,16 +379,11 @@ public class FishSim extends Application {
 	}
 
 	public class Fish { /* `static Fish` causes "{posBounds,posBound()} cannot be referenced from a static context" (unless those are set to `static`, which prevents `FishSim` from use of separate values with multiple windows) */
-		private static double SEPARATION_DISTANCE = 22;
-		private static double SEPARATION_FACTOR = 2;
-		private static double SEPARATION_NONSIMILAR_DISTANCE = 100;
-		private static double SEPARATION_NONSIMILAR_FACTOR = 2.2;
-		private static double ALIGNMENT_DISTANCE = 100;
-		private static double ALIGNMENT_FACTOR = 1;
-		private static double COHESION_DISTANCE = 100;
-		private static double COHESION_FACTOR = 1;
-		private static double BOUNDS_DISTANCE = 100;
-		private static double BOUNDS_FACTOR = 2;
+		public static Forces forcesSeparation = new Forces(22.0, 2.0);
+		public static Forces forcesSeparationNonsimilar = new Forces(100.0, 2.2);
+		public static Forces forcesAlignment = new Forces(100.0, 1.0);
+		public static Forces forcesCohesion = new Forces(100.0, 1.0);
+		public static Forces forcesBounds = new Forces(100.0, 2.0);
 		private static double MAX_SPEED = 3.0;
 		private static double ACCELERATION = 0.1;
 		private static double isSimilarTolerance = 0.2;
@@ -453,13 +449,13 @@ public class FishSim extends Application {
 					double[] diffPos = {pos[0] - other.pos[0], pos[1] - other.pos[1]};
 					double dist = Math.hypot(diffPos[0], diffPos[1]);
 					if (isSimilarTo(other)) {
-						if (dist < SEPARATION_DISTANCE) {
+						if (dist < forcesSeparation.distance) {
 							sepDpos[0] += diffPos[0] / dist;
 							sepDpos[1] += diffPos[1] / dist;
 							count++;
 						}
 					} else {
-						if (dist < SEPARATION_NONSIMILAR_DISTANCE) {
+						if (dist < forcesSeparationNonsimilar.distance) {
 							sepNonsimilarDpos[0] += diffPos[0] / dist;
 							sepNonsimilarDpos[1] += diffPos[1] / dist;
 							countNonsimilar++;
@@ -473,8 +469,8 @@ public class FishSim extends Application {
 				sepDpos[1] /= count;
 				double sepLength = Math.sqrt(sepDpos[0] * sepDpos[0] + sepDpos[1] * sepDpos[1]);
 				if (sepLength > 0) {
-					dpos[0] += (sepDpos[0] / sepLength) * ACCELERATION * SEPARATION_FACTOR;
-					dpos[1] += (sepDpos[1] / sepLength) * ACCELERATION * SEPARATION_FACTOR;
+					dpos[0] += (sepDpos[0] / sepLength) * ACCELERATION * forcesSeparation.factor;
+					dpos[1] += (sepDpos[1] / sepLength) * ACCELERATION * forcesSeparation.factor;
 				}
 			}
 			if (countNonsimilar > 0) {
@@ -482,8 +478,8 @@ public class FishSim extends Application {
 				sepNonsimilarDpos[1] /= countNonsimilar;
 				double sepLength = Math.sqrt(sepNonsimilarDpos[0] * sepNonsimilarDpos[0] + sepNonsimilarDpos[1] * sepNonsimilarDpos[1]);
 				if (sepLength > 0) {
-					dpos[0] += (sepNonsimilarDpos[0] / sepLength) * ACCELERATION * SEPARATION_NONSIMILAR_FACTOR;
-					dpos[1] += (sepNonsimilarDpos[1] / sepLength) * ACCELERATION * SEPARATION_NONSIMILAR_FACTOR;
+					dpos[0] += (sepNonsimilarDpos[0] / sepLength) * ACCELERATION * forcesSeparationNonsimilar.factor;
+					dpos[1] += (sepNonsimilarDpos[1] / sepLength) * ACCELERATION * forcesSeparationNonsimilar.factor;
 				}
 			}
 		}
@@ -495,7 +491,7 @@ public class FishSim extends Application {
 			for (Fish other : nearbyFish) {
 				if (other != this && isSimilarTo(other)) {
 					double dist = Math.hypot(pos[0] - other.pos[0], pos[1] - other.pos[1]);
-					if (dist < ALIGNMENT_DISTANCE) {
+					if (dist < forcesAlignment.distance) {
 						avgDpos[0] += other.dpos[0];
 						avgDpos[1] += other.dpos[1];
 						count++;
@@ -508,8 +504,8 @@ public class FishSim extends Application {
 				avgDpos[1] /= count;
 				double length = Math.sqrt(avgDpos[0] * avgDpos[0] + avgDpos[1] * avgDpos[1]);
 				if (length > 0) {
-					avgDpos[0] = (avgDpos[0] / length) * ACCELERATION * ALIGNMENT_FACTOR;
-					avgDpos[1] = (avgDpos[1] / length) * ACCELERATION * ALIGNMENT_FACTOR;
+					avgDpos[0] = (avgDpos[0] / length) * ACCELERATION * forcesAlignment.factor;
+					avgDpos[1] = (avgDpos[1] / length) * ACCELERATION * forcesAlignment.factor;
 				}
 				dpos[0] += avgDpos[0];
 				dpos[1] += avgDpos[1];
@@ -523,7 +519,7 @@ public class FishSim extends Application {
 			for (Fish other : nearbyFish) {
 				if (other != this && isSimilarTo(other)) {
 					double dist = Math.hypot(pos[0] - other.pos[0], pos[1] - other.pos[1]);
-					if (dist < COHESION_DISTANCE) {
+					if (dist < forcesCohesion.distance) {
 						avgPos[0] += other.pos[0];
 						avgPos[1] += other.pos[1];
 						count++;
@@ -536,8 +532,8 @@ public class FishSim extends Application {
 				avgPos[1] = (avgPos[1] / count) - pos[1];
 				double length = Math.sqrt(avgPos[0] * avgPos[0] + avgPos[1] * avgPos[1]);
 				if (length > 0) {
-					avgPos[0] = (avgPos[0] / length) * ACCELERATION * COHESION_FACTOR;
-					avgPos[1] = (avgPos[1] / length) * ACCELERATION * COHESION_FACTOR;
+					avgPos[0] = (avgPos[0] / length) * ACCELERATION * forcesCohesion.factor;
+					avgPos[1] = (avgPos[1] / length) * ACCELERATION * forcesCohesion.factor;
 				}
 				dpos[0] += avgPos[0];
 				dpos[1] += avgPos[1];
@@ -548,21 +544,21 @@ public class FishSim extends Application {
 			if(!applyWallAvoidanceTru) { return; }
 			double[] avoidancePos = {0, 0};
 
-			if (pos[0] < BOUNDS_DISTANCE) {
-				avoidancePos[0] += (BOUNDS_DISTANCE - pos[0]);
+			if (pos[0] < forcesBounds.distance) {
+				avoidancePos[0] += (forcesBounds.distance - pos[0]);
 			}
-			if (pos[0] > res[0] - BOUNDS_DISTANCE) {
-				avoidancePos[0] -= (pos[0] - (res[0] - BOUNDS_DISTANCE));
+			if (pos[0] > res[0] - forcesBounds.distance) {
+				avoidancePos[0] -= (pos[0] - (res[0] - forcesBounds.distance));
 			}
-			if (pos[1] < BOUNDS_DISTANCE) {
-				avoidancePos[1] += (BOUNDS_DISTANCE - pos[1]);
+			if (pos[1] < forcesBounds.distance) {
+				avoidancePos[1] += (forcesBounds.distance - pos[1]);
 			}
-			if (pos[1] > res[1] - BOUNDS_DISTANCE) {
-				avoidancePos[1] -= (pos[1] - (res[1] - BOUNDS_DISTANCE));
+			if (pos[1] > res[1] - forcesBounds.distance) {
+				avoidancePos[1] -= (pos[1] - (res[1] - forcesBounds.distance));
 			}
 
-			dpos[0] += avoidancePos[0] / BOUNDS_DISTANCE * ACCELERATION * BOUNDS_FACTOR;
-			dpos[1] += avoidancePos[1] / BOUNDS_DISTANCE * ACCELERATION * BOUNDS_FACTOR;
+			dpos[0] += avoidancePos[0] / forcesBounds.distance * ACCELERATION * forcesBounds.factor;
+			dpos[1] += avoidancePos[1] / forcesBounds.distance * ACCELERATION * forcesBounds.factor;
 		}
 
 		public void update() {
