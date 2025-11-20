@@ -36,15 +36,15 @@ Prefixes (used for variables / functions / classes): `` +`Class` `` introduces `
 Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/SusuJava/commit/6242d2045d619dd664c9a8eea9141c5d178a2ce8) (of the ancestor `git commit` --- which was half (`1 / 2`) human-produced source code --- to thus) [so `fps` improves](https://poe.com/s/ifeHY8AcpVmVC7R5aPB7):
 * @`class FishSim`: move `class Fish`-specific values into @`class Fish`.
 * @`class FishSim`: use `java.util.concurrent.Executor{s,Service}` to offload `updateFish()` physics (now uses 2 **CPU**s).
-* +`GRID_SIZE`, @`updateFish()`: use `GRID_SIZE` to split `List<Fish> fishList` into `List<Fish>[][] grid` (which reduces *O(n^2)* to *O(n^2 / (resolution[] / GRID_SIZE)))* **CPU** use)).
+* +`gridResolution`, @`updateFish()`: use `gridResolution` to split `List<Fish> fishList` into `List<Fish>[][] grid` (which reduces *O(n^2)* to *O(n^2 / (resolution[] / gridResolution)))* **CPU** use)).
 * -`javafx.scene.shape.Polygon`, +`javafx.scene.canvas.Canvas`, +`javafx.scene.canvas.GraphicsContext`: improves renderer **CPU** use?
 * @`class FishSim`: replaces `1.0 / 2 < random.nextDouble()` with `random.nextBoolean()`.
 * {-`Fish::createFishShape()`, -`Fish::getShape()`}, {+`Fish::render()`, +`FishSim::renderFish()`}: switch to `GraphicsContext`.
 * @`Fish::update`: `Fish` now wrap around (to opposite edges) if out-of-bounds.
 * Notice: the list which follows is all own improvements (versus version above). Own version:
   * @`FishSim::*`, @`Fish::*`: now mutable (since future versions will allow to resize windows plus configure distances). TODO: introduce `get*()` methods (so that typos do not reconfigure constants, such as view distances).
-  * @`GRID_SIZE`: documents minimum value which enforces `*_DISTANCE`s.
-  * @`applyFlockingRules()`: replaces magic constants (`100`) with `GRID_SIZE` (fixes undefined behaviour if `GRID_SIZE` changes).
+  * @`gridResolution`: documents minimum value which enforces `*_DISTANCE`s.
+  * @`applyFlockingRules()`: replaces magic constants (`100`) with `gridResolution` (fixes undefined behaviour if `gridResolution` changes).
   * @`Fish::applyFlockingRules()`, @`Fish::update()`: Replaces magic constants ({`2600`, `1600`}) with {`resolution[0]`, `resolution[1]`}.
   * @`class FishSim`: reduces `positionInterval` (from `5`) to `2` (since `ExecutorService` is used, this does not lower `fps`) so physics is smooth.
   * +`Fish::isSimilarTo()`, +`isSimilarTolerance`: limits schools to similar `Fish`. @`apply*()`: uses thus.
@@ -75,8 +75,8 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
       * +`Fish::getPosDiff(Fish o)`: uses `FishSim::posDiff` so distances follow `PosBounds.wrapAroundResolution`.
         * @`Fish::apply*()`: use `Fish::getPosDiff(o)`.
         * @`Fish::applyFlockingRules()`: `gridPos` now uses `Fish::getPosDiff(o)`.
-  * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / GRID_SIZE`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
-    * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `GRID_SIZE`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
+  * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / gridResolution`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
+    * @`FishSim::updateFish()`: produces extra `grid`s if `resolution[]` is not a multiple of `gridResolution`, so that `Fish` with position close to the resolution (close to edges / bounds) are still included.
     * @`FishSim::updateFish()`: moves bounds test into `FishSim::posBound()`, which `Fish::setPos()` uses.
     * @`class FishSim`: +`boundsVolume`, +`fishVolume`, +`fishLengthsSep`, `fishPerVolume`: so `FISH_COUNT` scales to resolution.
     * @`FishSim::renderFish()`: `if(isPosInBounds(fish.pos))` reduces calls to `fish.render()` (improves `fps` for sims with huge unshown groups of fish).
@@ -223,7 +223,7 @@ public class FishSim extends Application {
 	private static double fishLengthsSep = 62; // Average `Fish`-lengths distance  from `Fish` to `Fish`.
 	private static double fishPerVolume = 1 / fishVolume / fishLengthsSep; // `Fish` per volume (for 2D, volume is resolution).
 	private static int FISH_COUNT = (int)(boundsVolume * fishPerVolume);
-	private static int GRID_SIZE = 100; // Notice: set this to `Colllections.max({forces*.distance})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
+	private static int gridResolution = 100; // Notice: set this to `Colllections.max({forces*.distance})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
 	private static int positionInterval = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
 	public static double monitorRefreshHertz = 60.0; // The `fps` to wish for // Notice: since this limits `fps` to `monitorRefreshHertz`, this prevents benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`). Benchmarks can still use `FpsTextMode.msSpec` (or `FpsTextMode.msFish`).
 
@@ -242,7 +242,7 @@ public class FishSim extends Application {
 
 	private List<Fish> fishList = new ArrayList<>();
 	private int fishShown = 0;
-	private int[] gridSize = { (int)Math.ceil(getBounds()[0] / GRID_SIZE), (int)Math.ceil(getBounds()[1] / GRID_SIZE) };
+	private int[] gridSize = { (int)Math.ceil(getBounds()[0] / gridResolution), (int)Math.ceil(getBounds()[1] / gridResolution) };
 	private List<Fish>[][] grid; /* `listToPartitions(List<>[][] grid, List<> list)` uses this */
 	private Random random = new Random();
 	private Pane root = new Pane();
@@ -342,8 +342,8 @@ public class FishSim extends Application {
 
 	/* Spatial partitioning (simple grid system). TODO: generic version of this (accept all `class`s with `#isInBounds` plus `#pos`). */
 	private void listToPartitions(List<Fish>[][] grid, List<Fish> list) {
-		assert grid.length == (int)Math.ceil(getBounds()[0] / GRID_SIZE);
-		assert grid[0].length == (int)Math.ceil(getBounds()[1] / GRID_SIZE);
+		assert grid.length == (int)Math.ceil(getBounds()[0] / gridResolution);
+		assert grid[0].length == (int)Math.ceil(getBounds()[1] / gridResolution);
 		for(int i = 0; i < grid.length; i++) {
 			for(int j = 0; j < grid[i].length; j++) {
 				grid[i][j].clear();
@@ -351,7 +351,7 @@ public class FishSim extends Application {
 		}
 		for(Fish fish : list) { /* Assign list members to grid sections */
 			if(fish.isInBounds) {
-				int[] gridPos = {(int) (fish.pos[0] / GRID_SIZE), (int) (fish.pos[1] / GRID_SIZE)};
+				int[] gridPos = {(int) (fish.pos[0] / gridResolution), (int) (fish.pos[1] / gridResolution)};
 				grid[gridPos[0]][gridPos[1]].add(fish); // if `gridPos` is not in bounds, this will `throw new IndexOutOfBoundsException()`. But `Fish.setPos()` uses `FishSim::posBound()` which uses `FishSim::isPosInBounds()`, which ensures the `.pos` bounds to `resolution`.
 			}
 		}
@@ -481,7 +481,7 @@ public class FishSim extends Application {
 		}
 
 		public void applyFlockingRules(List<Fish> allFish, List<Fish>[][] grid) {
-			int[] gridPos = {(int) (pos[0] / GRID_SIZE), (int) (pos[1] / GRID_SIZE)};
+			int[] gridPos = {(int) (pos[0] / gridResolution), (int) (pos[1] / gridResolution)};
 			List<Fish> nearbyFish = new ArrayList<>();
 
 			// Check neighboring grid cells
