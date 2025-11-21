@@ -240,7 +240,7 @@ public class FishSim extends Application {
 		// Initialize fish
 		for(int i = 0; i < FISH_COUNT; i++) {
 			double[] pos = {random.nextDouble() * getBounds()[0], random.nextDouble() * getBounds()[1]};
-			double[] dpos = {(random.nextDouble() * 2 - 1) * Fish.MAX_SPEED, (random.nextDouble() * 2 - 1) * Fish.MAX_SPEED};
+			double[] dpos = {(random.nextDouble() * 2 - 1) * Fish.dposMax, (random.nextDouble() * 2 - 1) * Fish.dposMax};
 			fishList.add(new Fish(pos, dpos, Color.color(random.nextDouble(), random.nextDouble(), random.nextDouble())));
 		}
 
@@ -396,7 +396,7 @@ public class FishSim extends Application {
 		public static Forces forcesAlignment = new Forces(100.0, 1.0);
 		public static Forces forcesCohesion = new Forces(100.0, 1.0);
 		public static Forces forcesBounds = new Forces(100.0, 2.0);
-		private static double MAX_SPEED = 3.0;
+		private static double dposMax = 3.0;   // Motion lim (limit of derivative of position)
 		private static double d2Pos = 0.1;     // Motion<sup>2</sup> (derivative #2 of position)
 		private static double isSimilarTolerance = 0.2;
 		public static boolean applyWallAvoidanceTru = (PosBounds.wrapAroundResolution == posBounds);
@@ -556,9 +556,9 @@ public class FishSim extends Application {
 		public void update() {
 			// Limit speed
 			double speed = Math.sqrt(dpos[0] * dpos[0] + dpos[1] * dpos[1]);
-			if(speed > MAX_SPEED) {
-				dpos[0] = (dpos[0] / speed) * MAX_SPEED;
-				dpos[1] = (dpos[1] / speed) * MAX_SPEED;
+			if(speed > dposMax) {
+				dpos[0] = (dpos[0] / speed) * dposMax;
+				dpos[1] = (dpos[1] / speed) * dposMax;
 			}
 
 			// Update position
