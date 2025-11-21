@@ -63,5 +63,32 @@ public class Forces implements java.lang.Cloneable { /* Usage: replaces `double 
 		double[] doubleView = { distance, factor };
 		return java.util.Arrays.hashCode(doubleView);
 	}
+
+	/* `ImmutableForces` functions, which accept `double[]` (future versions also accept `ImmutablePos`).
+	 * For now, this is just functions for Boids groups (future versions will include physics functions, such as {attraction of masses, {repulsion, attraction} of {opposite, similar} charges}).
+	 */
+	// Usage: for Boids groups: `if(dposScaleSum(derivativeOfPosition, secondDerivOfPos, averageDposOfGroup)) { position += derivativeOfPosition; }`
+	public boolean dposScaleSum(double[] dposDes, double d2posDes, double[] dposSource) {
+		double d2posSource = Math.sqrt(Calculus.pow2(dposSource[0]) + Calculus.pow2(dposSource[1]));
+		if(d2posSource > 0) {
+			dposDes[0] += (dposSource[0] / d2posSource) * d2posDes * factor;
+			dposDes[1] += (dposSource[1] / d2posSource) * d2posDes * factor;
+			return true;
+		}
+		return false;
+/*
+		// Is faster, if `Math.sqrt(double)` costs more than `double[] dposSourceMsb = { Math.signum(double), Math.signum(double) }`
+		double[] dposSourcePow2 = { Calculus.pow2(dposSource[0]),  Calculus.pow2(dposSource[1]) };
+		double[] dposSourceMsb = { Math.signum(dposSource[0]),  Math.signum(dposSource[1]) };
+		double d2posSourcePow2 = dposSourcePow2[0] + dposSourcePow2[1];
+		if(d2posSourcePow2 > 0) { // TODO: ensure this scales to the original (with `Math.sqrt(double)`) values
+			dposDes[0] += (dposSourceMsb[0] * dposSourcePow2[0] / d2posSourcePow2) * d2posDes * factor;
+			dposDes[1] += (dposSourceMsb[1] * dposSourcePow2[1] / d2posSourcePow2) * d2posDes * factor;
+			return true;
+		}
+		return false;
+*/
+	}
+//TODO: public boolean dposScaleSum(Pos dposDes, double d2posDes, ImmutablePos dposSource) {
 };
 
