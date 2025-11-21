@@ -59,7 +59,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * +`double[] resolutionf = {resolution[0], resolution[1]};`: for physics code which requires `double[]`.
     * +[`./susuwu/Calculus.java`](../susuwu/Calculus.java): `public class Calculus` houses simple trigonometric (transcendental) `public static` functions. Future versions will include true calculus functions (such as "False Position" or "Quadratic Interpolation").
     * +[`./susuwu/Forces.java`](../susuwu/Forces.java): replaces `double *Distance; double *Factor;` with `Forces forces*;`, so other `double`s are not confused with those.
-      * +`Forces.posIfDistSum(posDes, posSource, dist)`: for *Boids* groups: `if(posIfDistPow2Sum(averagePosOfGroup, posOfIndividual, distPow2ToIndividual) { ++sizeOfGroup; }`. For `Fish::apply*()`, will reduce duplicate code.
+      * +`Forces.posIfDistSum(posDes, posSource, dist)`: for *Boids* groups: `if(posIfDistPow2Sum(averagePosOfGroup, posOfIndividual, distPow2ToIndividual) { ++sizeOfGroup; }`. For `Fish::apply*()`, reduces duplicate code.
       * +`Forces.dposScaleSum(dposDes, d2pos, dposSource)`: for Boids groups: `if(dposScaleSum(derivativeOfPosition, secondDerivOfPos, averageDposOfGroup)) { position += derivativeOfPosition; }`, reduces duplicate code.
     * +`class ImmutablePos`: stores constant vectors (first-order tensors), to future-proof (for volumetrics). [Usage: `double acceptsConsts(ImmutablePos pos)`](https://github.com/SwuduSusuwu/SusuJava/compare/preview..pos2#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4).
       * +`class Pos`: `Pos` stores vectors (first-order tensors), to future-proof (for volumetrics). Usage: `double setsMembersOfPos(Pos pos)`.
@@ -462,15 +462,11 @@ public class FishSim extends Application {
 					double[] diffPos = {pos[0] - other.pos[0], pos[1] - other.pos[1]};
 					double dist = Math.hypot(diffPos[0], diffPos[1]);
 					if(isSimilarTo(other)) {
-						if(dist < forcesSeparation.distance) {
-							sepDpos[0] += diffPos[0] / dist;
-							sepDpos[1] += diffPos[1] / dist;
+						if(forcesSeparation.posIfDistScaleSum(sepDpos, diffPos, dist)) {
 							count++;
 						}
 					} else {
-						if(dist < forcesSeparationNonsimilar.distance) {
-							sepNonsimilarDpos[0] += diffPos[0] / dist;
-							sepNonsimilarDpos[1] += diffPos[1] / dist;
+						if(forcesSeparationNonsimilar.posIfDistScaleSum(sepNonsimilarDpos, diffPos, dist)) {
 							countNonsimilar++;
 						}
 					}
@@ -495,10 +491,8 @@ public class FishSim extends Application {
 
 			for(Fish other : nearbyFish) {
 				if(other != this && isSimilarTo(other)) {
-					double dist = Math.hypot(pos[0] - other.pos[0], pos[1] - other.pos[1]);
-					if(dist < forcesAlignment.distance) {
-						avgDpos[0] += other.dpos[0];
-						avgDpos[1] += other.dpos[1];
+					double distPow2 = Calculus.pow2(pos[0] - other.pos[0]) + Calculus.pow2(pos[1] - other.pos[1]);
+					if(forcesAlignment.posIfDistPow2Sum(avgDpos, other.dpos, distPow2)) {
 						count++;
 					}
 				}
@@ -517,10 +511,8 @@ public class FishSim extends Application {
 
 			for(Fish other : nearbyFish) {
 				if(other != this && isSimilarTo(other)) {
-					double dist = Math.hypot(pos[0] - other.pos[0], pos[1] - other.pos[1]);
-					if(dist < forcesCohesion.distance) {
-						avgPos[0] += other.pos[0];
-						avgPos[1] += other.pos[1];
+					double distPow2 = Calculus.pow2(pos[0] - other.pos[0]) + Calculus.pow2(pos[1] - other.pos[1]);
+					if(forcesCohesion.posIfDistPow2Sum(avgPos, other.pos, distPow2)) {
 						count++;
 					}
 				}
