@@ -83,7 +83,9 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
       * @`class Fish`: +`boolean isInBounds;` stores `boolean posBound()`'s `return` value (improves CPU use). TODO: rename to `isVisible`?
         * @`FishSim::updateFish()`: `if(fish.isInBounds) {}` around `grid[gridPos[0]][gridPos[1]].add(fish);`, so `FishSim` allows out-of-bounds `Fish`.
       * @`class Fish`: +`boolean isVisible`: improves `FishSim::renderFish()` (reduces calls to `fish.render()`, which improves `fps` for sims with huge unshown groups of fish).
-    * +`boolean FishSim::setResolution(newResolution)`: this sets all variables (plus uses all functions) required for `class FishSim` to switch to `newResolution`.
+    * +`boolean FishSim::setResolution(newResolution)`: this sets all variables (plus uses all functions) required for `class FishSim` to switch to `newResolution`. Blocks unless has exclusive access to `ReentrantLock updateFishLock, renderFishLock;`.
+      * +`ReentrantLock updateFishLock`: @`updateFish()` blocks unless has exclusive access to this.
+      * +`ReentrantLock renderFishLock`: @`renderFish()` blocks unless has exclusive access to this.
   * +`FishSim::getBounds()`: to replace `FishSim::resolution` for physics uses. Introduced `bounds` for this (to allow out-of-view positions). Notice: for simple sims, this can `return resolutionf;`.
     * `bounds = {resolution[0] * 2, resolution[1] * 2};` `BOUNDS_FACTOR = (PosBounds.wrapAroundResolution == posBounds ? 0 : 2);`: if `wrapAroundResolution`, the view is close to a natural ocean.
     * +`FishSim::getBoundsSlash2()`: caches `getBounds()[dim] / 2` for physics uses (improves inner loops).
@@ -111,6 +113,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
 import susuwu.Calculus; /* `Calculus.pow2()` */
 import susuwu.Forces; /* `class Forces implements java.lang.Cloneable` */
 
@@ -204,10 +207,15 @@ public class FishSim extends Application {
 // Will use `double[]` for now. TODO: test how much of `java`'s [static `Array` overhead](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Physics_sims_which_structures_to_use.md#separate-variables-versus-dim-lists) `java`'s toolkit optimizes for you. If performance is a problem, choose a new approach to use.
 
 	private static PosBounds posBounds = PosBounds.wrapAroundResolution;
+	static ReentrantLock renderFishLock = new ReentrantLock();
+	static ReentrantLock updateFishLock = new ReentrantLock();
+	// TODO: remove `static` from {`resolution`, `bounds`}, to allow to remove `static` from {`setResolution()`, `renderFishLock, `updateFishLock`}, so `FishSim` allows numerous windows
 	public static boolean setResolution(int[] newResolution) {
 		assert 2 == newResolution.length;
 		assert 0 < newResolution[0]; //TODO: allow "headless" instances with `resolution = {0, 0}`?
 		assert 0 < newResolution[1];
+		updateFishLock.lock();
+		renderFishLock.lock();
 		resolution = newResolution;
 		resolutionf[0] = resolution[0]; resolutionf[1] = resolution[1];
 		resolutionfSlash2[0] = resolution[0] / 2; resolutionfSlash2[1] = resolution[1] / 2;
@@ -220,8 +228,10 @@ public class FishSim extends Application {
 		// gc = canvas.getGraphicsContext2D();
 		// scene = new Scene(root, resolution[0], resolution[1], Color.LIGHTBLUE); // replace with `scene.widthProperty().bind(primaryStage.widthProperty());`?
 		// stage.setScene(scene);
+		renderFishLock.unlock();
+		updateFishLock.unlock();
 		return true;
-	} //TODO: lock `updateFish()` plus `renderFish()` for this
+	}
 	private static int[] resolution = {1280, 720};
 	private static double[] resolutionf = {resolution[0], resolution[1]};
 	private static double[] resolutionfSlash2 = {resolution[0] / 2, resolution[1] / 2}; // Improves execution of inner loops which use this
@@ -410,6 +420,7 @@ public class FishSim extends Application {
 	}
 
 	private void updateFish() {
+		updateFishLock.lock();
 		long physicsNsStart = System.nanoTime();
 
 		listToPartitions(grid, fishList);
@@ -422,9 +433,11 @@ public class FishSim extends Application {
 
 		physicsNs += System.nanoTime() - physicsNsStart;
 		physicsCounter++;
+		updateFishLock.unlock();
 	}
 
 	private void renderFish() {
+		renderFishLock.lock();
 		long renderNsStart = System.nanoTime();
 		fishShown = 0;
 		gc.clearRect(0, 0, resolution[0], resolution[1]);
@@ -435,6 +448,7 @@ public class FishSim extends Application {
 			}
 		}
 		renderNs += System.nanoTime() - renderNsStart;
+		renderFishLock.unlock();
 	}
 
 	private void fpsTextRefresh() {
