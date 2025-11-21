@@ -67,6 +67,31 @@ public class Forces implements java.lang.Cloneable { /* Usage: replaces `double 
 	/* `ImmutableForces` functions, which accept `double[]` (future versions also accept `ImmutablePos`).
 	 * For now, this is just functions for Boids groups (future versions will include physics functions, such as {attraction of masses, {repulsion, attraction} of {opposite, similar} charges}).
 	 */
+	// Usage: for Boids groups: `if(posIfDistSum(averageDposOfGroup, dposOfIndividual, distanceToIndividual) { ++sizeOfGroup; }`
+	public boolean posIfDistScaleSum(double[] posDes, double[] posSource, double dist) {
+		dist = Math.max(dist, Double.MIN_NORMAL);  // Notice: `MIN_VALUE` (as epsilon) gives rounding errors, so use minimum normal value
+		return posIfDistSum(posDes, new double[] {posSource[0] / dist, posSource[1] / dist},  dist);
+	}
+	public boolean posIfDistSum(double[] posDes, double[] posSource, double dist) {
+		if(dist < distance) {
+			posDes[0] += posSource[0];
+			posDes[1] += posSource[1];
+			return true;
+		}
+		return false;
+	}
+	public boolean posIfDistPow2Sum(double[] posDes, double[] posSource, double distPow2) {
+		if(distPow2 < getDistancePow2()) {
+			posDes[0] += posSource[0];
+			posDes[1] += posSource[1];
+			return true;
+		}
+		return false;
+	}
+//TODO:	public boolean posIfDistScaleSum(Pos posDes, ImmutablePos posSource, double dist) {
+//TODO:	public boolean posIfDistSum(Pos posDes, ImmutablePos posSource, double dist) {
+//TODO:	public boolean posIfDistPow2Sum(Pos posDes, ImmutablePos posSource, double distPow2) {
+
 	// Usage: for Boids groups: `if(dposScaleSum(derivativeOfPosition, secondDerivOfPos, averageDposOfGroup)) { position += derivativeOfPosition; }`
 	public boolean dposScaleSum(double[] dposDes, double d2posDes, double[] dposSource) {
 		double d2posSource = Math.sqrt(Calculus.pow2(dposSource[0]) + Calculus.pow2(dposSource[1]));

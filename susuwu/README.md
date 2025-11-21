@@ -12,6 +12,7 @@
 [`./susuwu/`](./) stores `package susuwu;`, which is [`java`](https://www.java.com/en/download/help/whatis_java.html) source code (`*.java`) for <https://GitHub.com/SwuduSusuwu/> (which is the `git` version of <https://SwuduSusuwu.SubStack.com/>). The goal is to publish modular (reusable) source code which future sims can use:
 - [`./susuwu/Calculus.java`](./Calculus.java): `` public class Calculus { /* `class Calculus` houses simple trigonometric (transcendental) `public static` functions. Future versions will include true calculus functions (such as "area-under-curve" integrals, or "False Position" or "Quadratic Interpolation" root formulas). */ ``
 - [`./susuwu/Forces.java`](./Forces.java): `public class Forces implements java.lang.Cloneable` "/\* Usage: `import susuwu.Forces;` ... replaces `double fooDistance; double fooFactor;` with `Forces fooForces;`, so other `double`s are not confused with those. \*/"
+  - `boolean posIfDistSum(posDes, posSource, dist)`: for *Boids* groups: `if(posIfDistPow2Sum(averagePosOfGroup, posOfIndividual, distPow2ToIndividual) { ++sizeOfGroup; }`
   - `boolean dposScaleSum(dposDes, d2pos, dposSource)`: Usage: for Boids groups: `if(posIfDistSum(averageDposOfGroup, dposOfIndividual, distanceToIndividual) { ++sizeOfGroup; }`
 - [`./susuwu/FishSim.java`](./FishSim.java): "Simple [*JavaFX*](https://github.com/openjdk/jfx) fish sim. Usage: `import susuwu.FishSim;` includes `public class`s (for new sims to use)"
 
