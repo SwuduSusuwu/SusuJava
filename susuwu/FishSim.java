@@ -59,7 +59,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * +`double[] resolutionf = {resolution[0], resolution[1]};`: for physics code which requires `double[]`.
     * +[`./susuwu/Calculus.java`](../susuwu/Calculus.java): `public class Calculus` houses simple trigonometric (transcendental) `public static` functions. Future versions will include true calculus functions (such as "False Position" or "Quadratic Interpolation").
     * +[`./susuwu/Forces.java`](../susuwu/Forces.java): replaces `double *Distance; double *Factor;` with `Forces forces*;`, so other `double`s are not confused with those.
-      * +`Forces.dposScaleSum(dposDes, d2pos, dposSource)`: for Boids groups: `if(dposScaleSum(derivativeOfPosition, secondDerivOfPos, averageDposOfGroup)) { position += derivativeOfPosition; }`, will reduce duplicate code.
+      * +`Forces.dposScaleSum(dposDes, d2pos, dposSource)`: for Boids groups: `if(dposScaleSum(derivativeOfPosition, secondDerivOfPos, averageDposOfGroup)) { position += derivativeOfPosition; }`, reduces duplicate code.
     * +`class ImmutablePos`: stores constant vectors (first-order tensors), to future-proof (for volumetrics). [Usage: `double acceptsConsts(ImmutablePos pos)`](https://github.com/SwuduSusuwu/SusuJava/compare/preview..pos2#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4).
       * +`class Pos`: `Pos` stores vectors (first-order tensors), to future-proof (for volumetrics). Usage: `double setsMembersOfPos(Pos pos)`.
       * +`class ImmutablePos2`: 2-dimensional specialization of `class ImmutablePos`.
@@ -467,20 +467,12 @@ public class FishSim extends Application {
 			if (count > 0) {
 				sepDpos[0] /= count;
 				sepDpos[1] /= count;
-				double sepLength = Math.sqrt(sepDpos[0] * sepDpos[0] + sepDpos[1] * sepDpos[1]);
-				if (sepLength > 0) {
-					dpos[0] += (sepDpos[0] / sepLength) * ACCELERATION * forcesSeparation.factor;
-					dpos[1] += (sepDpos[1] / sepLength) * ACCELERATION * forcesSeparation.factor;
-				}
+				forcesSeparation.dposScaleSum(dpos, ACCELERATION, sepDpos);
 			}
 			if (countNonsimilar > 0) {
 				sepNonsimilarDpos[0] /= countNonsimilar;
 				sepNonsimilarDpos[1] /= countNonsimilar;
-				double sepLength = Math.sqrt(sepNonsimilarDpos[0] * sepNonsimilarDpos[0] + sepNonsimilarDpos[1] * sepNonsimilarDpos[1]);
-				if (sepLength > 0) {
-					dpos[0] += (sepNonsimilarDpos[0] / sepLength) * ACCELERATION * forcesSeparationNonsimilar.factor;
-					dpos[1] += (sepNonsimilarDpos[1] / sepLength) * ACCELERATION * forcesSeparationNonsimilar.factor;
-				}
+				forcesSeparationNonsimilar.dposScaleSum(dpos, ACCELERATION, sepNonsimilarDpos);
 			}
 		}
 
@@ -502,13 +494,7 @@ public class FishSim extends Application {
 			if (count > 0) {
 				avgDpos[0] /= count;
 				avgDpos[1] /= count;
-				double length = Math.sqrt(avgDpos[0] * avgDpos[0] + avgDpos[1] * avgDpos[1]);
-				if (length > 0) {
-					avgDpos[0] = (avgDpos[0] / length) * ACCELERATION * forcesAlignment.factor;
-					avgDpos[1] = (avgDpos[1] / length) * ACCELERATION * forcesAlignment.factor;
-				}
-				dpos[0] += avgDpos[0];
-				dpos[1] += avgDpos[1];
+				forcesAlignment.dposScaleSum(dpos, ACCELERATION, avgDpos);
 			}
 		}
 
@@ -530,13 +516,7 @@ public class FishSim extends Application {
 			if (count > 0) {
 				avgPos[0] = (avgPos[0] / count) - pos[0];
 				avgPos[1] = (avgPos[1] / count) - pos[1];
-				double length = Math.sqrt(avgPos[0] * avgPos[0] + avgPos[1] * avgPos[1]);
-				if (length > 0) {
-					avgPos[0] = (avgPos[0] / length) * ACCELERATION * forcesCohesion.factor;
-					avgPos[1] = (avgPos[1] / length) * ACCELERATION * forcesCohesion.factor;
-				}
-				dpos[0] += avgPos[0];
-				dpos[1] += avgPos[1];
+				forcesCohesion.dposScaleSum(dpos, ACCELERATION, avgPos);
 			}
 		}
 
