@@ -2,9 +2,9 @@ name: Lint and Static Analysis
 
 on:
   push:
-    branches: [preview]
+    branches: ['preview', 'new', 'preview', 'pos2']
   pull_request:
-    branches: [preview]
+    branches: ['preview', 'new', 'preview', 'pos2']
 
 permissions:
   contents: read
