@@ -4,13 +4,15 @@
  * If *this attribution* is not professional enough for business use: businesses can use *this source code* through included versions of [*GPLv2*](./LICENSE_GPLv2), [*Apache 2*](./LICENSE), or through both of those.
  */
 
-/* `class Forces` stores values for physics forces (so other `double`s are not confused with thus), plus includes a few functions for use with thus.
- * `class Forces` does not use generics since [`java` generics do not allow primitives](https://stackoverflow.com/questions/2721546/why-dont-java-generics-support-primitive-types), but `:%s/double/float/` in `vim` will produce the `float` version (`:%s/double/long/` produces the `long` version). [Valhalla is a possible solution for this](https://openjdk.org/jeps/218)
- * Some `assert`s follow, thus document which arguments to use with this (without `-enableassertions`, thus are not enforced).
- * Some "Usage:" comments follow, which document how to use this.
- */
 package susuwu; /* Usage: `import susuwu.Forces;` */
-public class Forces implements java.lang.Cloneable { /* Usage: replaces `double fooDistance; double fooFactor;` with `Forces fooForces;` */
+/**
+ * {@code class Forces} stores values for physics forces (so other {@code double}s are not confused with thus), plus includes a few functions for use with thus.
+ * {@code class Forces} does not use generics since [`java` generics do not allow primitives](https://stackoverflow.com/questions/2721546/why-dont-java-generics-support-primitive-types), but {@code :%s/double/float/} in {@code vim} will produce the {@code float} version ({@code :%s/double/long/} produces the {@code long} version). [Valhalla is a possible solution for this](https://openjdk.org/jeps/218)
+ * Some {@code assert}s follow, thus document which arguments to use with this (without {@code -enableassertions}, thus are not enforced).
+ * Some "Usage:" comments follow, which document how to use this.
+ * Usage: replaces {@code double fooDistance; double fooFactor;} with {@code Forces fooForces;}
+ */
+public class Forces implements java.lang.Cloneable {
 	/* Member variables & constructors:
 	 * Notice: future versions will move `double distance, factor` into `class ImmutableForces`, with `class Forces extends ImmutableForces`. */
 	public double distance = 0.0; // Notice: future versions will use `protected double distance`. Usercode should access through `setDistance(double)` or `getDistance()`.
@@ -64,7 +66,7 @@ public class Forces implements java.lang.Cloneable { /* Usage: replaces `double 
 		return java.util.Arrays.hashCode(doubleView);
 	}
 
-	/* `ImmutableForces` functions, which accept `double[]` (future versions also accept `ImmutablePos`).
+	/* `ImmutableForces` functions, which accept `double[] dest, source` or `Pos dest, ImmutablePos source`:
 	 * For now, this is just functions for Boids groups (future versions will include physics functions, such as {attraction of masses, {repulsion, attraction} of {opposite, similar} charges}).
 	 */
 	// Usage: for Boids groups: `if(posIfDistSum(averageDposOfGroup, dposOfIndividual, distanceToIndividual) { ++sizeOfGroup; }`
@@ -88,9 +90,24 @@ public class Forces implements java.lang.Cloneable { /* Usage: replaces `double 
 		}
 		return false;
 	}
-//TODO:	public boolean posIfDistScaleSum(Pos posDes, ImmutablePos posSource, double dist) {
-//TODO:	public boolean posIfDistSum(Pos posDes, ImmutablePos posSource, double dist) {
-//TODO:	public boolean posIfDistPow2Sum(Pos posDes, ImmutablePos posSource, double distPow2) {
+	public boolean posIfDistScaleSum(Pos posDes, ImmutablePos posSource, double dist) {
+		dist = Math.max(dist, Double.MIN_NORMAL); // Notice: `MIN_VALUE` (as epsilon) gives rounding errors, so use minimum normal value
+		return posIfDistSum(posDes, posSource.slashScalar(dist),  dist);
+	}
+	public boolean posIfDistSum(Pos posDes, ImmutablePos posSource, double dist) {
+		if(dist < distance) {
+			posDes.plusEquals(posSource);
+			return true;
+		}
+		return false;
+	}
+	public boolean posIfDistPow2Sum(Pos posDes, ImmutablePos posSource, double distPow2) {
+		if(distPow2 < getDistancePow2()) {
+			posDes.plusEquals(posSource);
+			return true;
+		}
+		return false;
+	}
 
 	// Usage: for Boids groups: `if(dposScaleSum(derivativeOfPosition, secondDerivOfPos, averageDposOfGroup)) { position += derivativeOfPosition; }`
 	public boolean dposScaleSum(double[] dposDes, double d2posDes, double[] dposSource) {
@@ -114,6 +131,14 @@ public class Forces implements java.lang.Cloneable { /* Usage: replaces `double 
 		return false;
 */
 	}
-//TODO: public boolean dposScaleSum(Pos dposDes, double d2posDes, ImmutablePos dposSource) {
+	public boolean dposScaleSum(Pos dposDes, double d2posDes, ImmutablePos dposSource) {
+		double d2posSource = dposSource.magnitude();
+		if(d2posSource > 0) {
+			double magnitude = (d2posDes * factor / d2posSource);
+			dposDes.plusEquals(dposSource.starScalar(magnitude));
+			return true;
+		}
+		return false;
+	}
 };
 
