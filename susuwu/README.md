@@ -14,6 +14,7 @@
 - [`./susuwu/ImmutablePos.java`](./ImmutablePos.java): `` public abstract class ImmutablePos implements java.lang.Cloneable, java.util.RandomAccess { /* `ImmutablePos` stores constant vectors (first-order tensors). Usage: `double acceptsConsts(ImmutablePos pos)`. */ ``
   - [`./susuwu/Pos.java`](./Pos.java): `` public class Pos extends ImmutablePos { /* `Pos` stores mutable vectors (first-order tensors). Usage: `void setsPos(Pos pos)`. */ ``
   - [`./susuwu/ImmutablePos2.java`](./ImmutablePos2.java): `` public abstract class ImmutablePos2 extends ImmutablePos { /* `ImmutablePos2` is the 2-dimensional specialization of `class ImmutablePos`. Usage: `double acceptsConsts(ImmutablePos2 pos2)`. */ ``
+  - [`./susuwu/Pos2.java`](./Pos2.java): `` public class Pos2 extends Pos { /* `class Pos2` is the 2-dimensional specialization of `class Pos`. Usage: `Pos2 position;` */ ``
 - [`./susuwu/Forces.java`](./Forces.java): `public class Forces implements java.lang.Cloneable` "/\* Usage: `import susuwu.Forces;` ... replaces `double fooDistance; double fooFactor;` with `Forces fooForces;`, so other `double`s are not confused with those. \*/"
   - `boolean posIfDistSum(posDes, posSource, dist)`: for *Boids* groups: `if(posIfDistPow2Sum(averagePosOfGroup, posOfIndividual, distPow2ToIndividual) { ++sizeOfGroup; }`
   - `boolean dposScaleSum(dposDes, d2pos, dposSource)`: Usage: for Boids groups: `if(posIfDistSum(averageDposOfGroup, dposOfIndividual, distanceToIndividual) { ++sizeOfGroup; }`

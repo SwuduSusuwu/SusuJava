@@ -31,7 +31,7 @@ public abstract class ImmutablePos2 extends ImmutablePos {
 		pos[0] = o.pos[0];
 		pos[1] = o.pos[1];
 	}
-	public ImmutablePos2(FishSim.Pos2 o) { /* Usage: as conversion constructor. TODO: clone virtual function addresses. */
+	public ImmutablePos2(Pos2 o) { /* Usage: as conversion constructor. TODO: clone virtual function addresses. */
 		assert null != o;
 		pos[0] = o.pos[0];
 		pos[1] = o.pos[1];

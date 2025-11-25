@@ -16,6 +16,7 @@
   * Will use [`./susuwu/ImmutablePos.java`](../susuwu/ImmutablePos.java): `public abstract class ImmutablePos implements java.lang.Cloneable, java.util.RandomAccess` stores constant vectors (first-order tensors), to future-proof (for volumetrics). [Usage: `double acceptsConsts(ImmutablePos pos)`](https://github.com/SwuduSusuwu/SusuJava/compare/preview..pos2#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4).
     * [`./susuwu/Pos.java`](../susuwu/Pos.java): `public class Pos extends ImmutablePos` stores mutable vectors (first-order tensors). Usage: `void setsPos(Pos pos)`.
     * [`./susuwu/ImmutablePos2.java`](../susuwu/ImmutablePos2.java): `public abstract class ImmutablePos2 extends ImmutablePos` is the 2-dimensional specialization of `class ImmutablePos`. Usage: `double acceptsConsts(ImmutablePos2 pos2)`.
+    * [`./susuwu/Pos2.java`](../susuwu/Pos2.java): `public class Pos2 extends Pos` is the 2-dimensional specialization of `class Pos`. Usage: `Pos2 position;`.
   * Uses [`./susuwu/Forces.java`](../susuwu/Forces.java): `public class Forces implements java.lang.Cloneable` "/\* Usage: `import susuwu.Forces;` ... replaces `double fooDistance; double fooFactor;` with `Forces fooForces;`, so other `double`s are not confused with those. \*/"
     * `Forces.posIfDistSum(posDes, posSource, dist)`: for *Boids* groups: `if(posIfDistPow2Sum(averagePosOfGroup, posOfIndividual, distPow2ToIndividual) { ++sizeOfGroup; }`. For `Fish::apply*()`, reduces duplicate code.
     * `Forces.dposScaleSum(dposDes, d2pos, dposSource)`: for Boids groups: `if(dposScaleSum(derivativeOfPosition, secondDerivOfPos, averageDposOfGroup)) { position += derivativeOfPosition; }`, reduces duplicate code.
@@ -79,7 +80,6 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
     * +`FishSim::FpsTextMode()`: says which resources for `fpsText` to show. `fpsTextRefresh()` uses this.
   * @`FishSim::*`: replaces pairs of 2 `int`s with `int[2]` (replaced 2 `double`s with `double[2]`), to future-proof (for `class Pos2`). Such as: -`WIDTH`, -`HEIGHT`, +`resolution[]`.
     * +`double[] resolutionf = {resolution[0], resolution[1]};`: for physics code which requires `double[]`.
-    * +`class Pos2`: 2-dimensional specialization of `class Pos`.
     * +`FishSim::outOfBounds()`: improves @`FishSim::updateFish()` (which now uses this if `Fish` not in `grid` bounds).
     * +`void Fish::setPos(double[] newPos)`: if `Fish` not in bounds, uses `FishSim::outOfBounds()`.
   * @`FishSim::updateFish()`: replaces magic constants (`resolution[] / gridResolution`) with `grid.length`, to ensure correct access if the code which produces `grid` changes.
