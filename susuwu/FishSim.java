@@ -547,19 +547,7 @@ public class FishSim extends Application {
 	 * Not used for now, due to concerns of virtual function RAM plus CPU usage.
 	 * The actual `class`s will include numerous more functions, plus will move into `./susuwu/{ImmutablePos, Pos, ImmutablePos2, Pos2}.java`
 	 */
-	public abstract static class Pos extends ImmutablePos { /* `Pos` stores vectors (first-order tensors). Usage: `double acceptsMutables(Pos pos)`.  */
-		public void set(int index, double newValue) { /* Usage: `Pos.set(index, newValue)`. */
-			assert pos.length > index; /* Notice: this trusts `java` to enforce `Array` bounds */
-			pos[index] = newValue;
-		}
-		public abstract double volume(); /* Usage: `return`s the product (Cartestian-volume) of `pos` */
-		public abstract void plusEquals(ImmutablePos o); /* Usage: `Pos.plusEquals(oPos)` is the tensor version of `Pos += o` */
-		public abstract void minusEquals(ImmutablePos o); /* Usage: `Pos.minusEquals(oPos)` is the tensor version of `Pos -= o` */
-		public abstract void starEquals(ImmutablePos o); /* Usage: `Pos.starEquals(oPos)` is the tensor version of `Pos *= o` */
-		public abstract void slashEquals(ImmutablePos o); /* Usage: `Pos.slashEquals(oPos)` is the tensor version of `Pos /= o` */
-		public abstract void moduloEquals(ImmutablePos o); /* Usage: `Pos.moduloEquals(oPos)` is the tensor version of `Pos %= o` */
-	};
-	public static class ImmutablePos2 extends ImmutablePos { /* `ImmutablePos2` is the 2-dimensional specialization of `class ImmutablePos`. Usage: `double acceptsConsts(ImmutablePos2 pos2)`. */
+	public abstract static class ImmutablePos2 extends ImmutablePos { /* `ImmutablePos2` iis the 2-dimensional specialization of `class ImmutablePos`. Usage: `double acceptsConsts(ImmutablePos2 pos2)`. */
 		double[] pos = {0, 0}; // `{pos[0], pos[1]}` replaces `{x, y}` position, `{WIDTH, HEIGHT}` resolution, `{dx, dy}` motion tensors, or `{d2x, d2y}` acceleration tensors.
 		public ImmutablePos2() {}
 		public ImmutablePos2(Pos2 o) { /* Notice: must use `interface` (or multiple inheritance) to allow implicit conversion of `Pos2` into `ImmutablePos` plus `ImmutablePos2` */
