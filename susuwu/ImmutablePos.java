@@ -4,16 +4,18 @@
  * If *this attribution* is not professional enough for business use: businesses can use *this source code* through included versions of [*GPLv2*](./LICENSE_GPLv2), [*Apache 2*](./LICENSE), or through both of those.
  */
 
-/* `class ImmutablePos` stores constant vectors (first-order tensors).
- * `class ImmutablePos` does not use generics since [`java` generics do not allow primitives](https://stackoverflow.com/questions/2721546/why-dont-java-generics-support-primitive-types), but `:%s/double/float/` in `vim` will produce the `float` version (`:%s/double/long/` produces the `long` version). [Valhalla is a possible solution for this](https://openjdk.org/jeps/218)
- * Some `assert`s follow, thus document which arguments to use with this (without `-enableassertions`, thus are not enforced).
- * Some "Usage:" comments follow, which document how to use this.
- * Notice: was unaware of [`DoubleVector`](https://docs.oracle.com/en/java/javase/21/docs/api/jdk.incubator.vector/jdk/incubator/vector/DoubleVector.html) when produced this, so no `implements DoubleVector` for now. */
 package susuwu; // Usage: `import susuwu.ImmutablePos;`
 import java.util.Arrays; // `Arrays.toString([])`
-public abstract class ImmutablePos implements java.lang.Cloneable, java.util.RandomAccess { /* Usage: `double acceptsConsts(ImmutablePos pos)`. */
-	/* Member variables:
-	 * Notice: `ImmutablePos` was almost set to `abstract`, due to confusion over which default `pos.length` to use: future versions could use `pos = {}`, `pos = {0}` or `pos = {0, 0, 0}` */
+/**
+ * {@code class ImmutablePos} stores constant vectors (first-order tensors).
+ * {@code class ImmutablePos} does not use generics since [{@code java} generics do not allow primitives](https://stackoverflow.com/questions/2721546/why-dont-java-generics-support-primitive-types), but {@code :%s/double/float/} in {@code vim} will produce the {@code float} version ({@code :%s/double/long/} produces the {@code long} version). [Valhalla is a possible solution for this](https://openjdk.org/jeps/218)
+ * Some {@code assert}s follow, thus document which arguments to use with this (without {@code -enableassertions}, thus are not enforced).
+ * Some "Usage:" comments follow, which document how to use this.
+ * Notice: was unaware of <a href="https://docs.oracle.com/en/java/javase/21/docs/api/jdk.incubator.vector/jdk/incubator/vector/DoubleVector.html">DoubleVector</a> when produced this, so no {@code implements DoubleVector} for now.
+ * @var pos Stores tensor of position coordinates (for internal {@code package susuwu} uses). Other {@code package}s should use {@link #dims()}, {@link #at(int)}, {@link #set(int, double)}. Notice: {@code class ImmutablePos} was almost set to {@code abstract}, due to confusion over which default {@code pos.length} to use: future versions could use {@code pos = {}}, {@code pos = {0}} or {@code pos = {0, 0, 0}}
+ * Usage: {@code double acceptsConsts(ImmutablePos pos)}
+ */
+public abstract class ImmutablePos implements java.lang.Cloneable, java.util.RandomAccess {
 	protected double[] pos = {0, 0};
 
 	/* Constructor functions: */
