@@ -16,7 +16,7 @@ public class Forces implements java.lang.Cloneable {
 	/* Member variables & constructors:
 	 * Notice: future versions will move `double distance, factor` into `class ImmutableForces`, with `class Forces extends ImmutableForces`. */
 	public double distance = 0.0; // Notice: future versions will use `protected double distance`. Usercode should access through `setDistance(double)` or `getDistance()`.
-//	public double distancePow2 = Calculus.pow2(distance); /* Usage: stores the `pow(distance, 2)` value, for reuses */
+	public double distancePow2 = Calculus.pow2(distance); /* Usage: stores the `pow(distance, 2)` value, for reuses */
 	public double factor = 0.0; // Notice: future versions will use `protected double factor`. Usercode should access through `setFactor(double)` or `getFactor()`.
 	public Forces(double distance, double factor) {
 		setFactor(factor);
@@ -36,7 +36,7 @@ public class Forces implements java.lang.Cloneable {
 	}
 	public void setDistance(double distance) {
 		this.distance = distance;
-//		this.distancePow2 = Calculus.pow2(distance); // Notice: if uncomment `double distancePow2`, then uncomment this
+		this.distancePow2 = Calculus.pow2(distance); // Notice: if uncomment `double distancePow2`, then uncomment this
 	}
 
 	/* Public getter functions:
@@ -44,8 +44,7 @@ public class Forces implements java.lang.Cloneable {
 	public double getFactor() { return this.factor; }
 	public double getDistance() { return this.distance; }
 	public double getDistancePow2() { /* Usage: `if(this.getDistancePow2() < Calculus.distancePow2(double...))` replaces `if(this.getDistance() < Calculus.hypotenus(double...))` */
-//		return this.distancePow2; // Notice: if uncomment `double distancePow2`, then uncomment this
-		return Calculus.pow2(this.distance);
+		return this.distancePow2; // Notice: if uncomment `double distancePow2`, then uncomment this
 	}
 
 	/* Comparison functions:
