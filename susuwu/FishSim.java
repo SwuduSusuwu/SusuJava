@@ -58,6 +58,7 @@ Notice: [Used *Solar-Pro-2* to improve codeflow](https://github.com/SwuduSusuwu/
   * @`FishSim::*`: replaces pairs of 2 `int`s with `int[2]` (replaced 2 `double`s with `double[2]`), to future-proof (for `class Pos2`). Such as: -`WIDTH`, -`HEIGHT`, +`resolution[]`.
     * +`double[] resolutionf = {resolution[0], resolution[1]};`: for physics code which requires `double[]`.
     * +[`./susuwu/Calculus.java`](../susuwu/Calculus.java): `public class Calculus` houses simple trigonometric (transcendental) `public static` functions. Future versions will include true calculus functions (such as "False Position" or "Quadratic Interpolation").
+    * +[`./susuwu/Forces.java`](../susuwu/Forces.java): will replace `double *Distance; double *Factor;` with `Forces forces*;`, so other `double`s are not confused with those.
     * +`class ImmutablePos`: stores constant vectors (first-order tensors), to future-proof (for volumetrics). [Usage: `double acceptsConsts(ImmutablePos pos)`](https://github.com/SwuduSusuwu/SusuJava/compare/preview..pos2#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4).
       * +`class Pos`: `Pos` stores vectors (first-order tensors), to future-proof (for volumetrics). Usage: `double setsMembersOfPos(Pos pos)`.
       * +`class ImmutablePos2`: 2-dimensional specialization of `class ImmutablePos`.
