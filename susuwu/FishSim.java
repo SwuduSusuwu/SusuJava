@@ -528,39 +528,6 @@ public class FishSim extends Application {
 	 * Not used for now, due to concerns of virtual function RAM plus CPU usage.
 	 * The actual `class`s will include numerous more functions, plus will move into `./susuwu/{ImmutablePos, Pos, ImmutablePos2, Pos2}.java`
 	 */
-	public abstract static class ImmutablePos2 extends ImmutablePos { /* `ImmutablePos2` iis the 2-dimensional specialization of `class ImmutablePos`. Usage: `double acceptsConsts(ImmutablePos2 pos2)`. */
-		double[] pos = {0, 0}; // `{pos[0], pos[1]}` replaces `{x, y}` position, `{WIDTH, HEIGHT}` resolution, `{dx, dy}` motion tensors, or `{d2x, d2y}` acceleration tensors.
-		public ImmutablePos2() {}
-		public ImmutablePos2(Pos2 o) { /* Notice: must use `interface` (or multiple inheritance) to allow implicit conversion of `Pos2` into `ImmutablePos` plus `ImmutablePos2` */
-			pos[0] = o.pos[0];
-			pos[1] = o.pos[1];
-		}
-		public ImmutablePos2(double pos0, double pos1) {
-			pos[0] = pos0;
-			pos[1] = pos1;
-		}
-		@Override
-		public int dims() {
-			return 2;
-		}
-		@Override
-		public Pos zeros() {
-			return new Pos2();
-		}
-		@Override
-		public Pos ones() {
-			return new Pos2(1, 1);
-		}
-		@Override
-		public Pos clone() {
-			return new Pos2(pos[0], pos[1]);
-		}
-
-		@Override
-		public double volume() {
-			return pos[0] * pos[1];
-		}
-	};
 	public static class Pos2 extends Pos { /* `class Pos2` is the 2-dimensional specialization of `class Pos` */
 		double[] pos = {0, 0};
 		public Pos2() {}
