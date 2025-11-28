@@ -14,7 +14,7 @@ package susuwu; // Usage: `import susuwu.ImmutablePos2;`
  * Usage: {@code double acceptsConsts(ImmutablePos2 pos) { double coord = pos.at(index); }}
  * @var pos Stores tensor of position coordinates (for internal {@code package susuwu} uses). Other {@code package}s should use: {@link #dims()}, {@link #at(int)}, {@link #set(int, double)}
  */
-public abstract class ImmutablePos2 extends ImmutablePos {
+public class ImmutablePos2 extends ImmutablePos {
 	/* Constructor functions: */
 	public ImmutablePos2() {} /* Usage: as default constructor */
 	public ImmutablePos2(double pos0, double pos1) { /* Usage: as manual constructor */
@@ -47,6 +47,18 @@ public abstract class ImmutablePos2 extends ImmutablePos {
 		assert 2 == o.pos.length; // Notice: `2` is optimization of `dims()`, for internal uses
 		pos[0] = o.pos[0];
 		pos[1] = o.pos[1]; // Notice: assumes `o.dims() >= 2`
+	}
+	@Override
+	public Pos clone() { /* Usage: `ImmutablePos pos = o.clone(); assert o.dims() == pos.dims(); for(int index = pos.dims(); index--; ) { assert o.at(index) == pos.at(index); }` */
+		return new Pos2(this);
+	}
+	@Override
+	public Pos zeros() { /* Usage: `ImmutablePos pos = o.zeros(); assert o.dims() == pos.dims(); for(int index = pos.dims(); index--; ) { assert 0 == pos.at(index); }` */
+		return new Pos2();
+	}
+	@Override
+	public Pos ones() { /* Usage: `ImmutablePos pos = o.ones(); assert o.dims() == pos.dims(); for(int index = pos.dims(); index--; ) { assert 1 == pos.at(index); }` */
+		return new Pos2(1, 1);
 	}
 
 	/* Immutable `pos` access functions */
