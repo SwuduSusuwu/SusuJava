@@ -528,20 +528,6 @@ public class FishSim extends Application {
 	 * Not used for now, due to concerns of virtual function RAM plus CPU usage.
 	 * The actual `class`s will include numerous more functions, plus will move into `./susuwu/{ImmutablePos, Pos, ImmutablePos2, Pos2}.java`
 	 */
-	public abstract static class ImmutablePos { /* `ImmutablePos` stores constant vectors (first-order tensors). Usage: `double acceptsConsts(ImmutablePos pos)`. */
-		double[] pos; /* Notice: future versions will use `private double[] pos;` */
-		public double at(int index) { /* Usage: `ImmutablePos.at(index)` `return`s `pos[index]`. */
-			assert pos.length > index; /* Notice: this trusts `java` to enforce `Array` bounds */
-			return pos[index];
-		}
-		public int dims() { /* Usage: `for(int index = ImmutablePos.dims(); index--; ) { sum += ImmutablePos.at(index); }` */
-			return pos.length;
-		}
-		abstract public Pos zeros(); /* Usage: `ImmutablePos pos = o.zeros(); assert o.dims() == pos.dims(); for(int index = pos.dims(); index--; ) { assert 0 == pos.at(index); }` */
-		abstract public Pos ones(); /* Usage: `ImmutablePos pos = o.ones(); assert o.dims() == pos.dims(); for(int index = pos.dims(); index--; ) { assert 1 == pos.at(index); }` */
-		abstract public Pos clone(); /* Usage: `ImmutablePos pos = o.clone(); assert o.dims() == pos.dims(); for(int index = pos.dims(); index--; ) { assert o.at(index) == pos.at(index); }` */
-		abstract public double volume(); /* Usage: `double arithmeticProduct = ImmutablePos.volume(); //Cartesian-volume` */
-	};
 	public abstract static class Pos extends ImmutablePos { /* `Pos` stores vectors (first-order tensors). Usage: `double acceptsMutables(Pos pos)`.  */
 		public void set(int index, double newValue) { /* Usage: `Pos.set(index, newValue)`. */
 			assert pos.length > index; /* Notice: this trusts `java` to enforce `Array` bounds */
