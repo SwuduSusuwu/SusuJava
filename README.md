@@ -29,6 +29,7 @@
 - [`./susuwu/Calculus.java`](./susuwu/Calculus.java): `` public class Calculus { /* `class Calculus` houses simple trigonometric (transcendental) `public static` functions. Future versions will include true calculus functions (such as "area-under-curve" integrals, or "False Position" or "Quadratic Interpolation" root formulas). */ ``
 - [`./susuwu/Forces.java`](./susuwu/Forces.java): `public class Forces implements java.lang.Cloneable` "/\* Usage: `import susuwu.Forces;` ... replaces `double fooDistance; double fooFactor;` with `Forces fooForces;`, so other `double`s are not confused with those. \*/"
 - [`./susuwu/SimUsages.java`](./susuwu/SimUsages.java): `class SimUsages` shows `FpsTextMode` statistics such as `fps` or `ms`. Requirements: some render loop (for measurements). Is not specific to the renderer used. Was produced for `class FishSim`, so the text (plus comments) assume the organisms are `class Fish`, but `SimUsages` is not specific to `class Fish`.
+- [`./susuwu/ImmutablePosBounds.java`](./susuwu/ImmutablePosBounds.java): `public class ImmutablePosBounds implements java.lang.Cloneable` \* Usage: `ImmutablePosBounds posBounds(PosBoundsMode);`: which stores how sims enforce bounds. \*/"
 - [`./susuwu/FishSim.java`](./susuwu/FishSim.java): "Simple [*JavaFX*](https://github.com/openjdk/jfx) fish sim. Usage: `import susuwu.FishSim;` includes `public class`s (for new sims to use)"
 
 [`./posts/`](./posts/) is *Markdown* which has to do with `java` sims, plus references to *Markdown* from other repos which has some use for `java` sims:
