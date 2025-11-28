@@ -22,18 +22,6 @@ public class Pos extends ImmutablePos { /* Usage: `void setsPos(Pos pos) { pos.s
 	public Pos(ImmutablePos o) { /* Usage: as conversion constructor. TODO: clone virtual function addresses. */
 		pos = o.pos.clone();
 	}
-	@Override
-	public Pos clone() { /* Usage: `ImmutablePos pos = o.clone(); assert o.dims() == pos.dims(); for(int index = pos.dims(); index--; ) { assert o.at(index) == pos.at(index); }` */
-		return new Pos(this);
-	}
-	public Pos zeros() { /* Usage: `ImmutablePos pos = o.zeros(); assert o.dims() == pos.dims(); for(int index = pos.dims(); index--; ) { assert 0 == pos.at(index); }` */
-		return new Pos();
-	}
-	public Pos ones() { /* Usage: `ImmutablePos pos = o.ones(); assert o.dims() == pos.dims(); for(int index = pos.dims(); index--; ) { assert 1 == pos.at(index); }` */
-		Pos pos = new Pos();
-		pos.fill_(1);
-		return pos;
-	}
 
 	/* `pos` functions: */
 	public double[] getPos() { /* Usage: use as `Pos.pos`. Notice: future versions could replace `double[] pos;` with `double pos0, pos1, ...;`, so use `.at(index)` or `.set(index, newValue)`. */
@@ -150,103 +138,6 @@ public class Pos extends ImmutablePos { /* Usage: `void setsPos(Pos pos) { pos.s
 		for(int dim = 0; dim < pos.length; ++dim) {
 			pos[dim] = Math.pow(pos[dim], o);
 		}
-	}
-
-	/* Vector (tensor) functions which accept other tensors:
-	 * Notice: the functions after this row all require `Pos clone()` for the generic versions, thus are `abstract` in `class ImmutablePos`, so `class ImmutablePos` does not require `class Pos`.
-	 * Future versions will move those functions into `class ImmutablePos` (if `java` suits such circular uses). */
-	public Pos plus(double[] o) { /* Usage: `Pos.plus(o)` is the tensor version of `(Pos + o)` */
-		Pos pos = clone();
-		pos.plusEquals(o);
-		return pos;
-	}
-	public Pos plus(ImmutablePos o) { /* Usage: `Pos.plus(o)` is the tensor version of `(Pos + o)` */
-		Pos pos = clone();
-		pos.plusEquals(o);
-		return pos;
-	}
-	public Pos minus(double[] o) { /* Usage: `Pos.minus(o)` is the tensor version of `(Pos - o)` */
-		Pos pos = clone();
-		pos.minusEquals(o);
-		return pos;
-	}
-	public Pos minus(ImmutablePos o) { /* Usage: `Pos.minus(o)` is the tensor version of `(Pos - o)` */
-		Pos pos = clone();
-		pos.minusEquals(o);
-		return pos;
-	}
-	public Pos star(double[] o) { /* Usage: `Pos.star(o)` is the tensor version of `(Pos * o)` */
-		Pos pos = clone();
-		pos.starEquals(o);
-		return pos;
-	}
-	public Pos star(ImmutablePos o) { /* Usage: `Pos.star(o)` is the tensor version of `(Pos * o)` */
-		Pos pos = clone();
-		pos.starEquals(o);
-		return pos;
-	}
-	public Pos slash(double[] o) { /* Usage: `Pos.slash(o)` is the tensor version of `(Pos / o)` */
-		Pos pos = clone();
-		pos.slashEquals(o);
-		return pos;
-	}
-	public Pos slash(ImmutablePos o) { /* Usage: `Pos.slash(o)` is the tensor version of `(Pos / o)` */
-		Pos pos = clone();
-		pos.slashEquals(o);
-		return pos;
-	}
-	public Pos modulo(double[] o) { /* Usage: `Pos.modulo(o)` is the tensor version of `(Pos % o)` */
-		Pos pos = clone();
-		pos.moduloEquals(o);
-		return pos;
-	}
-	public Pos modulo(ImmutablePos o) { /* Usage: `Pos.modulo(o)` is the tensor version of `(Pos % o)` */
-		Pos pos = clone();
-		pos.moduloEquals(o);
-		return pos;
-	}
-	public Pos pow(double[] o) { /* Usage: `Pos.pow(o)` is the tensor version of `Math.pow(Pos, o)` */
-		Pos pos = clone();
-		pos.powEquals(o);
-		return pos;
-	}
-	public Pos pow(ImmutablePos o) { /* Usage: `Pos.pow(o)` is the tensor version of `Math.pow(Pos, o)` */
-		Pos pos = clone();
-		pos.powEquals(o);
-		return pos;
-	}
-
-	/* Vector (tensor) functions which accept scalars:
-	 * Notice: almost used `double s` (acronym for "scalar"), but all similar functions use `o` (acronym for "otherInstance") */
-	public Pos plusScalar(double o) { /* Usage: `plusScalar(o)` compressed version of `plus(new double[]{o, o})` */
-		Pos pos = clone();
-		pos.plusEqualsScalar(o);
-		return pos;
-	}
-	public Pos minusScalar(double o) { /* Usage: `minusScalar(o)` compressed version of `minus(new double[]{o, o})` */
-		Pos pos = clone();
-		pos.minusEqualsScalar(o);
-		return pos;
-	}
-	public Pos starScalar(double o) { /* Usage: `starScalar(o)` compressed version of `star(new double[]{o, o})` */
-		Pos pos = clone();
-		pos.starEqualsScalar(o);
-		return pos;
-	}
-	public Pos slashScalar(double o) { /* Usage: `slashScalar(o)` compressed version of `slash(new double[]{o, o})` */
-		Pos pos = clone();
-		pos.slashEqualsScalar(o);
-		return pos;
-	}
-	public Pos moduloScalar(double o) { /* Usage: `moduloScalar(o)` compressed version of `modulo(new double[]{o, o})` */
-		Pos pos = clone();
-		pos.moduloEqualsScalar(o);
-		return pos;
-	}
-	public Pos powScalar(double o) { /* Usage: `powScalar(o)` compressed version of `pow(new double[]{o, o})` */
-		Pos pos = clone();
-		pos.powEqualsScalar(o);
-		return pos;
 	}
 };
 
