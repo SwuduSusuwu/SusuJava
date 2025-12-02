@@ -382,8 +382,8 @@ public class FishSim extends Application {
 			for(Fish o : nearbyFish) {
 				if(o != this && isSimilarTo(o)) {
 					Pos posDiff = getPosDiff(o);
-					double dist = posDiff.magnitude();
-					if(forcesAlignment.posIfDistSum(avgDpos, o.dpos, dist)) {
+					double distPow2 = posDiff.magnitudePow2();
+					if(forcesAlignment.posIfDistPow2Sum(avgDpos, o.dpos, distPow2)) {
 						count++;
 					}
 				}
@@ -402,8 +402,8 @@ public class FishSim extends Application {
 			for(Fish o : nearbyFish) {
 				if(o != this && isSimilarTo(o)) {
 					Pos posDiff = getPosDiff(o);
-					double dist = posDiff.magnitude();
-					if(forcesCohesion.posIfDistSum(avgPos, o.pos, dist)) {
+					double distPow2 = posDiff.magnitudePow2();
+					if(forcesCohesion.posIfDistPow2Sum(avgPos, o.pos, distPow2)) {
 						count++;
 					}
 				}
