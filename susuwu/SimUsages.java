@@ -23,14 +23,14 @@ public class SimUsages {
 	/* `public` members */
 	public long fpsTextMode = FpsTextMode.allUsages.value; // Usage `usages.fpsTextModeFps = FpsTextMode.fps.value;` to just show `fps`
 	public double secondsPerFpsTextRefresh = 1.0; // Usage: `usages.secondsPerFpsTextRefresh = 0.2;` to give more current values, or `= 2.0;` to give more smooth values. In `postRefresh()`: if `secondsPerFpsTextRefresh` elapses, `lastTime = System.nanoTime(); fpsTextRefresh();``
-	public double renderMs = Double.NaN; // Usage: `functionWhichUsesRenderMs(usages.renderMs);`. Stores average **ms** from `startRender()` to `postRender()` (`renderNs / frameCount / 1_000_000.0`)
+	public double renderMs = Double.NaN; // Usage: `functionWhichUsesRenderMs(usages.renderMs);`. Stores average **ms** from `startRender()` to `postRender()` (`renderNs / renderCounter / 1_000_000.0`)
 	public double physicsMs = Double.NaN; // Usage: `functionWhichUsesPhysicsMs(usages.physicsMs);`. Stores average **ms** from `startPhysics()` to `postPhysics()` (`physicsNs / physicsCounter / 1_000_000.0`)
-	public double fps = Double.NaN; // Usage: `functionWhichUsesFps(usages.fps);`. Stores `frameCount / (System.nanoTime() - lastTime) / 1_000_000_000.0`
+	public double fps = Double.NaN; // Usage: `functionWhichUsesFps(usages.fps);`. Stores `renderCounter / (System.nanoTime() - lastTime) / 1_000_000_000.0`
 
 	/* `private` or almost-`private` members */
-	public long lastTime = System.nanoTime(); // Stores `System.nanoTime()` when `frameCount = 0`.
-	public int frameCounter = 0; // Sum of `postRefresh()` uses since `SimUsages(Pane)`.
-	public int frameCount = 0; // Sum of `postRender()` uses since `lastTime = System.nanoTime()`.
+	public long lastTime = System.nanoTime(); // Stores `System.nanoTime()` when `renderCounter = 0`.
+	public int refreshCounter = 0; // Sum of `postRefresh()` uses since `SimUsages(Pane)`.
+	public int renderCounter = 0; // Sum of `postRender()` uses since `lastTime = System.nanoTime()`.
 	public int physicsCounter = 0; // Sum of `postPhysics()` uses since `lastTime = System.nanoTime()`.
 	public long physicsNs = -1; // Sum of `nanoTime()` at `postRender()` minus `nanoTime()` at `startRender()` since `lastTime = System.nanoTime()`.
 	public long renderNs = -1; // Sum of `nanoTime()` at `postRender()` minus `nanoTime()` at `startRender()` since `lastTime = System.nanoTime()`.
@@ -75,16 +75,16 @@ public class SimUsages {
 		double elapsed = (now - lastTime) / 1_000_000_000.0;
 		if(elapsed >= secondsPerFpsTextRefresh) {
 			lastTime = now;
-			fps = frameCount / elapsed;
-			renderMs = renderNs / frameCount / 1_000_000.0;
+			fps = renderCounter / elapsed;
+			renderMs = renderNs / renderCounter / 1_000_000.0;
 			physicsMs = physicsNs / physicsCounter / 1_000_000.0;
 			Platform.runLater(() -> fpsTextRefresh(fishShown, fishListSize));
-			frameCount = 1;
+			renderCounter = 1;
 			renderNs = -1;
 			physicsCounter = 1;
 			physicsNs = -1;
 		}
-		frameCounter++;
+		refreshCounter++;
 	}
 	private long renderNsStart, physicsNsStart;
 	public void startRender() { // Usage: `startRender();` at start of render loop
@@ -92,7 +92,7 @@ public class SimUsages {
 	}
 	public void postRender() { // Usage: `startRender();` at closure of render loop
 		renderNs += System.nanoTime() - renderNsStart;
-		frameCount++;
+		renderCounter++;
 	}
 	public void startPhysics() { // Usage: `startPhysics();` at start of physics loop
 		physicsNsStart = System.nanoTime();
