@@ -245,7 +245,7 @@ public class FishSim extends Application {
 	private static double fishPerVolume = 1 / fishVolume / fishLengthsSep; // `Fish` per volume (for 2D, volume is resolution).
 	private static int fishCount = (int)(boundsVolume * fishPerVolume);
 	private static int gridResolution = 100; // Notice: set this to `Colllections.max({forces*.distance})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
-	private static int positionInterval = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
+	private static int positionInterval = 2; // The `refreshCounter` per `Fish::applyFlockingRulesUpdate()`
 	public static double monitorRefreshHertz = 60.0; // The `SimUsages.fps` to wish for // Notice: since this limits `SimUsages.fps` to `monitorRefreshHertz`, this prevents benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`). Benchmarks can still use `FpsTextMode.msSpec` (or `FpsTextMode.msFish`).
 	public static double physicsRefreshHertz = monitorRefreshHertz / positionInterval; // The `1 / SimUsages.physicsMs` to wish for // Notice: unknown what `javafx.animation.Timeline` does if `physicsRefreshHertz > (1 / SimUsages.physicsMs)`, but guess thus stalls or consumes multiple executors
 
@@ -335,7 +335,7 @@ public class FishSim extends Application {
 			updateFish();
 			break;
 		case synchronousInterval:
-			if(simUsages.frameCounter % positionInterval == 0) {
+			if(simUsages.refreshCounter % positionInterval == 0) {
 				updateFish();
 			}
 			break;
@@ -343,7 +343,7 @@ public class FishSim extends Application {
 			executor.submit(() -> updateFish());
 			break;
 		case asynchronousInterval:
-			if(simUsages.frameCounter % positionInterval == 0) {
+			if(simUsages.refreshCounter % positionInterval == 0) {
 				executor.submit(() -> updateFish());
 			}
 			break;
