@@ -98,13 +98,11 @@ import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import java.util.ArrayList;
@@ -114,6 +112,7 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
+import susuwu.SimUsages; /* `class SimUsages`, `enum FpsTextMode` */
 import susuwu.Calculus; /* `Calculus.pow2()` */
 import susuwu.Forces; /* `class Forces implements java.lang.Cloneable` */
 
@@ -247,21 +246,8 @@ public class FishSim extends Application {
 	private static int fishCount = (int)(boundsVolume * fishPerVolume);
 	private static int gridResolution = 100; // Notice: set this to `Colllections.max({forces*.distance})` (which should equal what most sims call "view distance"), so that all relevent `Fish` are processed.
 	private static int positionInterval = 2; // The `frameCounter` per `Fish::applyFlockingRulesUpdate()`
-	public static double monitorRefreshHertz = 60.0; // The `fps` to wish for // Notice: since this limits `fps` to `monitorRefreshHertz`, this prevents benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`). Benchmarks can still use `FpsTextMode.msSpec` (or `FpsTextMode.msFish`).
-	public static double physicsRefreshHertz = monitorRefreshHertz / positionInterval; // The `1 / physicsMs` to wish for // Notice: unknown what `javafx.animation.Timeline` does if `physicsRefreshHertz > (1 / physicsMs)`, but guess thus stalls or consumes multiple executors
-
-	public enum FpsTextMode { // `FpsTextMode` says which resources `fpsText` will show.
-		none      (0     ), // `fpsText = "";`
-		fps       (1 << 0), // `fpsText` += `fps` "FPS";
-		ms        (2 << 1), // `fpsText` += `ms` "ms"; /* Notice: `ms = 1000 / fps;`, so includes idle CPU */
-		msSpec    (1 << 2), // `fpsText` += `renderMs` "renderMs," `physicsMs` "physicsMs"; /* Notice: uses `System.nanoTime()`, does not include idle CPU */
-		msFish    (1 << 3), // `fpsText` += `renderMs / fishShown` "renderMs / Fish shown," `physicsMs / fishList.size()` "physicsMs / Fish";
-		fish      (1 << 4), // `fpsText` += `fishList.size()` "Fish";
-		fishShown (1 << 5); // `fpsText` += `fishShown` "Fish shown";
-		long value; // Stores bitwise-or of those.
-		FpsTextMode(long value) { this.value = value; }
-	} // TODO: replace manual bitshifts with `java.util.EnumSet<E>`?
-	public long fpsTextMode = FpsTextMode.fps.value | FpsTextMode.ms.value | FpsTextMode.msSpec.value | FpsTextMode.msFish.value | FpsTextMode.fish.value | FpsTextMode.fishShown.value;
+	public static double monitorRefreshHertz = 60.0; // The `SimUsages.fps` to wish for // Notice: since this limits `SimUsages.fps` to `monitorRefreshHertz`, this prevents benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`). Benchmarks can still use `FpsTextMode.msSpec` (or `FpsTextMode.msFish`).
+	public static double physicsRefreshHertz = monitorRefreshHertz / positionInterval; // The `1 / SimUsages.physicsMs` to wish for // Notice: unknown what `javafx.animation.Timeline` does if `physicsRefreshHertz > (1 / SimUsages.physicsMs)`, but guess thus stalls or consumes multiple executors
 
 	private List<Fish> fishList = new ArrayList<>();
 	private int fishShown = 0;
@@ -272,17 +258,8 @@ public class FishSim extends Application {
 	private Canvas canvas = new Canvas(resolution[0], resolution[1]);
 	private GraphicsContext gc = canvas.getGraphicsContext2D();
 	private Stage stage;
-
-	private Text fpsText = new Text("0 FPS");
-	private int frameCount = 0; // Count of invocations (of functions such as `FishSim::renderFish()`) since `lastTime`.
-	private long lastTime = System.nanoTime();
-	private long physicsNs = -1; // Stores `nanoTime()` (at end of functions such as `FishSim::updateFish()`) minus `nanoTime()` at start of those.
-	private long renderNs = -1; // Stores `frameCount` sum of `nanoTime()` (at end of functions such as `renderFish()`) minus `nanoTime()` at start of those.
-	private double fps = 0;
-	public double renderMs = Double.NaN; // Stores average **ms** of **CPU** used for graphics functions per second (`renderNs / frameCount / 1_000_000.0`)
-	public double physicsMs = Double.NaN; // Stores average **ms** of **CPU** used for physics functions per second (`physicsNs / physicsCounter / 1_000_000.0`)
-	private int frameCounter = 0;
-	private int physicsCounter = 0;
+	SimUsages simUsages = new SimUsages(root);
+//	simUsages.fpsTextMode = FpsTextMode.allUsages.value; // TODO: "error: <identifier> expected" solution
 
 	private ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -300,7 +277,6 @@ public class FishSim extends Application {
 		}
 
 		root.getChildren().add(canvas);
-		root.getChildren().add(fpsText);
 
 		Scene scene = new Scene(root, resolution[0], resolution[1], Color.LIGHTBLUE);
 		stage = primaryStage;
@@ -308,10 +284,7 @@ public class FishSim extends Application {
 		primaryStage.setTitle("Fish Simulation (Boids)");
 		primaryStage.setResizable(false);
 		primaryStage.show();
-
-		fpsText.setX(10);
-		fpsText.setY(30);
-		fpsText.setFill(Color.WHITE);
+		simUsages.show();
 
 		grid = new ArrayList[gridSize[0]][gridSize[1]]; /* `listToPartitions(List<>[][] grid, List<> list)` uses this */
 		for(int i = 0; i < grid.length; i++) {
@@ -331,7 +304,7 @@ public class FishSim extends Application {
 		case separateFps:
 			Timeline timeline = new Timeline(
 				new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(System.nanoTime()); })
-			); // Notice: since this limits `fps` to `monitorRefreshHertz`, this prevents benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`). Benchmarks can still use `FpsTextMode.msSpec` (or `FpsTextMode.msFish`).
+			); // Notice: since this limits `SimUsages.fps` to `monitorRefreshHertz`, this prevents benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`). Benchmarks can still use `FpsTextMode.msSpec` (or `FpsTextMode.msFish`).
 			timeline.setCycleCount(Animation.INDEFINITE);
 			timeline.play();
 			break;
@@ -356,13 +329,13 @@ public class FishSim extends Application {
 	}
 
 	private void refreshLoop(long now) {
-		frameCounter++;
+		simUsages.startRefresh();
 		switch(physicsMode) { // `PhysicsMode.` is omitted from all `case`s, to support old `java --source` versions
 		case synchronousHomo:
 			updateFish();
 			break;
 		case synchronousInterval:
-			if(frameCounter % positionInterval == 0) {
+			if(simUsages.frameCounter % positionInterval == 0) {
 				updateFish();
 			}
 			break;
@@ -370,7 +343,7 @@ public class FishSim extends Application {
 			executor.submit(() -> updateFish());
 			break;
 		case asynchronousInterval:
-			if(frameCounter % positionInterval == 0) {
+			if(simUsages.frameCounter % positionInterval == 0) {
 				executor.submit(() -> updateFish());
 			}
 			break;
@@ -382,21 +355,7 @@ public class FishSim extends Application {
 		}
 
 		renderFish();
-
-		double elapsed = (now - lastTime) / 1_000_000_000.0;
-		if(elapsed >= 1.0) {
-			lastTime = now;
-			fps = frameCount / elapsed;
-			renderMs = renderNs / frameCount / 1_000_000.0;
-			physicsMs = physicsNs / physicsCounter / 1_000_000.0;
-			Platform.runLater(() -> fpsTextRefresh());
-			frameCount = 0;
-			renderNs = -1;
-			physicsCounter = 0;
-			physicsNs = -1;
-		} else {
-			frameCount++;
-		}
+		simUsages.postRefresh(now, fishShown, fishList.size());
 	}
 
 	private void outOfBounds(String function, Fish fish) {
@@ -423,7 +382,7 @@ public class FishSim extends Application {
 
 	private void updateFish() {
 		updateFishLock.lock();
-		long physicsNsStart = System.nanoTime();
+		simUsages.startPhysics();
 
 		listToPartitions(grid, fishList);
 
@@ -433,66 +392,23 @@ public class FishSim extends Application {
 			fish.update();
 		}
 
-		physicsNs += System.nanoTime() - physicsNsStart;
-		physicsCounter++;
+		simUsages.postPhysics();
 		updateFishLock.unlock();
 	}
 
 	private void renderFish() {
 		renderFishLock.lock();
-		long renderNsStart = System.nanoTime();
+		simUsages.startRender();
 		fishShown = 0;
 		gc.clearRect(0, 0, resolution[0], resolution[1]);
 		for(Fish fish : fishList) {
-			if(fish.isVisible) { // For `Fish` not shown, this condition improves `fps` (lowers `renderNs`).
+			if(fish.isVisible) { // For `Fish` not shown, this condition improves `SimUsages.fps` (lowers `SimUsages.renderNs`).
 				fishShown++;
 				fish.render(gc);
 			}
 		}
-		renderNs += System.nanoTime() - renderNsStart;
+		simUsages.postRender();
 		renderFishLock.unlock();
-	}
-
-	private void fpsTextRefresh() {
-		boolean fpsTextModeFps = (0 != (FpsTextMode.fps.value & fpsTextMode));
-		boolean fpsTextModeMs = (0 != (FpsTextMode.ms.value & fpsTextMode));
-		boolean fpsTextModeMsSpec = (0 != (FpsTextMode.msSpec.value & fpsTextMode));
-		boolean fpsTextMsSpecFish = (0 != ((FpsTextMode.msSpec.value | FpsTextMode.msFish.value) & fpsTextMode)); // TODO: replace manual bitshifts with `java.util.EnumSet<E>`?
-		boolean fpsTextModeMsFish = (0 != (FpsTextMode.msFish.value & fpsTextMode));
-		boolean fpsTextModeFish = (0 != (FpsTextMode.fish.value & fpsTextMode));
-		boolean fpsTextModeFishShown = (0 != (FpsTextMode.fishShown.value & fpsTextMode));
-		double totalMs = 1 / fps * 1000;
-		String fpsTextStr = "";
-		String strSep = ", ", strJoin = " (";
-		if(FpsTextMode.none.value == fpsTextMode) { return; }
-		if(fpsTextModeFps) {
-			fpsTextStr += String.format("%4.2f FPS" + strSep, fps);
-		}
-		if(fpsTextModeMs) {
-			fpsTextStr += String.format("%4.2f MS" + (fpsTextMsSpecFish ? strJoin : strSep), totalMs);
-		}
-		if(fpsTextModeMsSpec) {
-			fpsTextStr += String.format("%4.2f drawMS, %4.2f physicsMS", renderMs, physicsMs);
-			fpsTextStr += (fpsTextModeMsFish ? strSep : "");
-		}
-		if(fpsTextModeMsFish) {
-			fpsTextStr += String.format("%2.4f drawMS / Fish shown, %2.4f physicsMS / Fish", renderMs / fishShown, physicsMs / fishList.size());
-		}
-		if(fpsTextMsSpecFish) {
-			if(0 != ((FpsTextMode.ms.value & fpsTextMode))) {
-				fpsTextStr += ")";
-			}
-			fpsTextStr += strSep;
-		}
-		if(fpsTextModeFish) {
-			fpsTextStr += String.format("%4d Fish", fishList.size());
-			fpsTextStr += (fpsTextModeFishShown ? strJoin : strSep);
-		}
-		if(fpsTextModeFishShown) {
-			fpsTextStr += String.format(fpsTextModeFish ? "%4d shown)" : "%4d Fish shown", fishShown);
-			fpsTextStr += strSep;
-		}
-		fpsText.setText(fpsTextStr.substring(0, fpsTextStr.length() - strSep.length()));
 	}
 
 	@Override
