@@ -128,7 +128,7 @@ Do atomic commits: if swapping the new commit with a previous commit (such as th
 \[Notice: Commit titles can omit backticks (``) if not enough room; the backticks just allow _GitHub_ to do _Markdown_-format code / paths.\]
 
 ## `java`
-*Java* source code uses similar rules as `../SusuLib/`'s [**C**/**C++** source](https://github.com/SwuduSusuwu/SusuLib/blob/preview/README.md#cc-source) uses, with a few differences:
+*Java* source code uses similar rules as `../SusuLib/`'s [**C**/**C++** source](https://github.com/SwuduSusuwu/SusuLib/blob/preview/README.md#cc-source) uses (which are listed first), plus a few differences:
 * Both should use `if(...)` for conditions (since searches for `if ` will include *English* sentences), which allows searches for `if(`.
 * Both should use `for(...)` for loops (since searches for `for ` will include *English* sentences), which allows searches for `for(`.
 * Both should use "*camelCase*" for local values (such as `double localValue;`), since this is the most common practice.
