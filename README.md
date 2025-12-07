@@ -136,6 +136,8 @@ Do atomic commits: if swapping the new commit with a previous commit (such as th
 * Since `java` (not *English*) is the "lowest common denominator":
   * use `assert`s to document which arguments `interface`s (or `public` functions) can use.
   * use `` `pseudocode` `` to document how `class`s (or `public` functions) are used.
+* Most of <https://github.com/SwuduSusuwu/> uses [*Markdown*](https://spec.commonmark.org/0.31.2/), but since *Java* includes [`javadoc`](https://docs.oracle.com/javase/8/docs/technotes/tools/windows/javadoc.html) (which [parses *HyperText Markup Language* from comments](https://www.oracle.com/technical-resources/articles/java/javadoc-tool.html#format)), thus is the markup to use.
+  * Modules for [`java --source 23` (or newer) should use *Markdown*](https://docs.oracle.com/en/java/javase/23/javadoc/using-markdown-documentation-comments.html), since *Markdown* is more brevose, plus more common for users.
 * Since *Java* does not have `#define`` macros,  `static` constant values at the top of `class`s can use "*CONSTANT_CASE*" (such as `static double VALUE_WHICH_IS_GLOBAL_TO_CLASS;`), which *C++* reserves for macros.
 * Since *Java*'s `Array` is improved (versus **C++**'s primitive version) to allow `primitive[] VALUE_WHICH_IS_AN_ARR;` (which is more simple to use with regular expressions such as `sed` than `primitive VALUE_WHICH_IS_AN_ARR[]` is), use `primitive[] VALUE_WHICH_IS_AN_ARR;`
 * Document new functions thus: `` +`Class::newFunction()` ``, or `` +`Class.newFunction()` ``. TODO: rules for which to use. For now, suggest to use `Class::newFunction()` for `static` (global) functions, but `Class.newFunction()` for instanced (local) functions.
