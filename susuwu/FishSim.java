@@ -180,7 +180,6 @@ public class FishSim extends Application {
 	public boolean posBound(double[] pos, PosBounds posBounds) throws IllegalArgumentException { // If `PosBounds.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.getBounds()[dim] > pos[dim]` is established.
 		switch(posBounds) { // `PosBounds.` is omitted from all `case`s, to support old `java --source` versions
 		case invalidArgumentException:
-		case PosBounds.invalidArgumentException:
 			if(!isPosInBounds(pos)) {
 				throw new IllegalArgumentException(posOutOfBoundsStr(pos, "double[] pos"));
 				// return false; // Notice: unsure of codeflow after the exception is handled. This gives an error if uncommented, but without this, if the exception is handled, the function will fall through to `return true`.
