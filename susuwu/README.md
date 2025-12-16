@@ -16,6 +16,7 @@
   - `boolean dposScaleSum(dposDes, d2pos, dposSource)`: Usage: for Boids groups: `if(posIfDistSum(averageDposOfGroup, dposOfIndividual, distanceToIndividual) { ++sizeOfGroup; }`
 - [`./susuwu/ImmutablePosBounds.java`](./ImmutablePosBounds.java): `public class ImmutablePosBounds implements java.lang.Cloneable` \* Usage: `ImmutablePosBounds posBounds(PosBoundsMode);`. \*/"
   - `enum ImmutablePosBounds`: stores how sims enforce bounds.
+  - [`./susuwu/PosBounds.java`](./PosBounds.java): `public class PosBounds extend ImmutablePosBounds` is the mutable (`public void set`) version of `ImmutablePosBounds`.
 - [`./susuwu/SimUsages.java`](./SimUsages.java): `class SimUsages` shows `FpsTextMode` statistics such as `fps` or `ms`. Requirements: some render loop (for measurements). Is not specific to the renderer used. Was produced for `class FishSim`, so the text (plus comments) assume the organisms are `class Fish`, but `SimUsages` is not specific to `class Fish`.
 - [`./susuwu/FishSim.java`](./FishSim.java): "Simple [*JavaFX*](https://github.com/openjdk/jfx) fish sim. Usage: `import susuwu.FishSim;` includes `public class`s (for new sims to use)"
 

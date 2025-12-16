@@ -31,8 +31,8 @@ public class ImmutablePosBounds implements java.lang.Cloneable { /* Usage: repla
 		setPosBoundsMode_(o);
 	}
 	@Override
-	public ImmutablePosBounds clone() { /* Usage: `ImmutablePosBounds pos = o.clone(); assert o.equals(pos);` */
-		return new ImmutablePosBounds(this);
+	public PosBounds clone() { /* Usage: `ImmutablePosBounds pos = o.clone(); assert o.equals(pos);` */
+		return new PosBounds(this);
 	}
 
 	/* Public setter functions: `class PosBounds extends ImmutablePosBounds`. */

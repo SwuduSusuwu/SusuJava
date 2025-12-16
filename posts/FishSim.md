@@ -15,6 +15,7 @@
   * Uses [`./susuwu/Calculus.java`](../susuwu/Calculus.java): `` public class Calculus { /* `class Calculus` houses simple trigonometric (transcendental) `public static` functions. Future versions will include true calculus functions (such as "area-under-curve" integrals, or "False Position" or "Quadratic Interpolation" root formulas). */ ``
   * Uses [`./susuwu/Forces.java`](../susuwu/Forces.java): `public class Forces implements java.lang.Cloneable` "/\* Usage: `import susuwu.Forces;` ... replaces `double fooDistance; double fooFactor;` with `Forces fooForces;`, so other `double`s are not confused with those. \*/"
   * Uses [`./susuwu/ImmutablePosBounds.java`](../susuwu/ImmutablePosBounds.java): `public class ImmutablePosBounds implements java.lang.Cloneable` \* Usage: `ImmutablePosBounds posBounds(PosBoundsMode);`: which stores how sims enforce bounds. \*/"
+    * [`./susuwu/PosBounds.java`](../susuwu/PosBounds.java): `public class PosBounds extend ImmutablePosBounds` is the mutable (`public void set`) version of `ImmutablePosBounds`.
 
 ******************************************
 
