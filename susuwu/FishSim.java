@@ -29,6 +29,11 @@ import susuwu.SimUsages; /* `class SimUsages`, `enum FpsTextMode` */
 import susuwu.Calculus; /* `Calculus.pow2()` */
 import susuwu.Forces; /* `class Forces implements java.lang.Cloneable` */
 import susuwu.ImmutablePosBounds; /* `public enum PosBoundsMode`: which stores how sims enforce bounds. */
+import susuwu.ImmutablePos; /* `class ImmutablePos implements java.util.RandomAccess` */
+import susuwu.Pos; /* `class Pos extends ImmutablePos` */
+import susuwu.Pos2; /* `class Pos extends Pos` */
+//    public static class Pos2 extends double[2] {} // `{Pos2[0], Pos2[1]}` is `{x, y}` position (or resolution), or is `{pos[0], pos[0]}` motion (derivative of position), or is is `{d2x, d2y}` acceleration (derivative number 2). This was supposed to do what `typedef` does (wish for future-proof (limitless dimensions) virtual `class` with functions for numerous transforms).
+// TODO: test how much of `java`'s [static `Array` overhead](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Physics_sims_which_structures_to_use.md#separate-variables-versus-dim-lists) `java`'s toolkit optimizes for you. If performance is a problem, choose a new approach to use.
 
 /**
  * Simple [*JavaFX*](https://github.com/openjdk/jfx) fish sim, which includes reusable {@code public class}s (for new sims to use). Most of the reusable {@code public class}s are in other {@code .java} sources for {@code package susuwu}
@@ -47,63 +52,71 @@ public class FishSim extends Application {
 	private static PhysicsMode monitorRefreshMode = PhysicsMode.separateFps; // `monitorRefreshMode` must use `.separateUnbound` or `.separateFps`.
 	private static PhysicsMode physicsMode = PhysicsMode.separateFps; // Notice: if `PhysicsMode.*Interval`, must set `positionInterval`. if `PhysicsMode.separateFps`, must set `physicsRefreshHertz`.
 
-	public double[] posDiff(double[] pos, double[] o) {
+	public Pos posDiff(ImmutablePos pos, ImmutablePos o) {
+		Pos posDiff = pos.minus(o);
 		if(ImmutablePosBounds.PosBoundsMode.wrapAroundResolution == posBounds.getPosBoundsMode()) {
-			double[] posDiff = new double[pos.length];
-			for(int i = 0; pos.length > i; ++i) { /* Notice: ensure that `java` [unrolls this](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Physics_sims_which_structures_to_use.md#separate-variables-versus-dim-lists) */
-				posDiff[i] = pos[i] - o[i];
-				if(getBoundsSlash2()[i] < posDiff[i]) {
-					posDiff[i] -= getBounds()[i];
-				} else if(-getBoundsSlash2()[i] > posDiff[i]) {
-					posDiff[i] += getBounds()[i];
+			for(int i = 0; pos.pos.length > i; ++i) { /* Notice: ensure that `java` [unrolls this](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Physics_sims_which_structures_to_use.md#separate-variables-versus-dim-lists) */
+				if(getBoundsSlash2()[i] < posDiff.pos[i]) {
+					posDiff.pos[i] -= getBounds()[i];
+				} else if(-getBoundsSlash2()[i] > posDiff.pos[i]) {
+					posDiff.pos[i] += getBounds()[i];
 				}
 			}
-			return posDiff;
-		} else {
-			return new double[] {pos[0] - o[0], pos[1] - o[1]};
 		}
+		return posDiff;
 	}
 
 	public static double[] getBounds() {
 		assert null != bounds;
-		return bounds; // Notice: for simple sims, can `return resolutionf`.
+		assert null != bounds.pos;
+		return bounds.pos; // Notice: for simple sims, can `return resolutionf.pos`.
 	}
 	public static double[] getBoundsSlash2() { // Caches `getBounds()[dim] / 2` for physics uses (improves inner loops).
 		assert null != boundsSlash2;
-		return boundsSlash2; // Notice: for simple sims, can `return resolutionfSlash2`.
+		assert null != boundsSlash2.pos;
+		return boundsSlash2.pos; // Notice: for simple sims, can `return resolutionfSlash2.pos`.
+	}
+	public static ImmutablePos getBoundsPos() {
+		assert null != bounds; /* Notice:  redundant (since `java` checks for `null` dereferences), but documents what this does */
+		return bounds;
+	}
+	public static ImmutablePos getBoundsSlash2Pos() { // Caches `getBounds().slash(2)` for physics uses (improves inner loops).
+		assert null != boundsSlash2; /* Notice:  redundant (since `java` checks for `null` dereferences), but documents what this does */
+		return boundsSlash2;
 	}
 
-	public boolean isPosInBounds(double[] pos) throws IllegalArgumentException {
-		if(getBounds().length != pos.length) {
-			throw new IllegalArgumentException("`getBounds().length != pos.length`");
+	public boolean isPosInBounds(ImmutablePos pos) throws IllegalArgumentException {
+		if(getBoundsPos().dims() != pos.dims()) {
+			throw new IllegalArgumentException("`getBoundsPos().dims() != pos.dims()`");
 		} // TODO: If this test is used at the start of all `pos*()` functions, replace `[]` with `Pos2`, unless optimizer stores this.
-		for(int i = 0; i < pos.length; i++) {
-			if(0 > pos[i] || getBounds()[i] <= pos[i]) {
+		for(int i = 0; i < pos.dims(); i++) {
+			if(0 > pos.pos[i] || getBounds()[i] <= pos.pos[i]) {
 				return false;
 			}
-		} // TODO: replace `for(...) {...}` with `switch(pos.length) { case 2: ... }`, unless optimizer does this.
+		} // TODO: replace `for(...) {...}` with +`ImmutablePos::isInBounds(ImmutablePos bounds)`, which can use `switch(pos.length) { case 2: ... }` or specialized virtual functions
 		return true;
 	}
 
-	public String posOutOfBoundsStr(double[] pos, String posStr) {
-		return "`" + posStr + " = " + Arrays.toString(pos) + ";` `getBounds() = " + Arrays.toString(getBounds()) + ";` (`grid = new ArrayList[" + gridSize[0] + "][" + gridSize[1] + "];`), so `" + posStr + "` is out of bounds.";
+	public String posOutOfBoundsStr(ImmutablePos pos, String posStr) {
+		return "`" + posStr + " = " + Arrays.toString(pos.pos) + ";` `getBounds() = " + Arrays.toString(getBounds()) + ";` (`grid = new ArrayList[" + gridSize[0] + "][" + gridSize[1] + "];`), so `" + posStr + "` is out of bounds.";
 	}
 
-	public boolean posBound(double[] pos, ImmutablePosBounds posBounds) throws IllegalArgumentException { // If `PosBoundsMode.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.getBounds()[dim] > pos[dim]` is established.
+	public boolean posBound(Pos pos, ImmutablePosBounds posBounds) throws IllegalArgumentException { // If `PosBoundsMode.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.getBounds()[dim] > pos[dim]` is established.
+		assert getBoundsPos().dims() == pos.dims(); // Notice: `bounds` for volumetric physics allows 2-dimensional `pos`, but `posBounds` does not implement such codeflow
 		switch(posBounds.getPosBoundsMode()) { // `PosBoundsMode.` is omitted from all `case`s, to support old `java --source` versions
 		case invalidArgumentException:
 			if(!isPosInBounds(pos)) {
-				throw new IllegalArgumentException(posOutOfBoundsStr(pos, "double[] pos"));
+				throw new IllegalArgumentException(posOutOfBoundsStr(pos, "Pos pos"));
 				// return false; // Notice: unsure of codeflow after the exception is handled. This gives an error if uncommented, but without this, if the exception is handled, the function will fall through to `return true`.
 			}
 			break;
 		case wrapAroundResolution:
-			pos[0] = ((pos[0] % getBounds()[0]) + getBounds()[0]) % getBounds()[0];
-			pos[1] = ((pos[1] % getBounds()[1]) + getBounds()[1]) % getBounds()[1];
+			pos.plusEquals(getBoundsPos());
+			pos.moduloEquals(getBoundsPos());
 			break;
 		case clampToResolution:
-			pos[0] = Math.max(0, Math.min(getBounds()[0] - 1, pos[0])); // TODO: if `java` does not precompute `getBounds()[dim] - 1`, store `boundsMinus1[]`
-			pos[1] = Math.max(0, Math.min(getBounds()[1] - 1, pos[1]));
+			pos.pos[0] = Math.max(0, Math.min(getBounds()[0] - 1, pos.pos[0])); // TODO: +`Pos::{maxEquals(Pos), minEquals(Pos)}` or +`Pos::clamp(pos)`
+			pos.pos[1] = Math.max(0, Math.min(getBounds()[1] - 1, pos.pos[1]));
 			break;
 		case boundless:
 			return isPosInBounds(pos);
@@ -112,9 +125,6 @@ public class FishSim extends Application {
 		}
 		return true;
 	}
-
-//    public static class Pos2 extends double[2] {} // `{Pos2[0], Pos2[1]}` is `{x, y}` position (or resolution), or is `{pos[0], pos[0]}` motion (derivative of position), or is is `{d2x, d2y}` acceleration (derivative number 2). This was supposed to do what `typedef` does (wish for future-proof (limitless dimensions) virtual `class` with functions for numerous transforms).
-// Will use `double[]` for now. TODO: test how much of `java`'s [static `Array` overhead](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Physics_sims_which_structures_to_use.md#separate-variables-versus-dim-lists) `java`'s toolkit optimizes for you. If performance is a problem, choose a new approach to use.
 
 	private static ImmutablePosBounds posBounds = new ImmutablePosBounds(ImmutablePosBounds.PosBoundsMode.wrapAroundResolution);
 	static ReentrantLock renderFishLock = new ReentrantLock();
@@ -127,14 +137,17 @@ public class FishSim extends Application {
 		updateFishLock.lock();
 		renderFishLock.lock();
 		resolution = newResolution;
-		resolutionf[0] = resolution[0]; resolutionf[1] = resolution[1];
-		resolutionfSlash2[0] = resolution[0] / 2; resolutionfSlash2[1] = resolution[1] / 2;
+		resolutionf.pos[0] = resolution[0]; resolutionf.pos[1] = resolution[1];
+		resolutionfSlash2.pos[0] = resolution[0] / 2; resolutionfSlash2.pos[1] = resolution[1] / 2;
+//		resolutionfSlash2 = resolutionf.slashScalar(2); // TODO: if sure that no functions store references to the original instance's address, replace the above row with this (since simple source code is less bug prone)
 		resVolume = resolution[0] * resolution[1];
-		getBounds()[0] = resolution[0];
-		getBounds()[1] = resolution[1];
-		getBoundsSlash2()[0] = getBounds()[0] / 2;
-		getBoundsSlash2()[1] = getBounds()[1] / 2;
-		boundsVolume = getBounds()[0] * getBounds()[1];
+//		resVolume = (int)resolutionf.volume(); // TODO: if this rounds, replace the above row with this, since simple source is less bug prone
+		getBounds()[0] = resolution[0] * boundsResolutionFactor;
+		getBounds()[1] = resolution[1] * boundsResolutionFactor;
+//		bounds = resolutionf.starcalar(boundsResolutionFactor); // TODO: if sure that no functions store references to the original instance, replace the above row with this (since simple source code is less bug prone)
+		boundsSlash2.pos[0] = bounds.pos[0] / 2; boundsSlash2.pos[1] = bounds.pos[1] / 2;
+//		boundsSlash2 = bounds.slashScalar(2); // TODO: if sure that no functions store references to the original instance, replace the above row with this (since simple source code is less bug prone)
+		boundsVolume = bounds.volume();
 		// canvas = new Canvas(resolution[0], resolution[1]); // TODO: replace with `canvas.setWidth(resolution[0]); canvas.setHeight(resolution[1]);`?
 		// gc = canvas.getGraphicsContext2D();
 		// scene = new Scene(root, resolution[0], resolution[1], Color.LIGHTBLUE); // replace with `scene.widthProperty().bind(primaryStage.widthProperty());`?
@@ -144,13 +157,14 @@ public class FishSim extends Application {
 		return true;
 	}
 	private static int[] resolution = {1280, 720};
-	private static double[] resolutionf = {resolution[0], resolution[1]};
-	private static double[] resolutionfSlash2 = {resolution[0] / 2, resolution[1] / 2}; // Improves execution of inner loops which use this
+	private static Pos2 resolutionf = new Pos2(resolution[0], resolution[1]);
+	private static Pos resolutionfSlash2 = resolutionf.slashScalar(2); // Improves execution of inner loops which use this
 	private static int resVolume = resolution[0] * resolution[1];
+//	private static int resVolume = (int)resolutionf.volume(); // TODO: if this rounds, replace the above row with this, since simple source is less bug prone
 	private static double boundsResolutionFactor = 2; // `resolution[dim] * 2` gives best results (sufficient room for natural ocean, small enough for most CPUs to process). Notice: Powers of 2 give improved versions of most formulas for computers, but for now this allows all values
-	private static double[] bounds = {resolution[0] * boundsResolutionFactor, resolution[1] * boundsResolutionFactor}; // for simple sims, use `bounds = resolutionf;`
-	private static double[] boundsSlash2 = {getBounds()[0] / 2, getBounds()[1] / 2}; // Improves execution of inner loops which use this
-	private static double boundsVolume = getBounds()[0] * getBounds()[1];
+	private static Pos bounds = resolutionf.starScalar(boundsResolutionFactor); // for simple sims, use `bounds = resolutionf;`
+	private static Pos boundsSlash2 = bounds.slashScalar(2); // Improves execution of inner loops which use this
+	private static double boundsVolume = bounds.volume();
 	private static double fishVolume = 200; // Uses resolution of `Fish::render()`.
 	private static double fishLengthsSep = 62; // Average `Fish`-lengths distance  from `Fish` to `Fish`.
 	private static double fishPerVolume = 1 / fishVolume / fishLengthsSep; // `Fish` per volume (for 2D, volume is resolution).
@@ -182,8 +196,8 @@ public class FishSim extends Application {
 	public void start(Stage primaryStage) {
 		// Initialize fish
 		for(int i = 0; i < fishCount; i++) {
-			double[] pos = {random.nextDouble() * getBounds()[0], random.nextDouble() * getBounds()[1]};
-			double[] dpos = {(random.nextDouble() * 2 - 1) * Fish.dposMax, (random.nextDouble() * 2 - 1) * Fish.dposMax};
+			Pos2 pos = new Pos2(random.nextDouble() * getBounds()[0], random.nextDouble() * getBounds()[1]);
+			Pos2 dpos = new Pos2((random.nextDouble() * 2 - 1) * Fish.dposMax, (random.nextDouble() * 2 - 1) * Fish.dposMax);
 			fishList.add(new Fish(pos, dpos, Color.color(random.nextDouble(), random.nextDouble(), random.nextDouble())));
 		}
 
@@ -285,7 +299,7 @@ public class FishSim extends Application {
 		}
 		for(Fish fish : list) { /* Assign list members to grid sections */
 			if(fish.isInBounds) {
-				int[] gridPos = {(int) (fish.pos[0] / gridResolution), (int) (fish.pos[1] / gridResolution)};
+				int[] gridPos = {(int) (fish.pos.pos[0] / gridResolution), (int) (fish.pos.pos[1] / gridResolution)};
 				grid[gridPos[0]][gridPos[1]].add(fish); // if `gridPos` is not in bounds, this will `throw new IndexOutOfBoundsException()`. But `Fish.setPos()` uses `FishSim::posBound()` which uses `FishSim::isPosInBounds()`, which ensures the `.pos` bounds to `resolution`.
 			}
 		}
@@ -339,13 +353,18 @@ public class FishSim extends Application {
 		public static boolean applyWallAvoidanceTru = (ImmutablePosBounds.PosBoundsMode.wrapAroundResolution != posBounds.getPosBoundsMode());
 		public static boolean redFishAreAggressiveOrPoisonous = true; // changes how `isSimilarTo(Fish other)` uses `color.getRed()`
 
-		private double[] pos;        // Position
-		private double[] dpos;       // Motion (derivative of position)
+		private Pos pos;        // Position
+		private Pos dpos;       // Motion (derivative of position)
 		private Color color;
 		public boolean isInBounds;
 		public boolean isVisible = false; // Just stores `0 <= pos[0] && resolution[0] > pos[0] && 0 <= pos[1]  && resolution[1] > pos[1]` for now.
 
-		public Fish(double[] pos, double[] dpos, Color color) {
+		public Fish(ImmutablePos pos, ImmutablePos dpos, Color color) {
+			this.pos = pos.clone(); // TODO: ensure this clones the actual (specialized) virtual function addresses, which improve CPU use
+			this.dpos = dpos.clone();
+			this.color = color;
+		}
+		public Fish(Pos pos, Pos dpos, Color color) { /* Notice: uses "placement moves" for {`pos`, `dpos`}. Gives `Fish` ownership of `pos`, ownership of `dpos`. */
 			this.pos = pos;
 			this.dpos = dpos;
 			this.color = color;
@@ -362,21 +381,24 @@ public class FishSim extends Application {
 			return isSimilarTolerance > (Calculus.pow2(colorDis[0]) + Calculus.pow2(colorDis[1]) + Calculus.pow2(colorDis[2]));
 		} // TODO: Use a function (such as `javafx.scene.shape.Polygon.getPoints()`) for comparison of vertices. */
 
-		public double[] getPosDiff(Fish o) {
+		public Pos getPosDiff(Fish o) {
 			return posDiff(pos, o.pos);
 		}
 
-		public synchronized void setPos(double[] newPos) { // If `PosBoundsMode.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.getBounds()[dim] > pos[dim]` is established.
+		public synchronized void setPos(Pos newPos /* Notice: semantics of "placement move" */) { // If `PosBoundsMode.boundless != posBounds`, this ensures the invariant `0 <= pos[dim] && FishSim.getBounds()[dim] > pos[dim]` is established.
 			isInBounds = posBound(newPos, posBounds);
-			isVisible = (0 <= newPos[0] && resolution[0] > newPos[0] && 0 <= newPos[1]  && resolution[1] > newPos[1]);
+			isVisible = (0 <= newPos.pos[0] && resolution[0] > newPos.pos[0] && 0 <= newPos.pos[1]  && resolution[1] > newPos.pos[1]); // TODO: +`Pos::isLessOrEquals(Pos)`, +`Pos::isMore(pos)`
 			if((!isInBounds) && ImmutablePosBounds.PosBoundsMode.boundless != posBounds.getPosBoundsMode()) {
 				outOfBounds("Fish::setPos", this);
 			}
-			pos = newPos;
+			pos = newPos; /* Notice: does not use `newPos.clone()` since this function is used in inner loops. After this function returns, `this` has ownership of `newPos`. */
+		}
+		public synchronized void setPos(ImmutablePos newPos) {
+			setPos(newPos.clone()); /* Notice: since this function is used in inner loops, `setPos(Pos newPos)` uses the semantics of "placement move", so if `newPos` is immutable, must clone. */
 		}
 
 		public synchronized void applyFlockingRules(List<Fish> allFish, List<Fish>[][] grid) {
-			int[] gridPos = {(int) (pos[0] / gridResolution), (int) (pos[1] / gridResolution)};
+			int[] gridPos = {(int) (pos.pos[0] / gridResolution), (int) (pos.pos[1] / gridResolution)};
 			List<Fish> nearbyFish = new ArrayList<>();
 
 			// Check neighboring grid cells
@@ -403,15 +425,15 @@ public class FishSim extends Application {
 		}
 
 		private synchronized void applySeparation(List<Fish> nearbyFish) {
-			double[] sepDpos = {0, 0};
-			double[] sepNonsimilarDpos = {0, 0};
+			Pos sepDpos = dpos.zeros();
+			Pos sepNonsimilarDpos = dpos.zeros();
 			int count = 0, countNonsimilar = 0;
 
-			for(Fish other : nearbyFish) {
-				if(other != this) {
-					double[] posDiff = getPosDiff(other);
-					double dist = Math.hypot(posDiff[0], posDiff[1]);
-					if(isSimilarTo(other)) {
+			for(Fish o : nearbyFish) {
+				if(o != this) {
+					Pos posDiff = getPosDiff(o);
+					double dist = posDiff.magnitude(); // Notice: in future, +`Pos::boundHypotenus(o)`
+					if(isSimilarTo(o)) {
 						if(forcesSeparation.posIfDistScaleSum(sepDpos, posDiff, dist)) {
 							count++;
 						}
@@ -424,95 +446,89 @@ public class FishSim extends Application {
 			}
 
 			if(count > 0) {
-				sepDpos[0] /= count;
-				sepDpos[1] /= count;
+				sepDpos.slashEqualsScalar(count);
 				forcesSeparation.dposScaleSum(dpos, d2Pos, sepDpos);
 			}
 			if(countNonsimilar > 0) {
-				sepNonsimilarDpos[0] /= countNonsimilar;
-				sepNonsimilarDpos[1] /= countNonsimilar;
+				sepNonsimilarDpos.slashEqualsScalar(countNonsimilar);
 				forcesSeparationNonsimilar.dposScaleSum(dpos, d2Pos, sepNonsimilarDpos);
 			}
 		}
 
 		private synchronized void applyAlignment(List<Fish> nearbyFish) {
-			double[] avgDpos = {0, 0};
+			Pos avgDpos = dpos.zeros();
 			int count = 0;
 
-			for(Fish other : nearbyFish) {
-				if(other != this && isSimilarTo(other)) {
-					double[] posDiff = getPosDiff(other);
-					double distPow2 = Calculus.pow2(posDiff[0]) + Calculus.pow2(posDiff[1]);
-					if(forcesAlignment.posIfDistPow2Sum(avgDpos, other.dpos, distPow2)) {
+			for(Fish o : nearbyFish) {
+				if(o != this && isSimilarTo(o)) {
+					Pos posDiff = getPosDiff(o);
+					double dist = posDiff.magnitude();
+					if(forcesAlignment.posIfDistSum(avgDpos, o.dpos, dist)) {
 						count++;
 					}
 				}
 			}
 
 			if(count > 0) {
-				avgDpos[0] /= count;
-				avgDpos[1] /= count;
+				avgDpos.slashEqualsScalar(count);
 				forcesAlignment.dposScaleSum(dpos, d2Pos, avgDpos);
 			}
 		}
 
 		private synchronized void applyCohesion(List<Fish> nearbyFish) {
-			double[] avgPos = {0, 0};
+			Pos avgPos = pos.zeros();
 			int count = 0;
 
-			for(Fish other : nearbyFish) {
-				if(other != this && isSimilarTo(other)) {
-					double[] posDiff = getPosDiff(other);
-					double distPow2 = Calculus.pow2(posDiff[0]) + Calculus.pow2(posDiff[1]);
-					if(forcesCohesion.posIfDistPow2Sum(avgPos, other.pos, distPow2)) {
+			for(Fish o : nearbyFish) {
+				if(o != this && isSimilarTo(o)) {
+					Pos posDiff = getPosDiff(o);
+					double dist = posDiff.magnitude();
+					if(forcesCohesion.posIfDistSum(avgPos, o.pos, dist)) {
 						count++;
 					}
 				}
 			}
 
 			if(count > 0) {
-				avgPos[0] /= count;
-				avgPos[1] /= count;
+				avgPos.slashEqualsScalar(count);
 				forcesCohesion.dposScaleSum(dpos, d2Pos, posDiff(avgPos, pos));
 			}
 		}
 
 		private synchronized void applyWallAvoidance(double[] res) {
-			double[] avoidancePos = {0, 0};
+			Pos avoidancePos = dpos.zeros();
 
-			if(pos[0] < forcesBounds.distance) {
-				avoidancePos[0] += (forcesBounds.distance - pos[0]);
+			if(pos.pos[0] < forcesBounds.distance) {
+				avoidancePos.pos[0] += (forcesBounds.distance - pos.pos[0]);
+			} else if(pos.pos[0] > res[0] - forcesBounds.distance) {
+				avoidancePos.pos[0] -= (pos.pos[0] - (res[0] - forcesBounds.distance));
 			}
-			if(pos[0] > res[0] - forcesBounds.distance) {
-				avoidancePos[0] -= (pos[0] - (res[0] - forcesBounds.distance));
-			}
-			if(pos[1] < forcesBounds.distance) {
-				avoidancePos[1] += (forcesBounds.distance - pos[1]);
-			}
-			if(pos[1] > res[1] - forcesBounds.distance) {
-				avoidancePos[1] -= (pos[1] - (res[1] - forcesBounds.distance));
+			if(pos.pos[1] < forcesBounds.distance) {
+				avoidancePos.pos[1] += (forcesBounds.distance - pos.pos[1]);
+			} else if(pos.pos[1] > res[1] - forcesBounds.distance) {
+				avoidancePos.pos[1] -= (pos.pos[1] - (res[1] - forcesBounds.distance));
 			}
 
-			dpos[0] += avoidancePos[0] / forcesBounds.distance * d2Pos * forcesBounds.factor;
-			dpos[1] += avoidancePos[1] / forcesBounds.distance * d2Pos * forcesBounds.factor;
+			avoidancePos.starEqualsScalar(d2Pos * forcesBounds.factor / forcesBounds.distance);
+			dpos.plusEquals(avoidancePos);
 		}
 
 		public synchronized void update() {
 			// Limit speed
-			double speed = Math.sqrt(dpos[0] * dpos[0] + dpos[1] * dpos[1]);
+			double speed = dpos.magnitude();
 			if(speed > dposMax) {
-				dpos[0] = (dpos[0] / speed) * dposMax;
-				dpos[1] = (dpos[1] / speed) * dposMax;
+				dpos.slashEqualsScalar(speed);
+				dpos.starEqualsScalar(dposMax);
 			}
 
 			// Update position
-			setPos(new double[] {pos[0] + dpos[0], pos[1] + dpos[1]});
+			setPos(pos.plus(dpos));
 		}
 
 		public synchronized void render(GraphicsContext gc) {
 			gc.save();
-			gc.translate(pos[0], pos[1]);
-			gc.rotate(Math.toDegrees(Math.atan2(dpos[1], dpos[0])) + 90);
+			gc.translate(pos.pos[0], pos.pos[1]);
+			gc.rotate(Math.toDegrees(Math.atan2(dpos.pos[1], dpos.pos[0])) + 90);
 			gc.setFill(color);
 			gc.beginPath();
 			gc.moveTo(0, -10);
