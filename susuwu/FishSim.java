@@ -140,8 +140,7 @@ public class FishSim extends Application {
 		resolutionf.pos[0] = resolution[0]; resolutionf.pos[1] = resolution[1];
 		resolutionfSlash2.pos[0] = resolution[0] / 2; resolutionfSlash2.pos[1] = resolution[1] / 2;
 //		resolutionfSlash2 = resolutionf.slashScalar(2); // TODO: if sure that no functions store references to the original instance's address, replace the above row with this (since simple source code is less bug prone)
-		resVolume = resolution[0] * resolution[1];
-//		resVolume = (int)resolutionf.volume(); // TODO: if this rounds, replace the above row with this, since simple source is less bug prone
+		resVolume = (int)Math.round(resolutionf.volume()); /* Notice: uses `Pos::volume()` since simple source code is less bug prone. `Math.round` ensures 24-bit mantissas give accurate values */
 		getBounds()[0] = resolution[0] * boundsResolutionFactor;
 		getBounds()[1] = resolution[1] * boundsResolutionFactor;
 //		bounds = resolutionf.starcalar(boundsResolutionFactor); // TODO: if sure that no functions store references to the original instance, replace the above row with this (since simple source code is less bug prone)
@@ -159,8 +158,7 @@ public class FishSim extends Application {
 	private static int[] resolution = {1280, 720};
 	private static Pos2 resolutionf = new Pos2(resolution[0], resolution[1]);
 	private static Pos resolutionfSlash2 = resolutionf.slashScalar(2); // Improves execution of inner loops which use this
-	private static int resVolume = resolution[0] * resolution[1];
-//	private static int resVolume = (int)resolutionf.volume(); // TODO: if this rounds, replace the above row with this, since simple source is less bug prone
+	private static int resVolume = (int)Math.round(resolutionf.volume()); /* Notice: uses `Pos::volume()` since simple source code is less bug prone. `Math.round` ensures 24-bit mantissas give accurate values */
 	private static double boundsResolutionFactor = 2; // `resolution[dim] * 2` gives best results (sufficient room for natural ocean, small enough for most CPUs to process). Notice: Powers of 2 give improved versions of most formulas for computers, but for now this allows all values
 	private static Pos bounds = resolutionf.starScalar(boundsResolutionFactor); // for simple sims, use `bounds = resolutionf;`
 	private static Pos boundsSlash2 = bounds.slashScalar(2); // Improves execution of inner loops which use this
