@@ -94,6 +94,9 @@ Notice: replaced most of [*Solar-Pro-2*'s original `FishSim.java`](https://githu
 
 ``` end of *Markdown*
 */
+/* Simple [*JavaFX*](https://github.com/openjdk/jfx) fish sim, which will include reusable `public class`s (for new sims to use).
+ * This ([`./susuwu/FishSim.java`](./FishSim.java)) uses pseudo-*Markdown* for comments, but [`./posts/FishSim.md`](../posts/FishSim.md) is the actual [*Markdown*](https://github.github.com/gfm/) document for this.
+ * Notice: replaced most of [*Solar-Pro-2*'s original `FishSim.java`](https://github.com/SwuduSusuwu/SusuJava/blob/solarPro2FishSim/susuwu/FishSim.java), as [`./posts/FishSim.md#intro`](../posts/FishSim.md#intro) documents (plus [*GitHub*'s `/compare/` tool shows](https://github.com/SwuduSusuwu/SusuJava/compare/solarPro2FishSim..susuFishSim#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4). */
 
 import javafx.animation.Animation;
 import javafx.animation.AnimationTimer;
