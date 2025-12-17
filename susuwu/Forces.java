@@ -53,7 +53,7 @@ public class Forces implements java.lang.Cloneable { /* Usage: replaces `double 
 		if(null == o || !(o instanceof Forces)) {
 			return false;
 		}
-		return equals((ImmutablePos)o);
+		return equals((Forces)o);
 	}
 	public boolean equals(Forces o) { /* Usage: is `equals(Object o)` with low CPU use */
 		return o.distance == distance && o.factor == factor;
