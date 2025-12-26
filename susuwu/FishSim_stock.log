@@ -38,22 +38,22 @@ import javafx.util.Duration;
 public class FishSim extends Application {
                              ^
   symbol: class Application
-./susuwu/FishSim.java:99: error: cannot find symbol
+./susuwu/FishSim.java:97: error: cannot find symbol
 	private Pane root = new Pane();
 	        ^
   symbol:   class Pane
   location: class FishSim
-./susuwu/FishSim.java:100: error: cannot find symbol
+./susuwu/FishSim.java:98: error: cannot find symbol
 	private Canvas canvas = new Canvas(resolution[0], resolution[1]);
 	        ^
   symbol:   class Canvas
   location: class FishSim
-./susuwu/FishSim.java:101: error: cannot find symbol
+./susuwu/FishSim.java:99: error: cannot find symbol
 	private GraphicsContext gc = canvas.getGraphicsContext2D();
 	        ^
   symbol:   class GraphicsContext
   location: class FishSim
-./susuwu/FishSim.java:102: error: cannot find symbol
+./susuwu/FishSim.java:100: error: cannot find symbol
 	private Stage stage;
 	        ^
   symbol:   class Stage
@@ -70,7 +70,7 @@ import javafx.scene.paint.Color; /* `Color.WHITE` */
 ./susuwu/SimUsages.java:12: error: package javafx.scene.text does not exist
 import javafx.scene.text.Text; /* `Text fpsText` */
                         ^
-./susuwu/FishSim.java:113: error: cannot find symbol
+./susuwu/FishSim.java:111: error: cannot find symbol
 	public void start(Stage primaryStage) {
 	                  ^
   symbol:   class Stage
@@ -90,131 +90,131 @@ import javafx.scene.text.Text; /* `Text fpsText` */
 	        ^
   symbol:   class Text
   location: class SimUsages
-./susuwu/FishSim.java:276: error: cannot find symbol
+./susuwu/FishSim.java:274: error: cannot find symbol
 		private Color color;
 		        ^
   symbol:   class Color
   location: class FishSim.Fish
-./susuwu/FishSim.java:280: error: cannot find symbol
+./susuwu/FishSim.java:278: error: cannot find symbol
 		public Fish(ImmutablePos pos, ImmutablePos dpos, Color color) {
 		                                                 ^
   symbol:   class Color
   location: class FishSim.Fish
-./susuwu/FishSim.java:285: error: cannot find symbol
+./susuwu/FishSim.java:283: error: cannot find symbol
 		public Fish(Pos pos, Pos dpos, Color color) { /* Notice: uses "placement moves" for {`pos`, `dpos`}. Gives `Fish` ownership of `pos`, ownership of `dpos`. */
 		                               ^
   symbol:   class Color
   location: class FishSim.Fish
-./susuwu/FishSim.java:446: error: cannot find symbol
+./susuwu/FishSim.java:444: error: cannot find symbol
 		public synchronized void render(GraphicsContext gc) {
 		                                ^
   symbol:   class GraphicsContext
   location: class FishSim.Fish
-./susuwu/FishSim.java:99: error: cannot find symbol
+./susuwu/FishSim.java:97: error: cannot find symbol
 	private Pane root = new Pane();
 	                        ^
   symbol:   class Pane
   location: class FishSim
-./susuwu/FishSim.java:100: error: cannot find symbol
+./susuwu/FishSim.java:98: error: cannot find symbol
 	private Canvas canvas = new Canvas(resolution[0], resolution[1]);
 	                            ^
   symbol:   class Canvas
   location: class FishSim
-./susuwu/FishSim.java:109: error: cannot find symbol
+./susuwu/FishSim.java:107: error: cannot find symbol
 		launch(args);
 		^
   symbol:   method launch(String[])
   location: class FishSim
-./susuwu/FishSim.java:112: error: method does not override or implement a method from a supertype
+./susuwu/FishSim.java:110: error: method does not override or implement a method from a supertype
 	@Override
 	^
-./susuwu/FishSim.java:118: error: cannot find symbol
+./susuwu/FishSim.java:116: error: cannot find symbol
 			fishList.add(new Fish(pos, dpos, Color.color(random.nextDouble(), random.nextDouble(), random.nextDouble())));
 			                                 ^
   symbol:   variable Color
   location: class FishSim
-./susuwu/FishSim.java:123: error: cannot find symbol
+./susuwu/FishSim.java:121: error: cannot find symbol
 		Scene scene = new Scene(root, resolution[0], resolution[1], Color.LIGHTBLUE);
 		^
   symbol:   class Scene
   location: class FishSim
-./susuwu/FishSim.java:123: error: cannot find symbol
+./susuwu/FishSim.java:121: error: cannot find symbol
 		Scene scene = new Scene(root, resolution[0], resolution[1], Color.LIGHTBLUE);
 		                  ^
   symbol:   class Scene
   location: class FishSim
-./susuwu/FishSim.java:123: error: cannot find symbol
+./susuwu/FishSim.java:121: error: cannot find symbol
 		Scene scene = new Scene(root, resolution[0], resolution[1], Color.LIGHTBLUE);
 		                                                            ^
   symbol:   variable Color
   location: class FishSim
-./susuwu/FishSim.java:142: error: cannot find symbol
+./susuwu/FishSim.java:140: error: cannot find symbol
 			new AnimationTimer() {
 			    ^
   symbol:   class AnimationTimer
   location: class FishSim
-./susuwu/FishSim.java:143: error: method does not override or implement a method from a supertype
+./susuwu/FishSim.java:141: error: method does not override or implement a method from a supertype
 				@Override
 				^
-./susuwu/FishSim.java:148: error: cannot find symbol
+./susuwu/FishSim.java:146: error: cannot find symbol
 			Timeline timeline = new Timeline(
 			^
   symbol:   class Timeline
   location: class FishSim
-./susuwu/FishSim.java:148: error: cannot find symbol
+./susuwu/FishSim.java:146: error: cannot find symbol
 			Timeline timeline = new Timeline(
 			                        ^
   symbol:   class Timeline
   location: class FishSim
-./susuwu/FishSim.java:149: error: cannot find symbol
+./susuwu/FishSim.java:147: error: cannot find symbol
 				new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(System.nanoTime()); })
 				    ^
   symbol:   class KeyFrame
   location: class FishSim
-./susuwu/FishSim.java:149: error: cannot find symbol
+./susuwu/FishSim.java:147: error: cannot find symbol
 				new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(System.nanoTime()); })
 				             ^
   symbol:   variable Duration
   location: class FishSim
-./susuwu/FishSim.java:151: error: cannot find symbol
+./susuwu/FishSim.java:149: error: cannot find symbol
 			timeline.setCycleCount(Animation.INDEFINITE);
 			                       ^
   symbol:   variable Animation
   location: class FishSim
-./susuwu/FishSim.java:159: error: cannot find symbol
+./susuwu/FishSim.java:157: error: cannot find symbol
 			new AnimationTimer() {
 			    ^
   symbol:   class AnimationTimer
   location: class FishSim
-./susuwu/FishSim.java:160: error: method does not override or implement a method from a supertype
+./susuwu/FishSim.java:158: error: method does not override or implement a method from a supertype
 				@Override
 				^
-./susuwu/FishSim.java:165: error: cannot find symbol
+./susuwu/FishSim.java:163: error: cannot find symbol
 			Timeline loopPerSecond = new Timeline(
 			^
   symbol:   class Timeline
   location: class FishSim
-./susuwu/FishSim.java:165: error: cannot find symbol
+./susuwu/FishSim.java:163: error: cannot find symbol
 			Timeline loopPerSecond = new Timeline(
 			                             ^
   symbol:   class Timeline
   location: class FishSim
-./susuwu/FishSim.java:166: error: cannot find symbol
+./susuwu/FishSim.java:164: error: cannot find symbol
 				new KeyFrame(Duration.millis(1000.0 / physicsRefreshHertz), event -> { updateFish(); })
 				    ^
   symbol:   class KeyFrame
   location: class FishSim
-./susuwu/FishSim.java:166: error: cannot find symbol
+./susuwu/FishSim.java:164: error: cannot find symbol
 				new KeyFrame(Duration.millis(1000.0 / physicsRefreshHertz), event -> { updateFish(); })
 				             ^
   symbol:   variable Duration
   location: class FishSim
-./susuwu/FishSim.java:168: error: cannot find symbol
+./susuwu/FishSim.java:166: error: cannot find symbol
 			loopPerSecond.setCycleCount(Animation.INDEFINITE);
 			                            ^
   symbol:   variable Animation
   location: class FishSim
-./susuwu/FishSim.java:257: error: method does not override or implement a method from a supertype
+./susuwu/FishSim.java:255: error: method does not override or implement a method from a supertype
 	@Override
 	^
 ./susuwu/SimUsages.java:55: error: cannot find symbol

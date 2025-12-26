@@ -56,7 +56,7 @@ public class FishSim extends Application {
 	static ReentrantLock renderFishLock = new ReentrantLock();
 	static ReentrantLock updateFishLock = new ReentrantLock();
 	// TODO: remove `static` from {`resolution`, `bounds`}, to allow to remove `static` from {`setResolution()`, `renderFishLock, `updateFishLock`}, so `FishSim` allows numerous windows
-	public static boolean setResolution(int[] newResolution) {
+	public static boolean setResolution(int[] newResolution) { /* Notice: invalidates references to old `bounds`, `*Slash2` addresses. */ // TODO: remove `static` from {`resolution`, `bounds`}, to allow to remove `static` from {`setResolution()`, `renderFishLock, `updateFishLock`}, so `FishSim` allows numerous windows
 		assert 2 == newResolution.length;
 		assert 0 < newResolution[0]; //TODO: allow "headless" instances with `resolution = {0, 0}`?
 		assert 0 < newResolution[1];
@@ -64,11 +64,9 @@ public class FishSim extends Application {
 		renderFishLock.lock();
 		resolution = newResolution;
 		resolutionf.pos[0] = resolution[0]; resolutionf.pos[1] = resolution[1];
-		resolutionfSlash2.pos[0] = resolution[0] / 2; resolutionfSlash2.pos[1] = resolution[1] / 2;
-//		resolutionfSlash2 = resolutionf.slashScalar(2); // TODO: if sure that no functions store references to the original instance's address, replace the above row with this (since simple source code is less bug prone)
+		resolutionfSlash2 = resolutionf.slashScalar(2); /* Notice: invalidates references which store the old address to `resolutionfSlash2`. */
 		resVolume = (int)Math.round(resolutionf.volume()); /* Notice: uses `Pos::volume()` since simple source code is less bug prone. `Math.round` ensures 24-bit mantissas give accurate values */
-		posBounds.setBounds(new double[] { resolution[0] * boundsResolutionFactor, resolution[1] * boundsResolutionFactor });
-//		posBounds.setBounds(resolutionf.starScalar(boundsResolutionFactor).pos); // TODO: if sure that no functions store references to the original instance, replace the above row with this (since simple source code is less bug prone)
+		posBounds.setBounds(resolutionf.starScalar(boundsResolutionFactor).pos); // TODO: if sure that no functions store references to the original instance, replace the above row with this (since simple source code is less bug prone)
 		// canvas = new Canvas(resolution[0], resolution[1]); // TODO: replace with `canvas.setWidth(resolution[0]); canvas.setHeight(resolution[1]);`?
 		// gc = canvas.getGraphicsContext2D();
 		// scene = new Scene(root, resolution[0], resolution[1], Color.LIGHTBLUE); // replace with `scene.widthProperty().bind(primaryStage.widthProperty());`?
@@ -79,7 +77,7 @@ public class FishSim extends Application {
 	}
 	private static int[] resolution = {1280, 720};
 	private static Pos2 resolutionf = new Pos2(resolution[0], resolution[1]);
-	private static Pos resolutionfSlash2 = resolutionf.slashScalar(2); // Improves execution of inner loops which use this
+	private static Pos resolutionfSlash2 = resolutionf.slashScalar(2); /* Improves execution of inner loops which use this. Notice: `setResolution(newResolution)` invalidates stored references to `resolutionfSlash2` */
 	private static int resVolume = (int)Math.round(resolutionf.volume()); /* Notice: uses `Pos::volume()` since simple source code is less bug prone. `Math.round` ensures 24-bit mantissas give accurate values */
 	private static double boundsResolutionFactor = 2; // `resolution[dim] * 2` gives best results (sufficient room for natural ocean, small enough for most CPUs to process). Notice: Powers of 2 give improved versions of most formulas for computers, but for now this allows all values
 	private static PosBounds posBounds = new PosBounds(PosBounds.PosBoundsMode.wrapAroundResolution, resolutionf.starScalar(boundsResolutionFactor)); // for simple sims, use `resolutionf.clone()`
