@@ -24,6 +24,10 @@ public class PosBounds extends ImmutablePosBounds { /* Usage: replaces `double f
 		setPosBoundsMode_(o);
 		setResolution_(resolution);
 	}
+	public PosBounds(PosBoundsMode o, ImmutablePos resolution) {
+		setPosBoundsMode_(o);
+		setResolution_(resolution);
+	}
 	@Override
 	public PosBounds clone() { /* Usage: `PosBounds pos = o.clone(); assert o.equals(pos);` */
 		return new PosBounds(this);
@@ -40,10 +44,10 @@ public class PosBounds extends ImmutablePosBounds { /* Usage: replaces `double f
 		setResolution_(resolution);
 	}
 	public void setBounds(int index, double resolution) {
-		bounds[index] = resolution;
-		boundsSlash2[index] = resolution / 2;
-		boundsVolume = Calculus.volume(bounds);
-		gridSize[index] = (int)Math.ceil(bounds[index] / gridResolution);
+		bounds.set(index, resolution);
+		boundsSlash2.set(index, resolution / 2);
+		boundsVolume = bounds.volume();
+		gridSize[index] = (int)Math.ceil(bounds.at(index) / gridResolution);
 	}
 	public void setGridResolution(int resolution) {
 		setGridResolution_(resolution);
