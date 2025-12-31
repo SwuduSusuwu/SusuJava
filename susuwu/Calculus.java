@@ -21,7 +21,7 @@ public class Calculus { /* Usage: `Calculus.function(arguments)` */
 	public static double volume(double... position) { // Usage: is vararg version of "Cartesian volume"
 		double volume_ = 1;
 		for(double posW : position) {
-			volume_ *= pow2(posW);
+			volume_ *= posW;
 		}
 		return volume_;
 	}
