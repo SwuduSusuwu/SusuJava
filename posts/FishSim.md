@@ -8,6 +8,7 @@
 - [Synopsis](#synopsis)
 
 # Intro
+![`FishSim`@`857bb257`\_20251229](https://substack-post-media.s3.amazonaws.com/public/images/e8e4e758-fc80-4fdf-ab0d-0b8b560299a4_2228x1266.png)
 [`./posts/FishSim.md`](#table-of-contents) is split from [`../SusuPosts/posts/Human_ancestors_are_fish.md#request-java-fish`](https://github.com/SwuduSusuwu/SusuPosts/blob/69b7b1545ab51a1c1a562c0ac838a950bb086442/posts/Human_ancestors_are_fish.md#request-java-fish).
 * The build script moved to [`./susuwu/build.sh`](../susuwu/build.sh). Usage: `./susuwu/build.sh`
 * The source code moved to [`./susuwu/FishSim.java`](../susuwu/FishSim.java) (`package susuwu.FishSim;`).
@@ -22,17 +23,15 @@
     * `Forces.posIfDistSum(posDes, posSource, dist)`: for *Boids* groups: `if(posIfDistPow2Sum(averagePosOfGroup, posOfIndividual, distPow2ToIndividual) { ++sizeOfGroup; }`. For `Fish::apply*()`, reduces duplicate code.
     * `Forces.dposScaleSum(dposDes, d2pos, dposSource)`: for Boids groups: `if(dposScaleSum(derivativeOfPosition, secondDerivOfPos, averageDposOfGroup)) { position += derivativeOfPosition; }`, reduces duplicate code.
   * Uses [`./susuwu/ImmutablePosBounds.java`](../susuwu/ImmutablePosBounds.java): `public class ImmutablePosBounds implements java.lang.Cloneable`, usage: `ImmutablePosBounds posBounds(PosBoundsMode);`
-    * +`enum ImmutablePosBounds`: stores how sims enforce bounds.
+    * `enum ImmutablePosBounds`: stores how sims enforce bounds.
+      * if `PosBoundsMode.wrapAroundResolution`, with `boundsResolutionFactor = 2` the view is close to a natural ocean.
+    * `ImmutablePosBounds::getBounds()`: to replace `FishSim::resolution` for physics uses. Introduced `bounds` for this (to allow out-of-view positions). Notice: for simple sims, this can `return resolutionf;`.
+      * `setBounds({resolution[0] * 2, resolution[1] * 2};`
+      * `boolean isPosInBounds(double[] pos)`: replaces duplicate code which tests for if `pos` is in bounds. Allows 2-dimensions or volumetric.
+      * `boolean posBound(double[] pos, ImmutablePosBounds posBounds)`: enforces bounds onto `pos` (`Fish::setPos(newPos)` uses this). If `PosBoundsMode.boundless`, just tests `pos`.
+      * `public double[] posDiff(double[] pos, double[] o)`: reduces duplicate code for complex (such as `PosBoundsMode.wrapAroundResolution`) distances.
+        * `Fish::getPosDiff(Fish o)`: uses `FishSim::posBounds.posDiff` so distances follow `PosBoundsMode.wrapAroundResolution`.
     * [`./susuwu/PosBounds.java`](../susuwu/PosBounds.java): `public class PosBounds extend ImmutablePosBounds` is the mutable (`public void set`) version of `ImmutablePosBounds`.
-    * [`./susuwu/ImmutablePosBounds.java`](../susuwu/ImmutablePosBounds.java): `public class ImmutablePosBounds implements java.lang.Cloneable` Usage: `ImmutablePosBounds posBounds(PosBoundsMode);`
-      * `enum ImmutablePosBounds`: stores how sims enforce bounds.
-        * if `PosBoundsMode.wrapAroundResolution`, with `boundsResolutionFactor = 2` the view is close to a natural ocean.
-      * `ImmutablePosBounds::getBounds()`: to replace `FishSim::resolution` for physics uses. Introduced `bounds` for this (to allow out-of-view positions). Notice: for simple sims, this can `return resolutionf;`.
-        * `setBounds({resolution[0] * 2, resolution[1] * 2};`
-        * `boolean isPosInBounds(double[] pos)`: replaces duplicate code which tests for if `pos` is in bounds. Allows 2-dimensions or volumetric.
-        * `boolean posBound(double[] pos, ImmutablePosBounds posBounds)`: enforces bounds onto `pos` (`Fish::setPos(newPos)` uses this). If `PosBoundsMode.boundless`, just tests `pos`.
-        * `public double[] posDiff(double[] pos, double[] o)`: reduces duplicate code for complex (such as `PosBoundsMode.wrapAroundResolution`) distances.
-          * `Fish::getPosDiff(Fish o)`: uses `FishSim::posBounds.posDiff` so distances follow `PosBoundsMode.wrapAroundResolution`.
 
 * The [original version of this source code](https://github.com/SwuduSusuwu/SusuJava/blob/solarPro2FishSim/susuwu/FishSim.java) was [produced through *Solar-Pro-2*](https://poe.com/s/ehlOJYRJNsrGJttfJ4HK), but the goal is just to use thus as a template (for future versions to replace all with own source code).
 
