@@ -6,18 +6,14 @@
 
 package susuwu; /* Usage: `import susuwu.SimUsages;` */
 
-import javafx.application.Platform; /* `Platform.runLater(...)` */
-import javafx.scene.layout.Pane; /* `Pane pane` */
-import javafx.scene.paint.Color; /* `Color.WHITE` */
-import javafx.scene.text.Text; /* `Text fpsText` */
-
 /**
  * {@code class SimUsages} shows {@code FpsTextMode} statistics such as {@code fps} or {@code ms}.
  * Requirements: some render loop (for measurements). Is not specific to the renderer used.
  * Was produced for {@code susuwu.FishSim}, so the text (plus comments) assume the organisms are {@code class Fish}, but {@code SimUsages} is not specific to {@code class Fish}
  * Some {@code assert}s follow, thus document which arguments to use with this (without {@code -enableassertions}, thus are not enforced).
  * Some "Usage:" comments follow, which document how to use this.
- * Usage: {@code SimUsages usages = SimUsages(Pane); usages.show(); usages.fpsTextMode = FpsTextMode.fps.value | FpsTextMode.ms.value;}
+ * Usage: {@code SimUsages usages = new SimUsages(); usages.show(); usages.fpsTextMode = FpsTextMode.fps.value | FpsTextMode.ms.value;}
+ * Text is rendered via {@link SdlGles2#setWindowTitle} (replaces {@code javafx.scene.text.Text}).
  */
 public class SimUsages {
 	/* `public` members */
@@ -34,10 +30,9 @@ public class SimUsages {
 	public int physicsCounter = 0; // Sum of `postPhysics()` uses since `lastTime = System.nanoTime()`.
 	public long physicsNs = -1; // Sum of `nanoTime()` at `postRender()` minus `nanoTime()` at `startRender()` since `lastTime = System.nanoTime()`.
 	public long renderNs = -1; // Sum of `nanoTime()` at `postRender()` minus `nanoTime()` at `startRender()` since `lastTime = System.nanoTime()`.
-	private Pane root;
-	public SimUsages(Pane pane) {
-		this.root = pane;
-		this.root.getChildren().add(fpsText);
+	private String fpsText = "0 FPS";
+	public SimUsages() {
+		/* No Pane or display object needed: text is shown via SdlGles2.setWindowTitle(). */
 	}
 	static public enum FpsTextMode { // `FpsTextMode` says which resources `fpsText` will show.
 		none      (0     ), // `fpsText = "";`
@@ -52,11 +47,8 @@ public class SimUsages {
 		FpsTextMode(long value) { this.value = value; }
 	}; // TODO: replace manual bitshifts with `java.util.EnumSet<E>`?
 
-	private Text fpsText = new Text("0 FPS");
 	public void show() {
-		fpsText.setX(10);
-		fpsText.setY(30);
-		fpsText.setFill(Color.WHITE);
+		SdlGles2.setWindowTitle("Fish Simulation (Boids) - " + fpsText); /* Replaces `Text.setX/Y/setFill(Color.WHITE)`: text is in window title. */
 	}
 
 	/* Measurement funtions
@@ -78,7 +70,7 @@ public class SimUsages {
 			fps = renderCounter / elapsed;
 			renderMs = renderNs / renderCounter / 1_000_000.0;
 			physicsMs = physicsNs / physicsCounter / 1_000_000.0;
-			Platform.runLater(() -> fpsTextRefresh(fishShown, fishListSize));
+			fpsTextRefresh(fishShown, fishListSize); /* Replaces `Platform.runLater(...)`: SDL2 has no UI thread restriction, so call directly. */
 			renderCounter = 1;
 			renderNs = -1;
 			physicsCounter = 1;
@@ -141,6 +133,7 @@ public class SimUsages {
 			fpsTextStr += String.format(fpsTextModeFish ? "%4d shown)" : "%4d Fish shown", fishShown);
 			fpsTextStr += strSep;
 		}
-		fpsText.setText(fpsTextStr.substring(0, fpsTextStr.length() - strSep.length()));
+		fpsText = fpsTextStr.substring(0, fpsTextStr.length() - strSep.length());
+		SdlGles2.setWindowTitle("Fish Simulation (Boids) - " + fpsText); /* Replaces `Text.setText(...)`: update window title with FPS stats. */
 	}
 };
