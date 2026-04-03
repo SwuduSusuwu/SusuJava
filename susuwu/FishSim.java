@@ -80,7 +80,7 @@ public class FishSim {
 	private static Pos2 resolutionf = new Pos2(resolution[0], resolution[1]);
 	private static Pos resolutionfSlash2 = resolutionf.slashScalar(2); /* Improves execution of inner loops which use this. Notice: `setResolution(newResolution)` invalidates stored references to `resolutionfSlash2` */
 	private static int resVolume = (int)Math.round(resolutionf.volume()); /* Notice: uses `Pos::volume()` since simple source code is less bug prone. `Math.round` ensures 24-bit mantissas give accurate values */
-	private static double boundsResolutionFactor = 2; // `resolution[dim] * 2` gives best results (sufficient room for natural ocean, small enough for most CPUs to process). Notice: Powers of 2 give improved versions of most formulas for computers, but for now this allows all values
+	private static double boundsResolutionFactor = (1_000_000 > resVolume ? 2.0 : 1.2); // Ocean is `resolution[dim] * boundsResolutionFactor`. `2.0` gives more room for natural oceans, but old laptops with huge resolutions (such as `{2200, 1200}`) must use `1.2` so the load is low enough for old CPUs to process). TODO: include short benchmark (on startup) to set `boundsResolutionFactor` to optimal value, or reduce CPU use for unshown `Fish` (`if(!fish.isVisible)`, then execute `updateFish` just once per second (1 hertz), with larger steps).
 	private static PosBounds posBounds = new PosBounds(PosBounds.PosBoundsMode.wrapAroundResolution, resolutionf.starScalar(boundsResolutionFactor)); // for simple sims, use `resolutionf.clone()`
 	private static double fishVolume = 200; // Uses resolution of `Fish::render()`.
 	private static double fishLengthsSep = 62; // Average `Fish`-lengths distance  from `Fish` to `Fish`.
