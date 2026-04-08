@@ -49,7 +49,7 @@ public class FishSim {
 		synchronousInterval,  // `updateFish()` per `positionInterval` `refreshLoop()`s.
 		asynchronousHomo,     // `executor.submit(() -> updateFish());` once per `refreshLoop()`.
 		asynchronousInterval, // `executor.submit(() -> updateFish());` per `positionInterval` `refreshLoop()`s.
-		separateUnbound,      // `updateFish()` runs in a background thread continuously (replaces `AnimationTimer`).
+		separateUnbound,      // `updateFish()` runs in a background thread continuously (replaces `AnimationTimer`). Notice: with GLES2 this has an implicit bound to the monitor refresh (which `SimUsages` counts as "CPU use" (pause for vertical sync counts towards "drawMS")).
 		separateFps,          // `updateFish()` runs via `ScheduledExecutorService` at `physicsRefreshHertz` (replaces `Timeline/KeyFrame`).
 	}
 	private static PhysicsMode monitorRefreshMode = PhysicsMode.separateFps; // `monitorRefreshMode` must use `.separateUnbound` or `.separateFps`.
@@ -152,7 +152,7 @@ public class FishSim {
 			long now = System.nanoTime();
 			boolean shouldRender;
 			switch(monitorRefreshMode) { // `PhysicsMode.` is omitted from all `case`s, to support old `java --source` versions
-			case separateUnbound:
+			case separateUnbound: // TODO: since GLES2 this has an implicit bound to the monitor refresh, fix `SimUsages` to not count idle as "CPU use" (pause for vertical sync should not count towards "drawMS")). This does not seem to result from the `Thread.sleep(1)` (which is a few rows below this comment) but from `SdlGles2.swapWindow();` (if `swapWindow()` blocks on "vertical sync", one solution is to subtract the time used for `swapWindow()` from `simUsages.renderNs`).
 				shouldRender = true;
 				break;
 			case separateFps: /* fall-through */
