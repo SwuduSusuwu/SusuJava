@@ -50,7 +50,7 @@ public class FishSim {
 		asynchronousHomo,     // `executor.submit(() -> updateFish());` once per `refreshLoop()`.
 		asynchronousInterval, // `executor.submit(() -> updateFish());` per `positionInterval` `refreshLoop()`s.
 		separateUnbound,      // `updateFish()` runs in a background thread continuously (replaces `AnimationTimer`). Notice: with `GLES2` this has an implicit bound to the monitor refresh (Virtual Synchronization, which `SimUsages` does not count towards "drawMS").
-		separateFps,          // `updateFish()` runs via `ScheduledExecutorService` at `physicsRefreshHertz` (replaces `Timeline/KeyFrame`).
+		separateFps,          // `updateFish()` runs via `ScheduledExecutorService` at `physicsRefreshHertz` (replaces `Timeline`/`KeyFrame`).
 	}
 	private static PhysicsMode monitorRefreshMode = PhysicsMode.separateFps; // `monitorRefreshMode` must use `.separateUnbound` or `.separateFps`.
 	private static PhysicsMode physicsMode = PhysicsMode.separateFps; // Notice: if `PhysicsMode.*Interval`, must set `positionInterval`. if `PhysicsMode.separateFps`, must set `physicsRefreshHertz`.
@@ -134,7 +134,7 @@ public class FishSim {
 
 		// Start separate physics loop for `separateUnbound` / `separateFps` modes (replaces `AnimationTimer` / `Timeline`):
 		switch(physicsMode) { // `PhysicsMode.` is omitted from all `case`s, to support old `java --source` versions
-		case separateUnbound:
+		case separateUnbound: // Notice: `GLES2` version uses Vertical Synchronization, which `SimUsages` subtracts from `renderNs` (does not count towards resource usage).
 			executor.submit(() -> { while(!quit) { updateFish(); } });
 			break;
 		case separateFps:
