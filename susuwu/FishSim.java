@@ -47,7 +47,7 @@ public class FishSim extends Application {
 		synchronousInterval,  // `updateFish()` per `positionInterval` `refreshLoop()`s.
 		asynchronousHomo,     // `executor.submit(() -> updateFish());` once per `refreshLoop()`.
 		asynchronousInterval, // `executor.submit(() -> updateFish());` per `positionInterval` `refreshLoop()`s.
-		separateUnbound,      // `new AnimationTimer() { public void handle(long now) { updateFish(); }`
+		separateUnbound,      // `new AnimationTimer() { public void handle(long now) { updateFish(); }` // Notice: with `GLES2` this has an implicit bound to the monitor refresh (Virtual Synchronization, which `SimUsages` does not count towards "drawMS").
 		separateFps,          // `Timeline timeline = new Timeline( new KeyFrame(Duration.millis(1000.0 / physicsRefreshHertz), event -> { updateFish(); })`
 	}
 	private static PhysicsMode monitorRefreshMode = PhysicsMode.separateFps; // `monitorRefreshMode` must use `.separateUnbound` or `.separateFps`.
@@ -153,7 +153,7 @@ public class FishSim extends Application {
 			throw new IllegalArgumentException("Unsupported `PhysicsMode monitorRefreshMode`: " + monitorRefreshMode);
 		}
 		switch(physicsMode) { // `PhysicsMode.` is omitted from all `case`s, to support old `java --source` versions
-		case separateUnbound:
+		case separateUnbound: // Notice: `GLES2` version uses Vertical Synchronization, which `SimUsages` subtracts from `renderNs` (does not count towards resource usage).
 			new AnimationTimer() {
 				@Override
 				public void handle(long now) { updateFish(); }
@@ -241,7 +241,9 @@ public class FishSim extends Application {
 		renderFishLock.lock();
 		simUsages.startRender();
 		fishShown = 0;
+//		simUsages.preSynchro(); // Notice: alternatives: use `SDL_GL_SetSwapInterval(0);`, or move `simUsages.startRender()` below the first use of `SdlGles2`
 		gc.clearRect(0, 0, resolution[0], resolution[1]);
+//		simUsages.postSynchro();
 		for(Fish fish : fishList) {
 			if(fish.isVisible) { // For `Fish` not shown, this condition improves `SimUsages.fps` (lowers `SimUsages.renderNs`).
 				fishShown++;
