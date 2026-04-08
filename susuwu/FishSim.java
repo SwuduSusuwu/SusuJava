@@ -134,7 +134,7 @@ public class FishSim {
 
 		// Start separate physics loop for `separateUnbound` / `separateFps` modes (replaces `AnimationTimer` / `Timeline`):
 		switch(physicsMode) { // `PhysicsMode.` is omitted from all `case`s, to support old `java --source` versions
-		case separateUnbound:
+		case separateUnbound: // Notice: `GLES2` version uses Vertical Synchronization, which `SimUsages` subtracts from `renderNs` (does not count towards resource usage).
 			executor.submit(() -> { while(!quit) { updateFish(); } });
 			break;
 		case separateFps:
