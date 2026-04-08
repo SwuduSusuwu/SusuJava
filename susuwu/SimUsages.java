@@ -90,6 +90,12 @@ public class SimUsages {
 	public void startRender() { // Usage: `startRender();` at start of render loop
 		renderNsStart = System.nanoTime();
 	}
+	public void preSynchro() { // Usage: `startRender(); ... startSynchro(); SdlGles2.glClear(...); postSynchro();`
+		renderNsStart += System.nanoTime();
+	} // TODO: reduce `preSynchro()` to no-op, improve `postSynchro()` to subtract actual Virtual Synchronization time from `renderNsStat` (so the time to clear buffers is included).
+	public void postSynchro() { // Usage: `startRender(); ... startSynchro(); SdlGles2.glClear(...); postSynchro();`
+		renderNsStart -= System.nanoTime(); // Purpose: subtracts vertical synchronization time from "drawMS` (which is computed from `renderNs`, which is computed from `renderNsStart`). Problem: `glClear()` does not just wait for Virtical Synchronization, but also clears the buffer, which this will also subtract from `renderNs`.
+	}
 	public void postRender() { // Usage: `startRender();` at closure of render loop
 		renderNs += System.nanoTime() - renderNsStart;
 		renderCounter++;
