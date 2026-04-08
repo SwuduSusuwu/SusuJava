@@ -49,7 +49,7 @@ public class FishSim {
 		synchronousInterval,  // `updateFish()` per `positionInterval` `refreshLoop()`s.
 		asynchronousHomo,     // `executor.submit(() -> updateFish());` once per `refreshLoop()`.
 		asynchronousInterval, // `executor.submit(() -> updateFish());` per `positionInterval` `refreshLoop()`s.
-		separateUnbound,      // `updateFish()` runs in a background thread continuously (replaces `AnimationTimer`).
+		separateUnbound,      // `updateFish()` runs in a background thread continuously (replaces `AnimationTimer`). Notice: with `GLES2` this has an implicit bound to the monitor refresh (which `SimUsages` counts as "CPU use" (pause for Vertical Synchronization counts towards "drawMS")).
 		separateFps,          // `updateFish()` runs via `ScheduledExecutorService` at `physicsRefreshHertz` (replaces `Timeline/KeyFrame`).
 	}
 	private static PhysicsMode monitorRefreshMode = PhysicsMode.separateFps; // `monitorRefreshMode` must use `.separateUnbound` or `.separateFps`.
@@ -152,7 +152,7 @@ public class FishSim {
 			long now = System.nanoTime();
 			boolean shouldRender;
 			switch(monitorRefreshMode) { // `PhysicsMode.` is omitted from all `case`s, to support old `java --source` versions
-			case separateUnbound:
+			case separateUnbound: // TODO: since GLES2 this has an implicit bound to the monitor refresh, fix `SimUsages` to not count idle as "CPU use" (vertical synchronization for `SdlGles2.glClear(...);` should not count towards "drawMS")). Solution #1 is `SDL_GL_SetSwapInterval(0);` (Vertical Synchronization disabled), solution #2 is to subtract the time used for `glClear(...)` from `simUsages.renderNs`.
 				shouldRender = true;
 				break;
 			case separateFps: /* fall-through */
@@ -242,14 +242,14 @@ public class FishSim {
 		renderFishLock.lock();
 		simUsages.startRender();
 		fishShown = 0;
-		SdlGles2.glClear(SdlGles2.GL_COLOR_BUFFER_BIT); /* Replaces `gc.clearRect(0, 0, resolution[0], resolution[1])` */
+		SdlGles2.glClear(SdlGles2.GL_COLOR_BUFFER_BIT); // Replaces `gc.clearRect(0, 0, resolution[0], resolution[1])` // TODO: use `SDL_GL_SetSwapInterval(0);`, or do `SimUsages.preSynchro(); SdlGles2.glClear(SdlGles2.GL_COLOR_BUFFER_BIT); SimUsages.postSynchro();`, so `monitorRefreshMode = separateUnbound` does not include Vertical Synchronization into `drawMS`.
 		for(Fish fish : fishList) {
 			if(fish.isVisible) { // For `Fish` not shown, this condition improves `SimUsages.fps` (lowers `SimUsages.renderNs`).
 				fishShown++;
 				fish.render();
 			}
 		}
-		SdlGles2.swapWindow(); /* Presents the rendered frame (replaces implicit JavaFX frame commit). */
+		SdlGles2.swapWindow(); // Presents the rendered frame (replaces implicit JavaFX frame commit).
 		simUsages.postRender();
 		renderFishLock.unlock();
 	}
