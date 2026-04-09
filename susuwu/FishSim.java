@@ -6,26 +6,17 @@
 
 package susuwu; /* Usage: `import susuwu.FishSim;` */
 
-import javafx.animation.Animation;
-import javafx.animation.AnimationTimer;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
-import javafx.stage.Stage;
-import javafx.util.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import susuwu.SimUsages; /* `class SimUsages`, `enum FpsTextMode` */
+import susuwu.SdlGles2; /* `class SdlGles2`: JNI bridge to SDL2 + GLES2 */
 import susuwu.Calculus; /* `Calculus.pow2()` */
 import susuwu.Forces; /* `class Forces implements java.lang.Cloneable` */
 import susuwu.ImmutablePosBounds; /* `enum PosBoundsMode`: which stores how sims enforce bounds. */
@@ -37,18 +28,29 @@ import susuwu.Pos2; /* `class Pos extends Pos` */
 // TODO: test how much of `java`'s [static `Array` overhead](https://github.com/SwuduSusuwu/SusuPosts/blob/preview/posts/Physics_sims_which_structures_to_use.md#separate-variables-versus-dim-lists) `java`'s toolkit optimizes for you. If performance is a problem, choose a new approach to use.
 
 /**
- * Simple [*JavaFX*](https://github.com/openjdk/jfx) fish sim, which includes reusable {@code public class}s (for new sims to use). Most of the reusable {@code public class}s are in other {@code .java} sources for {@code package susuwu}
+ * Simple SDL2+GLES2 fish sim (via JNI), which includes reusable {@code public class}s (for new sims to use). Most of the reusable {@code public class}s are in other {@code .java} sources for {@code package susuwu}
  * This ([`./susuwu/FishSim.java`](./FishSim.java)) uses pseudo-*Markdown* for comments, but [`./posts/FishSim.md`](../posts/FishSim.md) is the actual [*Markdown*](https://github.github.com/gfm/) document for this.
  * Notice: replaced most of [*Solar-Pro-2*'s original `FishSim.java`](https://github.com/SwuduSusuwu/SusuJava/blob/solarPro2FishSim/susuwu/FishSim.java), as [`./posts/FishSim.md#intro`](../posts/FishSim.md#intro) documents (plus [*GitHub*'s `/compare/` tool shows](https://github.com/SwuduSusuwu/SusuJava/compare/solarPro2FishSim..susuFishSim#diff-8c440bb92bc6939e1450542897e0bbb1a8737b93808ea63ed32784edfacef4b4).
  */
-public class FishSim extends Application {
+public class FishSim {
+	/** Minimal {@code Color} replacement (replaces {@code javafx.scene.paint.Color}). Supports {@code getRed()}, {@code getGreen()}, {@code getBlue()} for {@code isSimilarTo()} comparisons. */
+	public static class Color {
+		private final double red, green, blue;
+		private Color(double r, double g, double b) { this.red = r; this.green = g; this.blue = b; }
+		public static Color color(double r, double g, double b) { return new Color(r, g, b); }
+		public double getRed()   { return red; }
+		public double getGreen() { return green; }
+		public double getBlue()  { return blue; }
+		public static final Color LIGHTBLUE = new Color(0.678, 0.847, 0.902); /* Light blue background (replaces `Color.LIGHTBLUE` from JavaFX) */
+	}
+
 	public enum PhysicsMode { // `PhysicsMode` says how to execute `updateFish()`
 		synchronousHomo,      // `updateFish()` once per `refreshLoop()`.
 		synchronousInterval,  // `updateFish()` per `positionInterval` `refreshLoop()`s.
 		asynchronousHomo,     // `executor.submit(() -> updateFish());` once per `refreshLoop()`.
 		asynchronousInterval, // `executor.submit(() -> updateFish());` per `positionInterval` `refreshLoop()`s.
-		separateUnbound,      // `new AnimationTimer() { public void handle(long now) { updateFish(); }`
-		separateFps,          // `Timeline timeline = new Timeline( new KeyFrame(Duration.millis(1000.0 / physicsRefreshHertz), event -> { updateFish(); })`
+		separateUnbound,      // `updateFish()` runs in a background thread continuously (replaces `AnimationTimer`). Notice: with `GLES2` this has an implicit bound to the monitor refresh (Virtual Synchronization, which `SimUsages` does not count towards "drawMS").
+		separateFps,          // `updateFish()` runs via `ScheduledExecutorService` at `physicsRefreshHertz` (replaces `Timeline/KeyFrame`).
 	}
 	private static PhysicsMode monitorRefreshMode = PhysicsMode.separateFps; // `monitorRefreshMode` must use `.separateUnbound` or `.separateFps`.
 	private static PhysicsMode physicsMode = PhysicsMode.separateFps; // Notice: if `PhysicsMode.*Interval`, must set `positionInterval`. if `PhysicsMode.separateFps`, must set `physicsRefreshHertz`.
@@ -67,10 +69,9 @@ public class FishSim extends Application {
 		resolutionfSlash2 = resolutionf.slashScalar(2); /* Notice: invalidates references which store the old address to `resolutionfSlash2`. */
 		resVolume = (int)Math.round(resolutionf.volume()); /* Notice: uses `Pos::volume()` since simple source code is less bug prone. `Math.round` ensures 24-bit mantissas give accurate values */
 		posBounds.setBounds(resolutionf.starScalar(boundsResolutionFactor).pos); // TODO: if sure that no functions store references to the original instance, replace the above row with this (since simple source code is less bug prone)
-		// canvas = new Canvas(resolution[0], resolution[1]); // TODO: replace with `canvas.setWidth(resolution[0]); canvas.setHeight(resolution[1]);`?
-		// gc = canvas.getGraphicsContext2D();
-		// scene = new Scene(root, resolution[0], resolution[1], Color.LIGHTBLUE); // replace with `scene.widthProperty().bind(primaryStage.widthProperty());`?
-		// stage.setScene(scene);
+		// (Resize SDL window here if needed: SDL_SetWindowSize(window, resolution[0], resolution[1]))
+		// (Resize GLES2 viewport here if needed: glViewport(0, 0, resolution[0], resolution[1]))
+		// (Rebuild GLES2 u_resolution uniform: SdlGles2.glClearColor/etc. if resolution changes)
 		renderFishLock.unlock();
 		updateFishLock.unlock();
 		return true;
@@ -94,37 +95,32 @@ public class FishSim extends Application {
 	private int fishShown = 0;
 	private List<Fish>[][] grid; /* `listToPartitions(List<>[][] grid, List<> list)` uses this */
 	private Random random = new Random();
-	private Pane root = new Pane();
-	private Canvas canvas = new Canvas(resolution[0], resolution[1]);
-	private GraphicsContext gc = canvas.getGraphicsContext2D();
-	private Stage stage;
-	SimUsages simUsages = new SimUsages(root);
+	SimUsages simUsages = new SimUsages(); /* Replaces `new SimUsages(root)`: no Pane needed for SDL2 text (shown via window title). */
 //	simUsages.fpsTextMode = FpsTextMode.allUsages.value; // TODO: "error: <identifier> expected" solution
 
+	private volatile boolean quit = false; /* Set to `true` by `stop()` to signal the main SDL loop to exit. */
 	private ExecutorService executor = Executors.newSingleThreadExecutor();
+	private ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor(); /* Replaces `javafx.animation.Timeline` for `separateFps` physics. */
 
 	public static void main(String[] args) {
-		launch(args);
+		new FishSim().run(args); /* Replaces `launch(args)`: instantiate directly since there is no JavaFX Application lifecycle. */
 	}
 
-	@Override
-	public void start(Stage primaryStage) {
+	/** Initializes SDL2+GLES2, populates fish, starts physics loops, then runs the render loop until quit. Replaces {@code start(Stage primaryStage)}. */
+	public void run(String[] args) { /* `args` preserved for future CLI configuration (e.g., `--resolution`, `--physics-mode`); currently unused. */
+		if(!SdlGles2.init(resolution[0], resolution[1], "Fish Simulation (Boids)")) {
+			System.err.println("FishSim.run: SdlGles2.init failed; aborting.");
+			return;
+		}
+		SdlGles2.glClearColor( /* Light-blue background (replaces `Color.LIGHTBLUE` passed to `new Scene(...)`) */
+			(float)Color.LIGHTBLUE.getRed(), (float)Color.LIGHTBLUE.getGreen(), (float)Color.LIGHTBLUE.getBlue(), 1.0f);
+
 		// Initialize fish
 		for(int i = 0; i < fishCount; i++) {
 			Pos2 pos = new Pos2(random.nextDouble() * posBounds.getBounds(0), random.nextDouble() * posBounds.getBounds(1));
 			Pos2 dpos = new Pos2((random.nextDouble() * 2 - 1) * Fish.dposMax, (random.nextDouble() * 2 - 1) * Fish.dposMax);
 			fishList.add(new Fish(pos, dpos, Color.color(random.nextDouble(), random.nextDouble(), random.nextDouble())));
 		}
-
-		root.getChildren().add(canvas);
-
-		Scene scene = new Scene(root, resolution[0], resolution[1], Color.LIGHTBLUE);
-		stage = primaryStage;
-		primaryStage.setScene(scene);
-		primaryStage.setTitle("Fish Simulation (Boids)");
-		primaryStage.setResizable(false);
-		primaryStage.show();
-		simUsages.show();
 
 		posBounds.setGridResolution(gridResolution);
 		grid = new ArrayList[posBounds.getGridSize(0)][posBounds.getGridSize(1)]; /* `listToPartitions(List<>[][] grid, List<> list)` uses this */
@@ -134,39 +130,44 @@ public class FishSim extends Application {
 			}
 		}
 
-		// Start animation loop
-		switch(monitorRefreshMode) { // `PhysicsMode.` is omitted from all `case`s, to support old `java --source` versions
-		case separateUnbound:
-			new AnimationTimer() {
-				@Override
-				public void handle(long now) { refreshLoop(now); }
-			}.start(); // Notice: replace `Timeline` with this for benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`).
-			break;
-		case separateFps:
-			Timeline timeline = new Timeline(
-				new KeyFrame(Duration.millis(1000.0 / monitorRefreshHertz), event -> { refreshLoop(System.nanoTime()); })
-			); // Notice: since this limits `SimUsages.fps` to `monitorRefreshHertz`, this prevents benchmarks which use `FpsTextMode.fps` (or `FpsTextMode.ms`). Benchmarks can still use `FpsTextMode.msSpec` (or `FpsTextMode.msFish`).
-			timeline.setCycleCount(Animation.INDEFINITE);
-			timeline.play();
-			break;
-		default:
-			throw new IllegalArgumentException("Unsupported `PhysicsMode monitorRefreshMode`: " + monitorRefreshMode);
-		}
+		simUsages.show();
+
+		// Start separate physics loop for `separateUnbound` / `separateFps` modes (replaces `AnimationTimer` / `Timeline`):
 		switch(physicsMode) { // `PhysicsMode.` is omitted from all `case`s, to support old `java --source` versions
 		case separateUnbound:
-			new AnimationTimer() {
-				@Override
-				public void handle(long now) { updateFish(); }
-			}.start();
+			executor.submit(() -> { while(!quit) { updateFish(); } });
 			break;
 		case separateFps:
-			Timeline loopPerSecond = new Timeline(
-				new KeyFrame(Duration.millis(1000.0 / physicsRefreshHertz), event -> { updateFish(); })
-			);
-			loopPerSecond.setCycleCount(Animation.INDEFINITE);
-			loopPerSecond.play();
+			long physicsIntervalMs = Math.max(1L, (long)(1_000.0 / physicsRefreshHertz)); /* Use milliseconds for scheduler precision (avoids nanosecond scheduler overhead). */
+			scheduledExecutor.scheduleAtFixedRate(() -> updateFish(), 0, physicsIntervalMs, TimeUnit.MILLISECONDS);
 			break;
+		default:
+			break; /* synchronous* / asynchronous* modes: handled inside `refreshLoop()` */
 		}
+
+		// Main SDL render loop (replaces `AnimationTimer` / `Timeline` for `monitorRefreshMode`):
+		long renderIntervalNs = (long)(1_000_000_000.0 / monitorRefreshHertz);
+		long lastRenderTime = System.nanoTime();
+		while(!quit && !SdlGles2.pollQuit()) {
+			long now = System.nanoTime();
+			boolean shouldRender;
+			switch(monitorRefreshMode) { // `PhysicsMode.` is omitted from all `case`s, to support old `java --source` versions
+			case separateUnbound: // Notice: uses Vertical Synchronization, which `SimUsages` subtracts from `renderNs` (does not count towards resource usage).
+				shouldRender = true;
+				break;
+			case separateFps: /* fall-through */
+			default:
+				shouldRender = ((now - lastRenderTime) >= renderIntervalNs);
+				break;
+			}
+			if(shouldRender) {
+				refreshLoop(now);
+				lastRenderTime = now;
+			} else {
+				try { Thread.sleep(1); } catch(InterruptedException e) { Thread.currentThread().interrupt(); break; } /* 1ms sleep avoids busy-waiting while still responding within 1 frame at 60fps (~16ms). */
+			}
+		}
+		stop();
 	}
 
 	private void refreshLoop(long now) {
@@ -190,7 +191,7 @@ public class FishSim extends Application {
 			break;
 		case separateUnbound:
 		case separateFps:
-			break; // no-op for both, since `start(Stage primaryStage)` processes thus
+			break; // no-op for both, since `run()` processes thus
 		default:
 			throw new IllegalArgumentException("Unsupported `PhysicsMode physicsMode`: " + physicsMode);
 		}
@@ -241,20 +242,26 @@ public class FishSim extends Application {
 		renderFishLock.lock();
 		simUsages.startRender();
 		fishShown = 0;
-		gc.clearRect(0, 0, resolution[0], resolution[1]);
+		simUsages.preSynchro(); // Notice: alternatives: use `SDL_GL_SetSwapInterval(0);`, or move `simUsages.startRender()` below the first use of `SdlGles2`
+		SdlGles2.glClear(SdlGles2.GL_COLOR_BUFFER_BIT); // Replaces `gc.clearRect(0, 0, resolution[0], resolution[1])`
+		simUsages.postSynchro();
 		for(Fish fish : fishList) {
 			if(fish.isVisible) { // For `Fish` not shown, this condition improves `SimUsages.fps` (lowers `SimUsages.renderNs`).
 				fishShown++;
-				fish.render(gc);
+				fish.render();
 			}
 		}
+		SdlGles2.swapWindow(); // Presents the rendered frame (replaces implicit JavaFX frame commit).
 		simUsages.postRender();
 		renderFishLock.unlock();
 	}
 
-	@Override
+	/** Signals the main loop to exit, shuts down executor threads, and calls {@code SDL_Quit()} via {@link SdlGles2#destroy()}. Replaces {@code @Override stop()}. */
 	public void stop() {
+		quit = true;
+		scheduledExecutor.shutdownNow();
 		executor.shutdown();
+		SdlGles2.destroy(); /* Replaces implicit JavaFX window teardown. */
 	}
 
 	public class Fish { /* `static Fish` causes "{posBounds,posBounds.posBound()} cannot be referenced from a static context" (unless those are set to `static`, which prevents `FishSim` from use of separate values with multiple windows) */
@@ -271,7 +278,7 @@ public class FishSim extends Application {
 
 		private Pos pos;        // Position
 		private Pos dpos;       // Motion (derivative of position)
-		private Color color;
+		private Color color;    /* Replaces `javafx.scene.paint.Color`: uses `FishSim.Color` which supports `getRed()`, `getGreen()`, `getBlue()`. */
 		public boolean isInBounds;
 		public boolean isVisible = false; // Just stores `0 <= pos[0] && resolution[0] > pos[0] && 0 <= pos[1]  && resolution[1] > pos[1]` for now.
 
@@ -441,20 +448,33 @@ public class FishSim extends Application {
 			setPos(pos.plus(dpos));
 		}
 
-		public synchronized void render(GraphicsContext gc) {
-			gc.save();
-			gc.translate(pos.pos[0], pos.pos[1]);
-			gc.rotate(Math.toDegrees(Math.atan2(dpos.pos[1], dpos.pos[0])) + 90);
-			gc.setFill(color);
-			gc.beginPath();
-			gc.moveTo(0, -10);
-			gc.lineTo(-5, 10);
-			gc.lineTo(-2, 0);
-			gc.lineTo(2, 0);
-			gc.lineTo(5, 10);
-			gc.closePath();
-			gc.fill();
-			gc.restore();
+		/**
+		 * Renders this fish using GLES2 via {@link SdlGles2#drawFilledPolygon}.
+		 * Replicates the JavaFX {@code gc.save/translate/rotate/setFill/beginPath/moveTo/lineTo/closePath/fill/restore} sequence.
+		 * Fish shape vertices (local space): {@code {0,-10}, {-5,10}, {-2,0}, {2,0}, {5,10}}.
+		 * Triangulated (triangle fan from vertex 0): triangles {@code {0,1,2}, {0,2,3}, {0,3,4}}.
+		 */
+		public synchronized void render() {
+			/* Replicate `gc.translate(tx,ty); gc.rotate(angleDeg+90)` as a 2-D rotation matrix. */
+			double angle = Math.atan2(dpos.pos[1], dpos.pos[0]) + Math.PI / 2.0; /* equiv. to Math.toRadians(Math.toDegrees(atan2) + 90) */
+			double cosA = Math.cos(angle);
+			double sinA = Math.sin(angle);
+			double tx = pos.pos[0];
+			double ty = pos.pos[1];
+			/* Fish shape local vertices: same coordinates as original JavaFX path */
+			final double[][] lv = {{0,-10}, {-5,10}, {-2,0}, {2,0}, {5,10}};
+			/* Triangulate polygon as fan from vertex 0: {0,1,2}, {0,2,3}, {0,3,4} -> 3 triangles, 9 verts, 18 floats */
+			final int[][] tris = {{0,1,2}, {0,2,3}, {0,3,4}};
+			float[] verts = new float[18];
+			int vi = 0;
+			for(int[] tri : tris) {
+				for(int idx : tri) {
+					double lx = lv[idx][0], ly = lv[idx][1];
+					verts[vi++] = (float)(lx * cosA - ly * sinA + tx); /* x' = x*cos - y*sin + tx */
+					verts[vi++] = (float)(lx * sinA + ly * cosA + ty); /* y' = x*sin + y*cos + ty */
+				}
+			}
+			SdlGles2.drawFilledPolygon(verts, (float)color.getRed(), (float)color.getGreen(), (float)color.getBlue(), 1.0f);
 		}
 	};
 };

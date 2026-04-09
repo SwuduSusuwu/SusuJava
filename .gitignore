@@ -71,6 +71,9 @@ compile_commands.json
 todo/
 susuwu/*.class
 susuwu/FishSim_local.log
+susuwu/*.so
+susuwu/*.dll
+susuwu/*.dylib
 
 # `remark-cli` temp
 package.json
